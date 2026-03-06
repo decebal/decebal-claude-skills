@@ -1,0 +1,45 @@
+{
+  "// PROJECT SETTINGS": "Place at .claude/settings.local.json in each project",
+  "// PURPOSE": "Allowlist commands Claude can run without prompting",
+
+  "// EXAMPLE: Bun + Taskfile project": "",
+  "permissions": {
+    "allow": [
+      "Bash(task *)",
+      "Bash(bun *)",
+      "Bash(bun run *)",
+      "Bash(bunx *)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(ls *)",
+      "Bash(pwd)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(wc *)"
+    ]
+  },
+
+  "// EXAMPLE: Rust project additions": "",
+  "permissions_rust": {
+    "allow": [
+      "Bash(cargo build *)",
+      "Bash(cargo test *)",
+      "Bash(cargo run *)",
+      "Bash(cargo clippy *)",
+      "Bash(cargo fmt *)",
+      "Bash(rustup *)"
+    ]
+  },
+
+  "// EXAMPLE: Docker project additions": "",
+  "permissions_docker": {
+    "allow": [
+      "Bash(docker compose *)",
+      "Bash(docker build *)",
+      "Bash(docker ps *)",
+      "Bash(docker logs *)"
+    ]
+  },
+
+  "// NOTE": "Merge the relevant sections into a single 'permissions.allow' array for your project"
+}

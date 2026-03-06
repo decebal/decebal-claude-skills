@@ -1,0 +1,17 @@
+{
+  "// GLOBAL SETTINGS": "Place at ~/.claude/settings.json",
+
+  "statusLine": {
+    "type": "command",
+    "command": "bunx ccstatusline@latest",
+    "padding": 0
+  },
+
+  "enabledPlugins": {
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true
+  },
+
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "medium"
+}
