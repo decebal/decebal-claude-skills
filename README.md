@@ -13,6 +13,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 ├── skills/                     # Complete local skill collection (SKILL.md + references)
 │   ├── brainstorming/          # Creative design exploration
 │   ├── bun-development/        # Bun runtime guide
+│   ├── create-plans/           # Hierarchical project plans (/create-prompt, /run-prompt)
 │   ├── dev-browser/            # Browser automation (Playwright)
 │   ├── docker-expert/          # Docker optimization & security
 │   ├── feature-spec/           # PRDs, requirements, scope (42 rules)

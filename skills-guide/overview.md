@@ -20,6 +20,7 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 |-------|---------|-----------------|
 | **brainstorming** | Explore ideas before implementation | Any creative/feature work (auto-triggers) |
 | **feature-spec** | PRDs, requirements, scope management | "write prd", "define requirements" |
+| **create-plans** | Hierarchical Claude-executable project plans; ships `/create-prompt` + `/run-prompt` | "plan this project", "create-prompt", "phase plan" |
 | **ralph-tui-prd** | PRDs optimized for agent execution | "create a prd", "plan this feature" |
 
 ### Task Orchestration
