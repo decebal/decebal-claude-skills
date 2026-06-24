@@ -11,6 +11,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 ```
 .
 ├── skills/                     # Complete local skill collection (SKILL.md + references)
+│   ├── blog-image/             # Screenshot → web-optimized hero/OG WebP + branded OG card (Pillow, bundled scripts)
 │   ├── brainstorming/          # Creative design exploration
 │   ├── bun-development/        # Bun runtime guide
 │   ├── create-plans/           # Hierarchical project plans (/create-prompt, /run-prompt)
@@ -22,7 +23,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── ralph-tui-create-beads-rust/  # PRD → beads conversion
 │   ├── ralph-tui-prd/          # PRD generation for agent execution
 │   ├── skill-creator/          # How to author skills
-│   └── typescript/             # TS optimization (42 rules)
+│   ├── typescript/             # TS optimization (42 rules)
+│   └── web-video/              # Screen recording → web-ready H.264 demo (+ poster/GIF) via ffmpeg (bundled script)
 ├── configs/                    # Reference configurations
 │   ├── settings.json           # Global settings reference
 │   ├── settings.local.json     # Project permission patterns
