@@ -66,8 +66,14 @@ optimize_image.py og.png --preset og -o public/assets/blog/chronis-0-8-0-og.webp
 3. Default to `--preset og` for share cards and `--preset hero` for in-post heros.
 4. Report the output path, dimensions, and file size.
 
+## Example output
+
+`examples/sample-og.webp` is a rendered card (`og_card.py` → `optimize_image.py
+--preset og`, 1200x630, 16 KB) — what a generated share card looks like.
+
 ## Notes
 
 - WebP is written by Pillow directly — `cwebp`/ImageMagick are NOT required.
 - For a screenshot of a *running page*, capture it first (your editor's screenshot
   tool, macOS CleanShot, or any browser screenshot), then feed the PNG here.
+- Tested by `tests/test_blog_image.sh` (preset dimensions, WebP output, `--max-width`).

@@ -55,3 +55,5 @@ optimize_video.sh demo.webm -o public/demo.mp4 --max-width 1280
 - `+faststart` moves the moov atom to the front so the video starts before it's
   fully downloaded — important for web.
 - Audio is stripped by default to shave bytes; pass `--keep-audio` to keep it.
+- Tested by `tests/test_web_video.sh` (H.264 codec, even/capped width, moov-before-mdat
+  faststart, audio stripped, poster + gif produced).

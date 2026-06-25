@@ -58,6 +58,37 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **Permissions** | [docs/permissions.md](docs/permissions.md) | Granular command allowlists by project type |
 | **Token Efficiency** | [docs/token-efficiency.md](docs/token-efficiency.md) | Patterns for staying within context limits |
 
+## Executable skills & tests
+
+Some skills bundle runnable scripts (not just instructions):
+
+- **`blog-image`** — `optimize_image.py` (screenshot → hero/OG WebP) and `og_card.py`
+  (title → branded 1200×630 card). Pure-Python (Pillow); runs in the Claude Desktop
+  sandbox. See `skills/blog-image/examples/sample-og.webp`.
+- **`web-video`** — `optimize_video.sh` (screen recording → web-ready H.264 + poster + GIF).
+  Needs `ffmpeg`.
+
+Run their tests (dep-aware — each self-skips when its deps are missing):
+
+```sh
+bash tests/run.sh                  # all skill tests
+bash tests/test_blog_image.sh      # needs Pillow (or uv) — checks preset dims + WebP output
+bash tests/test_web_video.sh       # needs ffmpeg — checks H.264, faststart, audio strip, poster/gif
+```
+
+CI runs them on every push to `skills/**` or `tests/**` via
+[`.github/workflows/test-skills.yml`](.github/workflows/test-skills.yml)
+(installs `ffmpeg` + `uv`).
+
+### Install a skill globally (Claude Code)
+
+```sh
+cp -R skills/blog-image ~/.claude/skills/blog-image
+cp -R skills/web-video  ~/.claude/skills/web-video
+```
+
+For Claude Desktop: upload the skill folder (SKILL.md + scripts) via Settings → Skills.
+
 ## Key Principles
 
 1. **Bun-first** — Use Bun as the default JS/TS runtime; never mix package managers
