@@ -34,6 +34,17 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── testing-gates.md        # What actually enforces anything; un-hangable tests
 │   ├── layer-boundaries.md     # 4-layer direction as a test; opening a god module
 │   └── …                       # 15 rules total — see rules/README.md
+├── gates/                      # The tooling the rules reference
+│   ├── rust/                   # 9 crates, 3 deps, 79 tests — one cargo workspace
+│   │   ├── staged-scope/       # which gates does this diff need? default-deny
+│   │   ├── check-test-hangs/   # no unbounded blocking I/O in tests
+│   │   ├── fmt-check/          # whole-repo rustfmt WITHOUT invoking cargo
+│   │   ├── render-agent-docs/  # one manifest → CLAUDE.md + AGENTS.md, --check
+│   │   └── …                   # rust-effective-diff, target-sweep, graph-audit
+│   ├── sh/                     # hook glue: run_gate, dead-branch guard, worktrees
+│   ├── ts/                     # RemoteState<T> + its backstop gate, git keepalive
+│   ├── gates.toml              # scopes, inert paths, test-hang tiers
+│   └── examples/pre-push       # a worked hook wiring all of it together
 ├── configs/                    # Reference configurations
 │   ├── settings.json           # Global settings reference
 │   ├── settings.local.json     # Project permission patterns
@@ -60,6 +71,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | Topic | File | Summary |
 |-------|------|---------|
 | **Portable Rules** | [rules/README.md](rules/README.md) | 15 stack-agnostic rule fragments, each with the incident that produced it |
+| **Gates** | [gates/README.md](gates/README.md) | The tooling the rules reference — hooks, scope classifier, drift check |
 | **Getting Started** | [configs/settings.json](configs/settings.json) | Global settings with extended thinking, LSP, status line |
 | **Skills (full source)** | [skills/](skills/) | 11 skills with SKILL.md + all reference files |
 | **CLAUDE.md Templates** | [templates/](templates/) | Battle-tested templates for different project types |
@@ -110,3 +122,4 @@ For Claude Desktop: upload the skill folder (SKILL.md + scripts) via Settings �
 7. **Ralph TUI for orchestration** — PRD → Beads → parallel agent execution for larger features
 8. **Rules by reference, never by copy** — `@`-import from `~/.claude/rules/`; pasted rules drift
 9. **Every rule carries its incident** — a bare prohibition gets rationalized away; a cost does not
+10. **A rule without a gate is advice** — where no CI check can be required, the pre-push hook is the only enforcement there is

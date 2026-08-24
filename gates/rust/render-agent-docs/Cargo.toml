@@ -1,0 +1,25 @@
+# render-agent-docs — generate CLAUDE.md and AGENTS.md from ONE manifest.
+#
+# Hand-maintained twins drift, and the drift is silent. The repo these gates come
+# from had an AGENTS.md that was a stale fork of its CLAUDE.md: it pointed agents
+# at a rules directory that had never existed under that name. Nothing failed;
+# the file simply told a second class of reader something untrue for months.
+#
+# So: one manifest, N rendered targets, and a `--check` mode that fails when a
+# target on disk differs from what the manifest says it should be.
+[package]
+name = "render-agent-docs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "render-agent-docs"
+path = "src/main.rs"
+
+[dependencies]
+gates-config = { workspace = true }
+
+[lints]
+workspace = true

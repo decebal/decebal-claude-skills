@@ -1,0 +1,41 @@
+# The gate binaries.
+#
+# One workspace so a consumer can build every gate with a single command and get
+# one lockfile:
+#
+#     cargo build --release --manifest-path gates/rust/Cargo.toml
+#     cargo install --path gates/rust/fmt-check      # or any single gate
+#
+# Kept deliberately small (rules/dependency-hygiene.md): three of the nine crates
+# declare no dependency at all, two more depend only on the in-workspace config
+# reader, and the whole workspace resolves three EXTERNAL crates —
+# `regex`, `serde_json`, `proc-macro2`. Config is read by `gates-config`, a
+# dependency-free reader for the TOML subset these gates use, rather than by
+# pulling `toml` + `serde` into every gate that wants one string.
+[workspace]
+resolver = "2"
+members = [
+  "check-no-id-refs",
+  "check-test-hangs",
+  "fmt-check",
+  "gates-config",
+  "graph-audit",
+  "render-agent-docs",
+  "rust-effective-diff",
+  "staged-scope",
+  "target-sweep",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+gates-config = { path = "gates-config" }
+regex = "1"
+serde_json = "1"
+proc-macro2 = { version = "1", default-features = false }
+
+[workspace.lints.clippy]
+absolute_paths = "warn"

@@ -69,8 +69,8 @@ member needs its own dependency install, or its gate fails for a reason that has
 nothing to do with the diff.
 
 ```bash
-tooling/scripts/check-branch-not-merged.sh   # dead-branch guard, runs first
-tooling/scripts/staged-scope.sh --range "$BASE"   # only run the gates the diff touches
+gates/sh/check-branch-not-merged.sh              # dead-branch guard, runs first
+staged-scope --range "$BASE"                     # run only the gates this diff touches
 ```
 
 ## Conventions

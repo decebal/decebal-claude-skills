@@ -1,0 +1,36 @@
+# agent-docs.toml — one manifest, every agent-instruction file.
+#
+# `render-agent-docs` writes each [targets.*] from the rules list plus the
+# overlay. `render-agent-docs --check` fails when a target on disk differs, which
+# is what belongs in the pre-push hook.
+#
+# Hand-maintained twins drift, and the drift is silent: the repo these gates come
+# from had an AGENTS.md that was a stale fork of its CLAUDE.md, pointing agents
+# at a rules directory that had never existed under that name. Nothing failed; it
+# simply told a second class of reader something untrue for months.
+
+# The rule fragments this repo loads, in order. Names from rules/README.md.
+rules = [
+  "git-discipline",
+  "evidence-discipline",
+  "definition-of-done",
+  "comments",
+  "token-efficiency",
+  "testing-gates",
+]
+
+# Where the rendered `@` imports point. Machine-wide rules live in
+# `~/.claude/rules`; a repo that vendors its own can point at `.claude/rules`.
+rules_dir = "~/.claude/rules"
+
+# This repo's own instructions — stack, commands, boundaries. Everything that is
+# NOT a portable rule goes here, and both targets share it.
+overlay = "docs/agent-overlay.md"
+
+[targets.claude]
+path  = "CLAUDE.md"
+title = "CLAUDE.md — Acme instructions"
+
+[targets.agents]
+path  = "AGENTS.md"
+title = "AGENTS.md — Acme instructions"
