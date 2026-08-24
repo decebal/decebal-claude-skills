@@ -1,11 +1,11 @@
 ---
-name: ralph-tui-cn-prd
-description: "Generate a Product Requirements Document (PRD) for ralph-tui task orchestration using chronis (cn CLI). Creates PRDs with user stories that can be converted to beads for automated execution. Triggers on: create a prd, write prd for, plan this feature, requirements for, spec out, cn prd."
+name: claude-cn-prd
+description: "Generate a Product Requirements Document (PRD) for claude task orchestration using chronis (cn CLI). Creates PRDs with user stories that can be converted to beads for automated execution. Triggers on: create a prd, write prd for, plan this feature, requirements for, spec out, cn prd."
 ---
 
-# Ralph TUI PRD Generator (chronis)
+# Claude Code PRD Generator (chronis)
 
-Create detailed Product Requirements Documents optimized for AI agent execution via ralph-tui with the chronis (`cn`) CLI.
+Create detailed Product Requirements Documents optimized for AI agent execution via claude with the chronis (`cn`) CLI.
 
 ---
 
@@ -118,7 +118,7 @@ Specific, measurable objectives (bullet list).
 
 ### 3. Quality Gates (Two Tiers)
 
-**CRITICAL:** Split gates into two tiers. The conversion tool (ralph-tui-cn-beads) reads this section directly.
+**CRITICAL:** Split gates into two tiers. The conversion tool (claude-cn-beads) reads this section directly.
 
 ```markdown
 ## Quality Gates
@@ -291,7 +291,7 @@ Remaining questions or areas needing clarification.
 
 ## Writing for AI Agents
 
-The PRD will be executed by AI coding agents via ralph-tui. Therefore:
+The PRD will be executed by AI coding agents via claude. Therefore:
 
 - Be explicit and unambiguous
 - User stories should be small (completable in one agent context window)
@@ -375,10 +375,10 @@ The PRD will be executed by AI coding agents via ralph-tui. Therefore:
 **Assistant:** Perfect, I have enough to generate the PRD.
 
 [PRD]
-# PRD: Dark Mode for Ralph TUI
+# PRD: Dark Mode for Claude Code
 
 ## Overview
-Add dark mode support to ralph-tui to reduce eye strain during long orchestration sessions. The feature will apply to all TUI components and persist the user's preference in the config file.
+Add dark mode support to claude to reduce eye strain during long orchestration sessions. The feature will apply to all TUI components and persist the user's preference in the config file.
 
 ## Goals
 - Provide a comfortable viewing experience in low-light environments
@@ -401,7 +401,7 @@ General codebase checks that run ONCE when all stories are done:
 **Description:** As a user, I want to set my preferred theme (light/dark) so that it persists across sessions.
 
 **Acceptance Criteria:**
-- [ ] Add `theme` field to `.ralph-tui.yaml` schema
+- [ ] Add `theme` field to `.claude.yaml` schema
 - [ ] Support values: "light", "dark", "system"
 - [ ] Default to "light" for backwards compatibility
 - [ ] Verify field is read correctly by loading config in test
@@ -438,13 +438,13 @@ Mark each item [x] as you complete it. Only close when all are checked.
 **Acceptance Criteria:**
 - [ ] Theme option visible in settings view
 - [ ] Changes apply immediately without restart (verify visually)
-- [ ] Changes persist to config file (verify by reading `.ralph-tui.yaml` after toggle)
+- [ ] Changes persist to config file (verify by reading `.claude.yaml` after toggle)
 - [ ] Verify in browser using dev-browser skill
 
 Mark each item [x] as you complete it. Only close when all are checked.
 
 ## Functional Requirements
-- FR-1: Theme setting must be readable from `.ralph-tui.yaml`
+- FR-1: Theme setting must be readable from `.claude.yaml`
 - FR-2: Theme must apply on TUI startup
 - FR-3: Theme changes in settings must apply immediately
 - FR-4: All text must maintain readability in both themes

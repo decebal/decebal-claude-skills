@@ -1,13 +1,13 @@
 ---
-name: ralph-tui-create-beads-rust
-description: "Convert PRDs to beads for ralph-tui execution using beads-rust (cn CLI). Creates an epic with child beads for each user story. Use when you have a PRD and want to use ralph-tui with beads-rust as the task source. Triggers on: create beads, convert prd to beads, beads for ralph, ralph beads, br beads, cn beads."
+name: claude-cn-beads
+description: "Convert PRDs to beads for claude execution using chronis (cn CLI). Creates an epic with child beads for each user story. Use when you have a PRD and want to use claude with chronis as the task source. Triggers on: create beads, convert prd to beads, cn beads, cn create."
 ---
 
-# Ralph TUI - Create Beads (chronis)
+# Claude Code - Create Beads (chronis)
 
-Converts PRDs to beads (epic + child tasks) for ralph-tui autonomous execution using **chronis** (`cn` CLI).
+Converts PRDs to beads (epic + child tasks) for claude autonomous execution using **chronis** (`cn` CLI).
 
-> **Note:** This skill uses the `cn` command from chronis (formerly beads-rust/`br`). If you have the original beads (`bd`) installed instead, use the `ralph-tui-create-beads` skill.
+> **Note:** This skill uses the `cn` command from chronis. If you have the original beads (`bd`) installed instead, use the `claude-create-beads` skill. If you have beads-rust (`br`), use the `claude-create-beads-rust` skill.
 
 ---
 
@@ -19,7 +19,7 @@ Take a PRD (markdown file or text) and create beads using `cn` commands:
 3. Create an **epic** bead (with epic-level quality gates)
 4. Create **child beads** for each user story (with story-specific acceptance criteria only)
 5. Set up **dependencies** between beads (schema → backend → UI)
-6. Output ready for `ralph-tui run --tracker chronis`
+6. Output ready for `claude "work the ready beads: cn ready --toon, claim each, implement, run its quality gates, cn done"`
 
 ---
 
@@ -155,7 +155,7 @@ Each bead's description contains `- [ ]` checkboxes. The agent must:
 
 1. Work through each criterion
 2. Verify it is satisfied (run a command, check output, inspect code)
-3. Mark it `- [x]` in the bead description (via `cn edit` or comment)
+3. Mark it `- [x]` in the bead description (via `cn edit --toon` or comment)
 4. Only close the bead when ALL items are `- [x]`
 
 ### Writing verifiable criteria
@@ -182,7 +182,7 @@ Beads use `cn create` command with **HEREDOC syntax** to safely handle special c
 
 ```bash
 # Create epic with epic-level quality gates
-cn create --type=epic \
+cn create --toon --type=epic \
   --title="[Feature Name]" \
   --description="$(cat <<'EOF'
 [Feature description from PRD]
@@ -193,10 +193,10 @@ cn create --type=epic \
 - [ ] `bun lint` passes
 EOF
 )" \
-  --external-ref="prd:./tasks/feature-name-prd.md"
+  --external-ref="prd:./docs/proposals/feature-name-prd.md"
 
 # Create child bead with story-specific criteria only
-cn create \
+cn create --toon \
   --parent=EPIC_ID \
   --title="[Story Title]" \
   --description="$(cat <<'EOF'
@@ -219,9 +219,9 @@ EOF
 
 ## Story Size: The #1 Rule
 
-**Each story must be completable in ONE ralph-tui iteration (~one agent context window).**
+**Each story must be completable in ONE claude iteration (~one agent context window).**
 
-ralph-tui spawns a fresh agent instance per iteration with no memory of previous work. If a story is too big, the agent runs out of context before finishing.
+claude spawns a fresh agent instance per iteration with no memory of previous work. If a story is too big, the agent runs out of context before finishing.
 
 ### Right-sized stories:
 - Add a database column + migration
@@ -253,8 +253,8 @@ Stories execute in dependency order. Earlier stories must not depend on later on
 ## Dependencies with `cn dep add`
 
 ```bash
-cn dep add ralph-tui-002 ralph-tui-001  # US-002 depends on US-001
-cn dep add ralph-tui-003 ralph-tui-002  # US-003 depends on US-002
+cn dep add --toon feature-002 feature-001  # US-002 depends on US-001
+cn dep add --toon feature-003 feature-002  # US-003 depends on US-002
 ```
 
 **Syntax:** `cn dep add <issue> <depends-on>` — the issue depends on (is blocked by) depends-on.
@@ -272,7 +272,7 @@ cn dep add ralph-tui-003 ralph-tui-002  # US-003 depends on US-002
 7. **First story**: No dependencies (creates foundation)
 8. **Subsequent stories**: Depend on their predecessors
 9. **Priority**: Based on dependency order, then document order (1=high, 2=medium, 3=low)
-11. **All stories**: Include the instruction to mark items `[x]` and only close when all checked
+10. **All stories**: Include the instruction to mark items `[x]` and only close when all checked
 
 ---
 
@@ -317,7 +317,7 @@ For UI stories:
 **Output beads:**
 ```bash
 # Create epic with epic-level quality gates
-cn create --type=epic \
+cn create --toon --type=epic \
   --title="Friends Outreach Track" \
   --description="$(cat <<'EOF'
 Warm outreach for deck feedback.
@@ -326,10 +326,10 @@ Warm outreach for deck feedback.
 - [ ] `task ci` passes (includes typecheck + lint)
 EOF
 )" \
-  --external-ref="prd:./tasks/friends-outreach-prd.md"
+  --external-ref="prd:./docs/proposals/friends-outreach-prd.md"
 
 # US-001: Schema story (no browser gate, no deps)
-cn create --parent=ralph-tui-abc \
+cn create --toon --parent=feature-abc \
   --title="US-001: Add investorType field to investor table" \
   --description="$(cat <<'EOF'
 As a developer, I need to categorize investors as 'cold' or 'friend'.
@@ -345,7 +345,7 @@ EOF
   --priority=1
 
 # US-002: UI story (includes browser verification gate)
-cn create --parent=ralph-tui-abc \
+cn create --toon --parent=feature-abc \
   --title="US-002: Add type toggle to investor list rows" \
   --description="$(cat <<'EOF'
 As Ryan, I want to toggle investor type directly from the list.
@@ -361,10 +361,10 @@ EOF
 )" \
   --priority=2
 
-cn dep add ralph-tui-002 ralph-tui-001
+cn dep add --toon feature-002 feature-001
 
 # US-003: UI story (includes browser verification gate)
-cn create --parent=ralph-tui-abc \
+cn create --toon --parent=feature-abc \
   --title="US-003: Filter investors by type" \
   --description="$(cat <<'EOF'
 As Ryan, I want to filter the list to see just friends or cold.
@@ -379,7 +379,7 @@ EOF
 )" \
   --priority=3
 
-cn dep add ralph-tui-003 ralph-tui-002
+cn dep add --toon feature-003 feature-002
 ```
 
 ---
@@ -389,7 +389,7 @@ cn dep add ralph-tui-003 ralph-tui-002
 After creating beads, sync to export to JSONL (for git tracking):
 
 ```bash
-cn sync --flush-only
+cn sync --toon --flush-only
 ```
 
 ---
@@ -398,16 +398,16 @@ cn sync --flush-only
 
 Beads are stored in: `.beads/` directory (SQLite DB + JSONL export)
 
-After creation, run ralph-tui:
+After creation, run claude:
 ```bash
-ralph-tui run --tracker chronis --epic ralph-tui-abc
+claude "work the ready beads under epic feature-abc: cn ready --toon, claim each, implement, run its quality gates, cn done"
 ```
 
-ralph-tui will:
+claude will:
 1. Pick an unblocked bead, spawn an agent
 2. Agent works through each `- [ ]` item, marking `- [x]` as verified
 3. Agent closes the bead only when all criteria are `- [x]`
-4. When all child beads are closed, ralph-tui runs epic-level quality gates
+4. When all child beads are closed, Claude runs the epic-level quality gates
 5. If epic gates pass, closes the epic and outputs `<promise>COMPLETE</promise>`
 6. If epic gates fail, creates a fix-up bead to address the failures
 
@@ -425,16 +425,30 @@ ralph-tui will:
 - [ ] Each story includes "Mark each item [x]..." instruction
 - [ ] Stories are right-sized (one agent context window)
 - [ ] Dependencies set with `cn dep add`
-- [ ] Ran `cn sync --flush-only`
+- [ ] Ran `cn sync --toon --flush-only`
 
 ---
 
-## Differences from beads (Go version)
+## CLI Command Reference
 
-| Command | beads (`bd`) | chronis (`cn`) |
-|---------|--------------|----------------|
-| Create | `bd create` | `cn create` |
-| Dependencies | `bd dep add` | `cn dep add` |
-| Sync | `bd sync` | `cn sync --flush-only` |
-| Close | `bd close` | `cn close` |
-| Storage | `.beads/beads.jsonl` | `.beads/*.db` + JSONL export |
+| Command | Purpose |
+|---------|---------|
+| `cn create --toon` | Create a new bead (epic or story) |
+| `cn create --toon --type=epic` | Create an epic bead |
+| `cn create --toon --parent=ID` | Create a child bead under an epic |
+| `cn dep add --toon <issue> <blocked-by>` | Add a dependency |
+| `cn sync --toon --flush-only` | Export to JSONL for git tracking |
+| `cn close --toon <id>` | Close a completed bead |
+| `cn edit --toon <id>` | Edit a bead's description |
+
+---
+
+## Differences from other beads CLIs
+
+| Command | beads (`bd`) | beads-rust (`br`) | chronis (`cn`) |
+|---------|--------------|-------------------|----------------|
+| Create | `bd create` | `br create` | `cn create --toon` |
+| Dependencies | `bd dep add` | `br dep add` | `cn dep add --toon` |
+| Sync | `bd sync` | `br sync --flush-only` | `cn sync --toon --flush-only` |
+| Close | `bd close` | `br close` | `cn close --toon` |
+| Storage | `.beads/beads.jsonl` | `.beads/*.db` + JSONL | `.chronis/` (WAL + Parquet) |

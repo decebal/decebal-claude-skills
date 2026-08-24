@@ -97,7 +97,7 @@ bodies only on invocation, and stay loaded for the rest of the session once used
 
 ## Agent Task Sizing
 
-For Ralph TUI / parallel execution:
+For Claude Code / parallel execution:
 - One concern per agent task
 - Clear file scope per task
 - Self-contained acceptance criteria

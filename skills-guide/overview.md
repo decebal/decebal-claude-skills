@@ -21,13 +21,13 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 | **brainstorming** | Explore ideas before implementation | Any creative/feature work (auto-triggers) |
 | **feature-spec** | PRDs, requirements, scope management | "write prd", "define requirements" |
 | **create-plans** | Hierarchical Claude-executable project plans; ships `/create-prompt` + `/run-prompt` | "plan this project", "create-prompt", "phase plan" |
-| **ralph-tui-prd** | PRDs optimized for agent execution | "create a prd", "plan this feature" |
+| **claude-prd** | PRDs optimized for agent execution | "create a prd", "plan this feature" |
 
 ### Task Orchestration
 
 | Skill | Purpose | Trigger Phrases |
 |-------|---------|-----------------|
-| **ralph-tui-create-beads-rust** | Convert PRDs to executable beads | "create beads", "convert prd to beads" |
+| **claude-create-beads-rust** | Convert PRDs to executable beads | "create beads", "convert prd to beads" |
 
 ### Meta
 
@@ -49,8 +49,8 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 ├── feature-spec -> ~/.agents/skills/feature-spec
 ├── find-skills -> ~/.agents/skills/find-skills
 ├── mcp-builder -> ~/.agents/skills/mcp-builder
-├── ralph-tui-create-beads-rust -> ~/.agents/skills/ralph-tui-create-beads-rust
-└── ralph-tui-prd -> ~/.agents/skills/ralph-tui-prd
+├── claude-create-beads-rust -> ~/.agents/skills/claude-create-beads-rust
+└── claude-prd -> ~/.agents/skills/claude-prd
 ```
 
 ## Installing Skills

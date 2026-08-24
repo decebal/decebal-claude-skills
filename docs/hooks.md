@@ -21,8 +21,8 @@ Two available styles:
 - **learning-output-style** — Interactive learning with questions and exercises
 - **explanatory-output-style** — Educational insights with context and reasoning
 
-### Ralph Loop Detection (Stop)
-Prevents self-referential loops where Claude agents call themselves endlessly. Critical for Ralph TUI orchestration.
+### Self-referential loop detection (Stop)
+Prevents self-referential loops where Claude agents call themselves endlessly. Critical for Claude Code orchestration.
 
 ## Guard-rail hooks (`hooks/`)
 

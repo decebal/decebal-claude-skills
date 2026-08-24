@@ -20,8 +20,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── feature-spec/           # PRDs, requirements, scope (42 rules)
 │   ├── find-skills/            # Skill discovery & install
 │   ├── mcp-builder/            # MCP server creation guide
-│   ├── ralph-tui-create-beads-rust/  # PRD → beads conversion
-│   ├── ralph-tui-prd/          # PRD generation for agent execution
+│   ├── claude-create-beads-rust/  # PRD → beads conversion
+│   ├── claude-prd/             # PRD generation for agent execution
 │   ├── skill-creator/          # How to author skills
 │   ├── typescript/             # TS optimization (42 rules)
 │   └── web-video/              # Screen recording → web-ready H.264 demo (+ poster/GIF) via ffmpeg (bundled script)
@@ -64,7 +64,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 ├── skills-guide/               # Skills authoring & usage
 │   ├── overview.md             # Installed skills inventory
 │   ├── creating-skills.md      # How to create custom skills
-│   └── ralph-tui-workflow.md   # PRD → Beads → Execution pipeline
+│   └── claude-workflow.md      # PRD → Beads → Execution pipeline
 ├── docs/                       # Deep dives
 │   ├── mcp-servers.md          # MCP server integrations
 │   ├── hooks.md                # Hooks configuration
@@ -82,7 +82,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **Getting Started** | [configs/settings.json](configs/settings.json) | Global settings with extended thinking, LSP, status line |
 | **Skills (full source)** | [skills/](skills/) | 11 skills with SKILL.md + all reference files |
 | **CLAUDE.md Templates** | [templates/](templates/) | Battle-tested templates for different project types |
-| **Skills Guide** | [skills-guide/overview.md](skills-guide/overview.md) | Skills inventory, authoring guide, Ralph TUI workflow |
+| **Skills Guide** | [skills-guide/overview.md](skills-guide/overview.md) | Skills inventory, authoring guide, PRD → beads pipeline |
 | **MCP Servers** | [docs/mcp-servers.md](docs/mcp-servers.md) | GitHub, Linear, Slack, Supabase, Firebase, and more |
 | **Permissions** | [docs/permissions.md](docs/permissions.md) | Granular command allowlists by project type |
 | **Token Efficiency** | [docs/token-efficiency.md](docs/token-efficiency.md) | Patterns for staying within context limits |
@@ -133,7 +133,7 @@ For Claude Desktop: upload the skill folder (SKILL.md + scripts) via Settings �
 4. **CLAUDE.md as source of truth** — Every project gets a CLAUDE.md with stack, commands, and conventions
 5. **Skills for repeatable workflows** — Extract common patterns into reusable skills
 6. **Extended thinking always on** — Better reasoning for complex tasks
-7. **Ralph TUI for orchestration** — PRD → Beads → parallel agent execution for larger features
+7. **No separate orchestrator** — PRD → beads → Claude works the ready ones itself; parallelism is one worktree per agent
 8. **Rules by reference, never by copy** — `@`-import from `~/.claude/rules/`; pasted rules drift
 9. **Every rule carries its incident** — a bare prohibition gets rationalized away; a cost does not
 10. **A rule without a gate is advice** — where no CI check can be required, the pre-push hook is the only enforcement there is

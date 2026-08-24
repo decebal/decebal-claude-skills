@@ -44,7 +44,7 @@ trigger: keyword1, keyword2, phrase to match
 
 ## Examples from Installed Skills
 
-### Questionnaire Pattern (ralph-tui-prd)
+### Questionnaire Pattern (claude-prd)
 Ask lettered clarifying questions (A, B, C, D) before generating output. Adapt follow-up questions based on answers.
 
 ### Multi-phase Workflow (mcp-builder)
