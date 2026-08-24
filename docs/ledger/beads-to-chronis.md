@@ -71,14 +71,44 @@ scalar, and a bigger correctness problem than the paths were.
 lines, 57 fences, seven places where a tagged fence lands as a closer. Pre-existing,
 untouched here, and already documented in the fence pass.
 
-**The global copies will drift again.** `~/.claude/skills/create-plans` and
-`~/.agents/skills/create-plans` are directories, not symlinks, so every repo fix
-has to be applied three times. The four `claude-*` skills next to them ARE
-symlinks and needed no second edit. Making the rest links would close this class.
+**The global copies drift, and linking them is NOT the fix.** An earlier draft of
+this ledger said it was. That was wrong, and the correction is worth more than
+the original claim.
+
+`~/.claude/skills/create-plans` and `~/.agents/skills/create-plans` are
+directories, not symlinks, so a repo fix has to be applied three times — which is
+how the `.beads` line got fixed in the `~/.agents` copy while a dead
+`create-agent-skills` link two files over did not.
+
+But `~/.agents/skills/` is **Codex's** root, loaded via `HOME`, and its copy is
+deliberately different: *"tasks that **Codex** will execute"*, *"**Codex**-executable
+plans"*. Linking it to the repo would tell Codex that Claude runs its plans.
+
+The same asymmetry defeats a blanket sync. The repo now points readers at
+`skill-creator`; that skill exists in `~/.claude/skills` and does **not** exist in
+the Codex root, so copying the fix across would have traded one dead link for
+another. The Codex copy names `find-skills` instead, which is installed there.
+
+Of the seven skills present in both the repo and the Codex root, **six differ**,
+and several carry files the repo does not have — `dev-browser` alone has a
+`node_modules` and 484 MB of browser `profiles`. Exactly one, `find-skills`, is
+byte-identical and could be linked without loss.
 
 **`~/.agents/skills/` still holds pre-rename skills** — `ralph-tui-create-beads-rust`,
 `ralph-tui-create-json`, `ralph-tui-prd`. The rename landed in the repo and in
 `~/.claude/skills`; it never reached this root.
+
+## Instrument notes
+
+Two ways the measurement lied, both caught, both worth knowing:
+
+- **`rtk`'s `diff` wrapper reported "Files are identical" for files that differ.**
+  `diff -rq` flagged the pair, per-file `diff` called them identical, and `cmp`
+  settled it: char 4754, line 155. Any conclusion drawn from the wrapper alone
+  would have been backwards.
+- **The counter counted this ledger.** A document about `.beads` is citations, not
+  claims. `docs/ledger/` is excluded — it postdates the frozen corpus rather than
+  being carved out of it.
 
 ## Method note
 
