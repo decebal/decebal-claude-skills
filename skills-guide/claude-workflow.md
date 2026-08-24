@@ -1,13 +1,17 @@
-# Ralph TUI Workflow: PRD → Beads → Execution (chronis)
+# PRD → Beads → Execution
 
-Ralph TUI orchestrates parallel Claude agents for larger features. The workflow has three stages.
+Three stages for a feature too big to hold in one context: write it down, split
+it into tracked units, then work them.
+
+There is no separate orchestrator. Claude reads the ready beads itself, and
+parallelism is one worktree per agent — see
+[`rules/agent-parallelism.md`](../rules/agent-parallelism.md).
 
 ## Pipeline Overview
 
 ```
-1. PRD Generation     →  2. Beads Creation     →  3. Parallel Execution
-   (ralph-tui-cn-prd)     (ralph-tui-cn-beads)     (ralph-tui run
-                                                     --tracker chronis)
+1. PRD Generation   →   2. Beads Creation           →   3. Execution
+   (claude-prd)           (claude-create-beads-rust)      (claude, reading `cn ready`)
 ```
 
 ## Stage 1: PRD Generation
@@ -59,10 +63,10 @@ cn dep add <story-id> <dependency-id>
 ## Stage 3: Execution
 
 ```bash
-ralph-tui run --tracker chronis
+claude "work the ready beads: cn ready --toon, claim each, implement, run its quality gates, cn done"
 ```
 
-Ralph TUI:
+Claude Code:
 1. Reads beads and their dependencies
 2. Launches parallel Claude agents for independent stories
 3. Runs story-level quality gates after each completion
@@ -85,6 +89,6 @@ claude "create a prd for user authentication with OAuth"
 # 2. Create beads from PRD
 claude "create beads from ./tasks/prd-user-auth.md"
 
-# 3. Execute with ralph-tui
-ralph-tui run --tracker chronis
+# 3. Execute with claude
+claude "work the ready beads: cn ready --toon, claim each, implement, run its quality gates, cn done"
 ```

@@ -1,13 +1,18 @@
-# Ralph TUI Workflow: PRD → Beads → Execution
+# PRD → Beads → Execution (chronis)
 
-Ralph TUI orchestrates parallel Claude agents for larger features. The workflow has three stages.
+Three stages for a feature too big to hold in one context: write it down, split
+it into tracked units, then work them.
+
+There is no separate orchestrator. Claude reads the ready beads itself, and
+parallelism is one worktree per agent — see
+[`rules/agent-parallelism.md`](../rules/agent-parallelism.md), which also covers
+when splitting is worth it and when it costs more in merge than it saves.
 
 ## Pipeline Overview
 
 ```
-1. PRD Generation     →  2. Beads Creation     →  3. Parallel Execution
-   (ralph-tui-prd)        (ralph-tui-create-       (ralph-tui run
-                           beads-rust)               --tracker chronis)
+1. PRD Generation   →   2. Beads Creation   →   3. Execution
+   (claude-cn-prd)        (claude-cn-beads)      (claude, reading `cn ready`)
 ```
 
 ## Stage 1: PRD Generation
@@ -50,7 +55,7 @@ cn create --title "Story 1: ..." --body "..." --parent <epic-id> --label story
 cn dep add <story-id> <dependency-id>
 ```
 
-**Output:** Beads in `.beads/` directory with:
+**Output:** Beads in `.chronis/` with:
 - Acceptance criteria as verifiable checkboxes
 - Story-specific quality gate commands
 - Dependencies between stories
@@ -59,14 +64,20 @@ cn dep add <story-id> <dependency-id>
 ## Stage 3: Execution
 
 ```bash
-ralph-tui run --tracker chronis
+claude "work the ready beads: cn ready --toon, claim each, implement, run its quality gates, cn done"
 ```
 
-Ralph TUI:
-1. Reads beads and their dependencies
-2. Launches parallel Claude agents for independent stories
-3. Runs story-level quality gates after each completion
-4. Runs epic-level quality gates when all stories pass
+Claude then:
+1. Reads the ready beads and their dependencies (`cn ready --toon` shows only
+   unblocked, unclaimed work)
+2. Claims one before starting it — the claim is what stops two sessions doing
+   the same bead
+3. Runs that story's quality gates before `cn done`
+4. Runs the epic-level gates when every child bead is closed
+
+Independent stories can go to concurrent agents, one worktree each. Split by
+disjoint file sets, never by concept, and never run two builds at once —
+[`rules/agent-parallelism.md`](../rules/agent-parallelism.md) has the measurements.
 
 ## Story Sizing
 
@@ -85,6 +96,6 @@ claude "create a prd for user authentication with OAuth"
 # 2. Create beads from PRD
 claude "create beads from ./tasks/prd-user-auth.md"
 
-# 3. Execute with ralph-tui
-ralph-tui run --tracker chronis
+# 3. Work them
+claude "work the ready beads: cn ready --toon, claim each, implement, run its quality gates, cn done"
 ```
