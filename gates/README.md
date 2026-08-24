@@ -16,6 +16,7 @@ braces**. See [rules/testing-gates.md](../rules/testing-gates.md).
 | [`sh/check-branch-not-merged.sh`](sh/check-branch-not-merged.sh) | bash | Refuses a push to a squash-merged (dead) branch. Fails OPEN with no `gh` |
 | [`sh/hook-gate-lib.sh`](sh/hook-gate-lib.sh) | bash | `run_gate` — the 300s ceiling, the clamp, the bounded runner, the cold-cache probe and warm-up |
 | [`sh/agent-worktree.sh`](sh/agent-worktree.sh) | bash | One isolated worktree per agent, seeded from [`worktree-seed.conf`](worktree-seed.conf) and verified on disk |
+| [`rust/claude-guard`](rust/claude-guard) | Rust | The three guard-rail hooks, plus the trust helper — see [hooks/README.md](../hooks/README.md) |
 | [`rust/staged-scope`](rust/staged-scope) | Rust | Which gates does this diff actually need? Default-deny: anything unmatched is `unknown` |
 | [`rust/check-no-id-refs`](rust/check-no-id-refs) | Rust | No task-tracker ids in source comments — they mean nothing without the tracker |
 | [`rust/check-test-hangs`](rust/check-test-hangs) | Rust | Rejects unbounded real blocking I/O in test files, at authoring time |
@@ -32,8 +33,9 @@ braces**. See [rules/testing-gates.md](../rules/testing-gates.md).
 
 Default is Rust. The exceptions each have a reason:
 
-- **`hook-gate-lib.sh` is SOURCED by the hooks.** It defines shell functions the
-  hook body calls; nothing else can.
+- **`hook-gate-lib.sh` is SOURCED by the git hooks.** It defines shell functions
+  the hook body calls; nothing else can. (The *agent* guard-rail hooks are a
+  different thing entirely, and they are Rust — see `claude-guard`.)
 - **`check-branch-not-merged.sh` runs before anything is built.** It is the one
   gate that must never be skippable, on a fresh clone with no toolchain, so it
   cannot be a binary that has to be compiled first.
@@ -63,10 +65,11 @@ cargo install --path gates/rust/fmt-check
 cargo install --path gates/rust/rust-effective-diff
 cargo install --path gates/rust/render-agent-docs
 cargo install --path gates/rust/check-no-id-refs
+cargo install --path gates/rust/claude-guard        # the agent guard-rail hooks
 ```
 
-The workspace declares **three** external dependencies — `regex`, `serde_json`,
-`proc-macro2` — which resolve to 11 crates in the graph. Three of the nine
+The workspace declares **four** external dependencies — `regex`, `serde_json`,
+`proc-macro2`, and `sha2` for the guard's content-trust hash. Three of the ten
 members declare no dependency at all, and two more depend only on the
 in-workspace config reader
 ([rules/dependency-hygiene.md](../rules/dependency-hygiene.md)). Config is read
@@ -75,7 +78,7 @@ gates use, rather than by pulling `toml` + `serde` into a binary a git hook has
 to build.
 
 ```bash
-cargo test  --manifest-path gates/rust/Cargo.toml   # 79 tests
+cargo test  --manifest-path gates/rust/Cargo.toml   # 137 tests
 cargo clippy --manifest-path gates/rust/Cargo.toml --all-targets
 ```
 
