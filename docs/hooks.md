@@ -31,15 +31,17 @@ full pattern list in [`hooks/README.md`](../hooks/README.md):
 
 | Hook | Event | Effect |
 |------|-------|--------|
-| `infra-guard.sh` | PreToolUse, Bash | Denies live-service mutation, `terraform apply`/state surgery, storage deletion, package publishes, protected-branch force-pushes. Follows `make`/`bash`/`npm run` wrapper chains and classifies what they actually run |
-| `bash-hygiene.sh` | PreToolUse, Bash | Blocks compound commands and substitution; rewrites a repairable `2>&1` rather than blocking it |
-| `comment-hygiene.sh` | PostToolUse, Edit/Write | Feeds back comment lines an edit added, to be justified or deleted |
+| `claude-guard infra-guard` | PreToolUse, Bash | Denies live-service mutation, `terraform apply`/state surgery, storage deletion, package publishes, protected-branch force-pushes. Follows `make`/`bash`/`npm run` wrapper chains and classifies what they actually run |
+| `claude-guard bash-hygiene` | PreToolUse, Bash | Blocks compound commands and substitution; rewrites a repairable `2>&1` rather than blocking it |
+| `claude-guard comment-hygiene` | PostToolUse, Edit/Write | Feeds back comment lines an edit added, to be justified or deleted |
 
 ```sh
-cp hooks/*.sh ~/.claude/hooks/
-bash tests/test_infra_guard.sh     # 34 cases
-bash tests/test_bash_hygiene.sh    # 12 cases
+cargo install --path gates/rust/claude-guard
+cargo test --manifest-path gates/rust/Cargo.toml -p claude-guard   # 63 tests
 ```
+
+One binary rather than five shell scripts: a hook needing `jq` becomes a silent
+no-op on a machine without it, and nothing says so.
 
 ## Hook Configuration Format
 

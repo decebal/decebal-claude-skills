@@ -18,13 +18,13 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "$HOME/.claude/hooks/infra-guard.sh", "timeout": 10 }
+          { "type": "command", "command": "claude-guard infra-guard", "timeout": 10 }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "$HOME/.claude/hooks/bash-hygiene.sh", "timeout": 5 }
+          { "type": "command", "command": "claude-guard bash-hygiene", "timeout": 5 }
         ]
       }
     ],
@@ -32,7 +32,7 @@
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "$HOME/.claude/hooks/comment-hygiene.sh", "timeout": 5 }
+          { "type": "command", "command": "claude-guard comment-hygiene", "timeout": 5 }
         ]
       }
     ]

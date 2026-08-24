@@ -1,28 +1,37 @@
 # Guard-rail hooks
 
-Three hooks that make Claude Code safer and cheaper to run, plus the scanning
-library they share. Drop them in `~/.claude/hooks/` for every project, or
-`.claude/hooks/` for one.
+Three hooks that make an agent safer and cheaper to run, shipped as **one
+binary** — [`gates/rust/claude-guard`](../gates/rust/claude-guard).
 
-They need `jq`; `bash-hygiene.sh` also needs `perl`. A missing dependency makes a
-hook no-op rather than fail closed — check your tooling before relying on them.
-
-| Hook | Event | Effect |
+| Subcommand | Event | Effect |
 |---|---|---|
-| `infra-guard.sh` | PreToolUse, Bash | Denies or prompts on high-blast-radius commands, by blast radius rather than apparent simplicity |
-| `bash-hygiene.sh` | PreToolUse, Bash | Blocks compound commands, substitution and combined redirects. Rewrites a repairable `2>&1` instead of blocking it |
-| `comment-hygiene.sh` | PostToolUse, Edit/Write | Feeds back the comment lines an edit added, to be justified or deleted |
+| `claude-guard infra-guard` | PreToolUse, Bash | Denies or prompts on high-blast-radius commands, by blast radius rather than apparent simplicity |
+| `claude-guard bash-hygiene` | PreToolUse, Bash | Blocks compound commands, substitution and combined redirects. Rewrites a repairable `2>&1` instead of blocking it |
+| `claude-guard comment-hygiene` | PostToolUse, Edit/Write | Feeds back the comment lines an edit added, to be justified or deleted |
+| `claude-guard trust '<cmd>'` | — | Vet a wrapper chain, record the judgement as a content hash |
 
-`infra-guard-scan.sh` is a library, not a hook — every deny/ask pattern and the
-wrapper resolver live there, sourced by `infra-guard.sh` and
-`infra-guard-trust.sh`.
+## Why a binary and not shell
+
+These were five shell scripts needing `jq` on every firing and `perl` on every
+Bash call. Two things were wrong with that:
+
+- **A missing dependency made a hook a silent no-op.** No `jq`, no guard — and
+  nothing said so. That is the failure mode
+  [`rules/testing-gates.md`](../rules/testing-gates.md) names: a gate that runs
+  nowhere is indistinguishable from one that passes. A binary either exists or
+  the hook command fails loudly.
+- **Three process spawns before the first byte of policy**, on every Bash call
+  you make: bash, then jq, then perl.
+
+The port also made the decision matrix testable in-process. `infra-guard` returns
+a `Decision` and `main` does the exiting, so all 34 cases run as ordinary tests
+against a real lab repo instead of by spawning a script and parsing its output.
 
 ## Install
 
 ```sh
-cp hooks/*.sh ~/.claude/hooks/
+cargo install --path gates/rust/claude-guard
 cp configs/prod-guard-tokens.txt ~/.claude/prod-guard-tokens.txt   # then edit it
-chmod +x ~/.claude/hooks/*.sh
 ```
 
 Register them in `~/.claude/settings.json`:
@@ -32,19 +41,20 @@ Register them in `~/.claude/settings.json`:
   "hooks": {
     "PreToolUse": [
       { "matcher": "Bash",
-        "hooks": [{ "type": "command", "command": "$HOME/.claude/hooks/infra-guard.sh", "timeout": 10 }] },
+        "hooks": [{ "type": "command", "command": "claude-guard infra-guard", "timeout": 10 }] },
       { "matcher": "Bash",
-        "hooks": [{ "type": "command", "command": "$HOME/.claude/hooks/bash-hygiene.sh", "timeout": 5 }] }
+        "hooks": [{ "type": "command", "command": "claude-guard bash-hygiene", "timeout": 5 }] }
     ],
     "PostToolUse": [
       { "matcher": "Edit|Write|MultiEdit",
-        "hooks": [{ "type": "command", "command": "$HOME/.claude/hooks/comment-hygiene.sh", "timeout": 5 }] }
+        "hooks": [{ "type": "command", "command": "claude-guard comment-hygiene", "timeout": 5 }] }
     ]
   }
 }
 ```
 
-For a project-scoped install use `$CLAUDE_PROJECT_DIR/.claude/hooks/...` instead.
+Use the absolute path (`$HOME/.cargo/bin/claude-guard …`) if `~/.cargo/bin` is not
+on the hook's `PATH`.
 
 ## infra-guard
 
@@ -90,7 +100,7 @@ off, which defeats it.
 If a chain prompts and is genuinely safe, fix the guard or record your review:
 
 ```sh
-~/.claude/hooks/infra-guard-trust.sh '<command>'
+claude-guard trust '<command>'
 ```
 
 That hashes every resolved unit — script contents, make recipe text, package
@@ -134,11 +144,9 @@ Two rules follow, both applied here:
    because the harness captures both streams anyway. Piped and file-redirected
    forms still block: there the merge decides what the next stage reads.
 
-Measure before and after any change:
-
-```sh
-bash tests/payload_size.sh
-```
+Payload size used to be a script that PRINTED the numbers. It is now a set of
+ceilings that FAIL — a report tells you the payload grew after you shipped it,
+and only if someone runs it. See `payload_size_tests.rs`.
 
 Current: `comment-hygiene` ~57 tok, `bash-hygiene` block ~31 tok, `infra-guard`
 deny ~25 tok.
@@ -146,10 +154,10 @@ deny ~25 tok.
 ## Tests
 
 ```sh
-bash tests/test_infra_guard.sh     # 34 cases
-bash tests/test_bash_hygiene.sh    # 12 cases: allow / rewrite / block
+cargo test --manifest-path gates/rust/Cargo.toml -p claude-guard
 ```
 
-Both self-skip when `jq` or `perl` is missing. Changing a pattern means re-running
-them — the matrix covers both layers, the depth dial, the quoted-string skeleton,
-the read-only exclusions, and the rewrite guards.
+63 tests, no external dependency and nothing to skip. The matrix covers both
+layers, the depth dial, the quoted-string skeleton, the read-only exclusions, the
+rewrite guards, and the trust cache busting when a recipe changes. Changing a
+pattern means re-running them.

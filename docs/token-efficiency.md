@@ -75,12 +75,14 @@ all edits; replaced with a two-line pointer it costs ~57.
 **Prefer `updatedInput` to a block.** A PreToolUse hook can rewrite the tool input
 rather than reject it. A block costs a round trip *and* its stderr; a rewrite
 costs neither. Only rewrite where the repair cannot change what the command does
-— see the `2>&1` handling in [`hooks/bash-hygiene.sh`](../hooks/bash-hygiene.sh),
-which rewrites a trailing merge but still blocks the piped and file-redirected
-forms where the merge decides what the next stage reads.
+— see the `2>&1` handling in
+[`gates/rust/claude-guard`](../gates/rust/claude-guard/src/bash_hygiene.rs), which
+rewrites a trailing merge but still blocks the piped and file-redirected forms
+where the merge decides what the next stage reads.
 
-Measure rather than guess — [`tests/payload_size.sh`](../tests/payload_size.sh)
-prints bytes and a token estimate per firing.
+Measure rather than guess, and hold the number: `payload_size_tests.rs` FAILS when
+a payload grows past its ceiling. A script that printed the size only told you
+after you had shipped it, and only if someone ran it.
 
 ## Output Limits Worth Knowing
 

@@ -1,0 +1,61 @@
+name: gates
+
+# The guard rails moved from shell into `gates/rust/claude-guard`, and their
+# tests moved with them. `tests/run.sh` no longer covers them, so without this
+# job the 137 workspace tests would run in NO CI job at all — the failure
+# rules/testing-gates.md names: a gate that runs nowhere is indistinguishable
+# from one that passes.
+
+on:
+  push:
+    paths:
+      - "gates/**"
+      - ".github/workflows/gates.yml"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gates/rust
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt, clippy
+          cache-workspaces: gates/rust
+
+      - name: Format check
+        run: cargo fmt --all --check
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace
+
+      # The guard is the one gate here that runs on every tool call, so it gets a
+      # smoke test against the real binary as well as its unit tests: a broken
+      # argument parse would pass every in-process test and still deny nothing.
+      - name: Smoke test the guard binary
+        run: |
+          cargo build --release -p claude-guard
+          bin=target/release/claude-guard
+
+          out=$(printf '%s' '{"tool_input":{"command":"terraform apply"},"cwd":"/tmp"}' | "$bin" infra-guard)
+          case "$out" in *'"permissionDecision":"deny"'*) ;; *) echo "no deny: $out"; exit 1;; esac
+
+          out=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"gh pr list 2>&1","description":"keep"}}' | "$bin" bash-hygiene)
+          case "$out" in *'"command":"gh pr list"'*) ;; *) echo "no rewrite: $out"; exit 1;; esac
+          case "$out" in *'"description":"keep"'*) ;; *) echo "rewrite dropped a sibling field: $out"; exit 1;; esac
+
+          printf '%s' '{"tool_name":"Bash","tool_input":{"command":"ls && pwd"}}' | "$bin" bash-hygiene && { echo "chain not blocked"; exit 1; }
+
+          out=$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"ls -la"}}' | "$bin" bash-hygiene)
+          [ -z "$out" ] || { echo "clean command produced output: $out"; exit 1; }
+
+          echo "guard smoke OK"

@@ -35,7 +35,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── layer-boundaries.md     # 4-layer direction as a test; opening a god module
 │   └── …                       # 15 rules total — see rules/README.md
 ├── gates/                      # The tooling the rules reference
-│   ├── rust/                   # 9 crates, 3 deps, 79 tests — one cargo workspace
+│   ├── rust/                   # 10 crates, 4 deps, 137 tests — one cargo workspace
+│   │   ├── claude-guard/       # the guard-rail hooks: infra, bash, comments
 │   │   ├── staged-scope/       # which gates does this diff need? default-deny
 │   │   ├── check-test-hangs/   # no unbounded blocking I/O in tests
 │   │   ├── fmt-check/          # whole-repo rustfmt WITHOUT invoking cargo
@@ -45,12 +46,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── ts/                     # RemoteState<T> + its backstop gate, git keepalive
 │   ├── gates.toml              # scopes, inert paths, test-hang tiers
 │   └── examples/pre-push       # a worked git hook wiring all of it together
-├── hooks/                      # Claude Code guard-rail hooks (see hooks/README.md)
-│   ├── infra-guard.sh          # PreToolUse: blocks high-blast-radius commands
-│   ├── infra-guard-scan.sh     # Shared pattern library + wrapper-chain resolver
-│   ├── infra-guard-trust.sh    # Vet a wrapper chain, trust it by content hash
-│   ├── bash-hygiene.sh         # PreToolUse: one command per call; rewrites 2>&1
-│   └── comment-hygiene.sh      # PostToolUse: flags comments an edit added
+├── hooks/README.md             # Guard-rail hooks: install, patterns, token cost
+│                               # (the code is gates/rust/claude-guard)
 ├── configs/                    # Reference configurations
 │   ├── settings.json           # Global settings reference
 │   ├── settings.local.json     # Project permission patterns
@@ -98,18 +95,23 @@ Some skills bundle runnable scripts (not just instructions):
 - **`web-video`** — `optimize_video.sh` (screen recording → web-ready H.264 + poster + GIF).
   Needs `ffmpeg`.
 
-The `hooks/` directory is runnable too — three PreToolUse/PostToolUse guard rails
-plus their shared pattern library. See [hooks/README.md](hooks/README.md).
+The guard-rail hooks are runnable too — three PreToolUse/PostToolUse guards in one
+binary. See [hooks/README.md](hooks/README.md).
 
-Run their tests (dep-aware — each self-skips when its deps are missing):
+Run the skill tests (dep-aware — each self-skips when its deps are missing):
 
 ```sh
 bash tests/run.sh                  # everything
 bash tests/test_blog_image.sh      # needs Pillow (or uv) — checks preset dims + WebP output
 bash tests/test_web_video.sh       # needs ffmpeg — checks H.264, faststart, audio strip, poster/gif
-bash tests/test_infra_guard.sh     # needs jq — 34-case deny/ask/silent matrix
-bash tests/test_bash_hygiene.sh    # needs jq + perl — 12-case allow/rewrite/block matrix
-bash tests/payload_size.sh         # not a test — prints per-firing hook token cost
+```
+
+The guard-rail hooks are Rust, and their tests come with the workspace — no
+external dependency, nothing to skip:
+
+```sh
+cargo test --manifest-path gates/rust/Cargo.toml -p claude-guard   # 63 tests
+cargo test --manifest-path gates/rust/Cargo.toml                   # 137, every gate
 ```
 
 CI runs them on every push to `skills/**` or `tests/**` via
