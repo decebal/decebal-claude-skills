@@ -100,6 +100,12 @@ from one that passes. Both `check-test-hangs` and `check-remote-recovery` exit
 **2** when they match zero files, because a moved directory otherwise turns them
 into no-ops that print a tick.
 
+This bites the gates themselves. Moving the guard rails out of `tests/` and into
+this workspace took their tests out of the only CI job that existed, and nothing
+would have said so — `.github/workflows/gates.yml` is what puts them back. It
+also smoke-tests the real binary, because a broken argument parse passes every
+in-process test and still denies nothing.
+
 **A ceiling that gets raised instead of respected.** `GATE_TIMEOUT` may be
 lowered and is clamped at 300 — the library does not honour a higher value. A
 step that needs more than five minutes is a bug in the step
