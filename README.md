@@ -25,6 +25,15 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── skill-creator/          # How to author skills
 │   ├── typescript/             # TS optimization (42 rules)
 │   └── web-video/              # Screen recording → web-ready H.264 demo (+ poster/GIF) via ffmpeg (bundled script)
+├── rules/                      # Portable rule fragments — @-import into any CLAUDE.md
+│   ├── git-discipline.md       # Dead-branch guard, squash merges, branch/push rules
+│   ├── evidence-discipline.md  # Verify the artifact, not the exit code; read state, never guess
+│   ├── agent-parallelism.md    # Split by file count; one worktree per agent; never two builds
+│   ├── timeouts.md             # The 5-minute ceiling on every gate
+│   ├── definition-of-done.md   # End-to-end or not done; size is never a signal
+│   ├── testing-gates.md        # What actually enforces anything; un-hangable tests
+│   ├── layer-boundaries.md     # 4-layer direction as a test; opening a god module
+│   └── …                       # 15 rules total — see rules/README.md
 ├── configs/                    # Reference configurations
 │   ├── settings.json           # Global settings reference
 │   ├── settings.local.json     # Project permission patterns
@@ -50,6 +59,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 
 | Topic | File | Summary |
 |-------|------|---------|
+| **Portable Rules** | [rules/README.md](rules/README.md) | 15 stack-agnostic rule fragments, each with the incident that produced it |
 | **Getting Started** | [configs/settings.json](configs/settings.json) | Global settings with extended thinking, LSP, status line |
 | **Skills (full source)** | [skills/](skills/) | 11 skills with SKILL.md + all reference files |
 | **CLAUDE.md Templates** | [templates/](templates/) | Battle-tested templates for different project types |
@@ -98,3 +108,5 @@ For Claude Desktop: upload the skill folder (SKILL.md + scripts) via Settings �
 5. **Skills for repeatable workflows** — Extract common patterns into reusable skills
 6. **Extended thinking always on** — Better reasoning for complex tasks
 7. **Ralph TUI for orchestration** — PRD → Beads → parallel agent execution for larger features
+8. **Rules by reference, never by copy** — `@`-import from `~/.claude/rules/`; pasted rules drift
+9. **Every rule carries its incident** — a bare prohibition gets rationalized away; a cost does not

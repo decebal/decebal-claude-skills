@@ -1,5 +1,19 @@
 # {Project Name}
 
+## Rules
+
+Portable rules live in [`rules/`](../rules/). Copy the set you want to
+`~/.claude/rules/` and import them — do not paste their text here, it drifts.
+
+@~/.claude/rules/git-discipline.md
+@~/.claude/rules/evidence-discipline.md
+@~/.claude/rules/definition-of-done.md
+@~/.claude/rules/comments.md
+@~/.claude/rules/token-efficiency.md
+@~/.claude/rules/testing-gates.md
+@~/.claude/rules/error-channels.md
+@~/.claude/rules/ui-remote-states.md
+
 ## Stack
 - Frontend: Next.js 15 / Svelte 5 with TypeScript
 - Backend: {Elysia/Express/Rust}
@@ -48,3 +62,9 @@ tests/
 - {Data fetching strategy}
 - {Auth approach}
 - {Error handling conventions}
+
+## DO NOT
+- Mix package managers
+- Render a raw payload to a user — summarize, or state an honest fallback
+- Offer a screen that cannot fetch its data with no way to retry
+- Commit without running lint + tests

@@ -1,6 +1,6 @@
 # Token Efficiency & Context Window Optimization
 
-Patterns for maximizing effectiveness within Claude's context window, extracted from the Longhand/Tauri projects.
+Patterns for maximizing effectiveness within Claude's context window, extracted from production Rust + TypeScript desktop and monorepo projects.
 
 ## Search Strategy
 
