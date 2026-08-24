@@ -1,6 +1,6 @@
 ---
 name: create-plans
-description: Create hierarchical project plans optimized for solo agentic development. Use when planning projects, phases, or tasks that Claude will execute. Produces Claude-executable plans with verification criteria, not enterprise documentation. Handles briefs, roadmaps, phase plans, and context handoffs. NOTE — if the project already uses chronis (`.beads/` present) or another task tracker, do NOT run this as the top-level planner; chronis stays the queue and dependency tracker. Use this instead to author per-bead PHASE plans for in-bead execution detail (paste the PLAN.md into the bead description, or store it at .planning/phases/<bead-id>.md) — see CLAUDE.md "Planning skills" if the project has one.
+description: Create hierarchical project plans optimized for solo agentic development. Use when planning projects, phases, or tasks that Claude will execute. Produces Claude-executable plans with verification criteria, not enterprise documentation. Handles briefs, roadmaps, phase plans, and context handoffs. NOTE — if the project already uses chronis (`.chronis/` present) or another task tracker, do NOT run this as the top-level planner; chronis stays the queue and dependency tracker. Use this instead to author per-bead PHASE plans for in-bead execution detail (paste the PLAN.md into the bead description, or store it at .planning/phases/<bead-id>.md) — see CLAUDE.md "Planning skills" if the project has one.
 ---
 
 <essential_principles>

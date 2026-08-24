@@ -21,21 +21,21 @@ Add this to your `.gitignore`:
 | `.chronis/storage/*.parquet` | Parquet event files | Binary data, grows large, machine-local |
 | `.chronis/wal/` | Write-ahead log segments | Transient durability layer, not portable |
 
-## .beads/ — the task database
+## There is no second directory
 
-The `.beads/` directory (created by `cn create`) holds the SQLite DB and JSONL exports. This is also gitignored by convention since it contains local task state.
+`.chronis/` is the whole store. Tasks are events in the same WAL and Parquet
+files as everything else — there is no separate task database, no SQLite file,
+and no JSONL export to track.
 
-```gitignore
-.beads/
-```
-
-If you want to version-track your beads for team visibility, export them:
+`.beads/` belongs to the older `bd` and `br` CLIs. The only chronis command that
+mentions it reads it:
 
 ```bash
-cn sync --flush-only    # exports to .beads/*.jsonl
-cp .beads/export.jsonl tasks/beads-snapshot.jsonl
-git add tasks/beads-snapshot.jsonl
+cn migrate-beads    # import .beads/issues.jsonl into chronis events
 ```
+
+So if you see `.beads/` in a chronis project, it is either a leftover from before
+the migration or a mistake in the doc you are reading.
 
 ## tasks/ — PRDs and snapshots
 
@@ -49,11 +49,8 @@ git add -f tasks/prd-my-feature.md
 ## Recommended .gitignore block
 
 ```gitignore
-# Chronis (local event store data)
+# Chronis (local event store data — tasks included)
 .chronis/
-
-# Beads task database (local state)
-.beads/
 
 # Claude Code session state
 .claude/
@@ -75,7 +72,7 @@ When using claude with chronis for feature work:
 ```bash
 git checkout -b feat/my-feature
 claude "create a prd for my feature"           # generates tasks/prd-my-feature.md
-claude "create beads from tasks/prd-my-feature.md"  # creates .beads/ (gitignored)
+claude "create beads from tasks/prd-my-feature.md"  # writes tasks into .chronis/ (gitignored)
 claude "work the ready beads: cn ready --toon, claim each, implement, run its quality gates, cn done"                 # agents work, commit to branch
 git push -u origin feat/my-feature
 gh pr create
@@ -95,11 +92,11 @@ Each developer runs their own local chronis instance. There is no shared state �
 Chronis data accumulates over time. Clean up periodically:
 
 ```bash
-# Remove all local chronis data (events, WAL, config)
+# Remove all local chronis data — events, WAL, config, and every task
 rm -rf .chronis/
-
-# Remove beads task database
-rm -rf .beads/
 ```
 
-This is safe — `.chronis/` is local ephemeral data, and `.beads/` can be recreated from the PRD.
+This is safe in the sense that nothing shared is lost: `.chronis/` is local
+ephemeral data, and the tasks in it can be recreated from the PRD. It is not
+undoable, though — there is no export, so anything recorded only in a task's
+event history goes with it.

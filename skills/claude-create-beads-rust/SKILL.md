@@ -396,7 +396,7 @@ cn sync --flush-only
 
 ## Output Location
 
-Beads are stored in: `.beads/` directory (SQLite DB + JSONL export)
+Beads are stored in: `.chronis/` (WAL + Parquet event files — there is no separate task database)
 
 After creation, run claude:
 ```bash
