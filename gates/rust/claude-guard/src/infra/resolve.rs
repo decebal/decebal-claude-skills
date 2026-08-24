@@ -193,12 +193,9 @@ pub fn risky_lines(text: &str, prod_re: Option<&str>) -> bool {
 
 fn resolve_script(p: &str, root: &Path, cwd: &Path) -> Option<PathBuf> {
     let bare = p.strip_prefix("./").unwrap_or(p);
-    for cand in [PathBuf::from(p), root.join(bare), cwd.join(bare)] {
-        if cand.is_file() {
-            return Some(cand);
-        }
-    }
-    None
+    [PathBuf::from(p), root.join(bare), cwd.join(bare)]
+        .into_iter()
+        .find(|cand| cand.is_file())
 }
 
 /// The recipe body for one make target.
