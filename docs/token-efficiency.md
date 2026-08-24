@@ -53,6 +53,48 @@ Bun only. Biome for linting. Sequential Rust tests.
 Never use unwrap(). Never skip migrations.
 ```
 
+## Hook Payload Cost
+
+Hooks are free until they emit on a channel the model reads. Three routing rules
+decide what is actually billed:
+
+- **`permissionDecisionReason` reaches the model only on `deny`.** On `ask` and
+  `allow` it is shown to you alone, so an ask tier costs nothing — write those
+  reasons as long as they need to be.
+- **`additionalContext` persists.** It is inserted into the conversation and saved
+  in the transcript, so it is re-sent on every later request in the session. A
+  payload here is paid for the rest of the session, not once.
+- **exit-2 stderr reaches the model** as the denial reason. Exit-0 stdout does not.
+
+Two rules follow:
+
+**Never restate in a hook payload what CLAUDE.md already carries.** Point at it.
+A PostToolUse hook that re-stated a rule cost ~172 tokens per firing on ~46% of
+all edits; replaced with a two-line pointer it costs ~57.
+
+**Prefer `updatedInput` to a block.** A PreToolUse hook can rewrite the tool input
+rather than reject it. A block costs a round trip *and* its stderr; a rewrite
+costs neither. Only rewrite where the repair cannot change what the command does
+— see the `2>&1` handling in [`hooks/bash-hygiene.sh`](../hooks/bash-hygiene.sh),
+which rewrites a trailing merge but still blocks the piped and file-redirected
+forms where the merge decides what the next stage reads.
+
+Measure rather than guess — [`tests/payload_size.sh`](../tests/payload_size.sh)
+prints bytes and a token estimate per firing.
+
+## Output Limits Worth Knowing
+
+| Knob | Default |
+|------|---------|
+| `BASH_MAX_OUTPUT_LENGTH` | 30,000 chars (max 150,000) |
+| `MAX_MCP_OUTPUT_TOKENS` | 25,000 |
+| `TASK_MAX_OUTPUT_LENGTH` | 32,000 chars (subagent result) |
+| Hook output strings | capped at 10,000 chars, then spilled to a file |
+
+Startup context is worth auditing too: `/context` breaks it down by category and
+`/doctor` proposes CLAUDE.md trims. Skill *descriptions* load at startup; skill
+bodies only on invocation, and stay loaded for the rest of the session once used.
+
 ## Agent Task Sizing
 
 For Ralph TUI / parallel execution:

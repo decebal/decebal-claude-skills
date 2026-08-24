@@ -41,13 +41,20 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   │   ├── fmt-check/          # whole-repo rustfmt WITHOUT invoking cargo
 │   │   ├── render-agent-docs/  # one manifest → CLAUDE.md + AGENTS.md, --check
 │   │   └── …                   # rust-effective-diff, target-sweep, graph-audit
-│   ├── sh/                     # hook glue: run_gate, dead-branch guard, worktrees
+│   ├── sh/                     # git-hook glue: run_gate, dead-branch guard, worktrees
 │   ├── ts/                     # RemoteState<T> + its backstop gate, git keepalive
 │   ├── gates.toml              # scopes, inert paths, test-hang tiers
-│   └── examples/pre-push       # a worked hook wiring all of it together
+│   └── examples/pre-push       # a worked git hook wiring all of it together
+├── hooks/                      # Claude Code guard-rail hooks (see hooks/README.md)
+│   ├── infra-guard.sh          # PreToolUse: blocks high-blast-radius commands
+│   ├── infra-guard-scan.sh     # Shared pattern library + wrapper-chain resolver
+│   ├── infra-guard-trust.sh    # Vet a wrapper chain, trust it by content hash
+│   ├── bash-hygiene.sh         # PreToolUse: one command per call; rewrites 2>&1
+│   └── comment-hygiene.sh      # PostToolUse: flags comments an edit added
 ├── configs/                    # Reference configurations
 │   ├── settings.json           # Global settings reference
 │   ├── settings.local.json     # Project permission patterns
+│   ├── prod-guard-tokens.txt   # infra-guard prod/non-prod identifier template
 │   └── plugins.md              # Plugin & LSP setup
 ├── templates/                  # CLAUDE.md templates
 │   ├── monorepo.md             # For monorepo projects
@@ -79,6 +86,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **MCP Servers** | [docs/mcp-servers.md](docs/mcp-servers.md) | GitHub, Linear, Slack, Supabase, Firebase, and more |
 | **Permissions** | [docs/permissions.md](docs/permissions.md) | Granular command allowlists by project type |
 | **Token Efficiency** | [docs/token-efficiency.md](docs/token-efficiency.md) | Patterns for staying within context limits |
+| **Guard-rail hooks** | [hooks/README.md](hooks/README.md) | Blast-radius guard, Bash hygiene, comment hygiene — install steps + pattern list |
 
 ## Executable skills & tests
 
@@ -90,12 +98,18 @@ Some skills bundle runnable scripts (not just instructions):
 - **`web-video`** — `optimize_video.sh` (screen recording → web-ready H.264 + poster + GIF).
   Needs `ffmpeg`.
 
+The `hooks/` directory is runnable too — three PreToolUse/PostToolUse guard rails
+plus their shared pattern library. See [hooks/README.md](hooks/README.md).
+
 Run their tests (dep-aware — each self-skips when its deps are missing):
 
 ```sh
-bash tests/run.sh                  # all skill tests
+bash tests/run.sh                  # everything
 bash tests/test_blog_image.sh      # needs Pillow (or uv) — checks preset dims + WebP output
 bash tests/test_web_video.sh       # needs ffmpeg — checks H.264, faststart, audio strip, poster/gif
+bash tests/test_infra_guard.sh     # needs jq — 34-case deny/ask/silent matrix
+bash tests/test_bash_hygiene.sh    # needs jq + perl — 12-case allow/rewrite/block matrix
+bash tests/payload_size.sh         # not a test — prints per-firing hook token cost
 ```
 
 CI runs them on every push to `skills/**` or `tests/**` via

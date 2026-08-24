@@ -12,6 +12,32 @@
     "gopls-lsp@claude-plugins-official": true
   },
 
+  "// HOOKS": "Guard rails from hooks/ — see hooks/README.md. Drop this block if you did not install them",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "$HOME/.claude/hooks/infra-guard.sh", "timeout": 10 }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "$HOME/.claude/hooks/bash-hygiene.sh", "timeout": 5 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "$HOME/.claude/hooks/comment-hygiene.sh", "timeout": 5 }
+        ]
+      }
+    ]
+  },
+
   "alwaysThinkingEnabled": true,
   "effortLevel": "medium"
 }

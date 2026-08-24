@@ -24,21 +24,63 @@ Two available styles:
 ### Ralph Loop Detection (Stop)
 Prevents self-referential loops where Claude agents call themselves endlessly. Critical for Ralph TUI orchestration.
 
+## Guard-rail hooks (`hooks/`)
+
+Three runnable hooks live in [`hooks/`](../hooks/), with install steps and the
+full pattern list in [`hooks/README.md`](../hooks/README.md):
+
+| Hook | Event | Effect |
+|------|-------|--------|
+| `infra-guard.sh` | PreToolUse, Bash | Denies live-service mutation, `terraform apply`/state surgery, storage deletion, package publishes, protected-branch force-pushes. Follows `make`/`bash`/`npm run` wrapper chains and classifies what they actually run |
+| `bash-hygiene.sh` | PreToolUse, Bash | Blocks compound commands and substitution; rewrites a repairable `2>&1` rather than blocking it |
+| `comment-hygiene.sh` | PostToolUse, Edit/Write | Feeds back comment lines an edit added, to be justified or deleted |
+
+```sh
+cp hooks/*.sh ~/.claude/hooks/
+bash tests/test_infra_guard.sh     # 34 cases
+bash tests/test_bash_hygiene.sh    # 12 cases
+```
+
 ## Hook Configuration Format
 
-Hooks are defined in `hooks.json` files within plugin directories:
+Hooks are registered in `settings.json` under `hooks`, keyed by event, with a
+`matcher` selecting which tools they apply to:
 
 ```json
 {
-  "hooks": [
-    {
-      "type": "PreToolUse",
-      "tools": ["Edit", "Write", "MultiEdit"],
-      "command": "echo 'Check for security vulnerabilities before editing'"
-    }
-  ]
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "$HOME/.claude/hooks/check.sh", "timeout": 5 }
+        ]
+      }
+    ]
+  }
 }
 ```
+
+Use `$CLAUDE_PROJECT_DIR` instead of `$HOME` for a project-scoped hook. Plugins
+ship their own `hooks.json`; the shape above is the one that applies to user and
+project settings.
+
+### What a hook can return
+
+A hook's exit code and JSON decide what reaches Claude and what only reaches you.
+This drives both behaviour and token cost — see
+[token-efficiency.md](token-efficiency.md#hook-payload-cost).
+
+| Channel | Reaches the model |
+|---|---|
+| exit 2 + stderr | Yes — delivered as the denial reason |
+| exit 0 + stdout | No — debug log only (except `UserPromptSubmit`/`SessionStart`) |
+| `permissionDecisionReason` on `deny` | Yes |
+| `permissionDecisionReason` on `ask`/`allow` | No — shown to you only |
+| `additionalContext` | Yes, and it persists in the transcript |
+| `systemMessage` | No, for synchronous hooks |
+| `updatedInput` (PreToolUse) | Replaces the tool input — rewrite instead of block |
+| `updatedToolOutput` (PostToolUse) | Replaces the tool result the model sees |
 
 ## Managing Hooks
 
