@@ -28,7 +28,7 @@ Store documentation where the team can find it. Inaccessible docs are useless do
 
 **Correct (centralized and searchable):**
 
-```markdown
+````markdown
 ## Documentation Accessibility Standards
 
 ### Central Hub
@@ -158,7 +158,7 @@ This folder contains technical specifications for Project Dashboard.
 - Respond to questions within 24h
 - Mark deprecated docs clearly
 - Redirect to current versions
-```
+````
 
 **Accessibility requirements:**
 - Single entry point for all docs

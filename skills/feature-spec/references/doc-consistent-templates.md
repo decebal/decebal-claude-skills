@@ -37,7 +37,7 @@ Next Steps
 
 **Correct (standardized template):**
 
-```markdown
+````markdown
 ## PRD Template v2.0
 
 Every PRD follows this structure. Sections may be brief but cannot
@@ -158,7 +158,7 @@ Acceptance Criteria:
 - Collect feedback from users
 - Update based on common omissions
 - Version templates (v1.0, v2.0)
-```
+````
 
 **Template requirements:**
 - Standard structure for each document type
