@@ -51,7 +51,11 @@ fn comment_hygiene_context_stays_small_as_comments_multiply() {
 fn a_bash_hygiene_block_is_a_line_not_a_lecture() {
     // Exit 2 puts this on stderr, which IS billed to the model.
     let v = bash_hygiene::violations("ls && pwd", None);
-    assert_under("bash-hygiene, one violation", &bash_hygiene::remediation(&v, None), 45);
+    assert_under(
+        "bash-hygiene, one violation",
+        &bash_hygiene::remediation(&v, None),
+        45,
+    );
 }
 
 #[test]

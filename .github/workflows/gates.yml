@@ -27,7 +27,7 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: rustfmt, clippy
-          workspaces: gates/rust
+          cache-workspaces: gates/rust
 
       - name: Format check
         run: cargo fmt --all --check
