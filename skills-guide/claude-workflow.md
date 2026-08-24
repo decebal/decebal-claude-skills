@@ -54,7 +54,7 @@ cn create --title "Story 1: ..." --body "..." --parent <epic-id> --label story
 cn dep add <story-id> <dependency-id>
 ```
 
-**Output:** Beads in `.beads/` directory with:
+**Output:** Beads in `.chronis/` with:
 - Acceptance criteria as verifiable checkboxes
 - Story-specific quality gate commands
 - Dependencies between stories
