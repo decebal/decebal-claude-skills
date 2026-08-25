@@ -121,15 +121,20 @@ fn main() -> ExitCode {
             return ExitCode::from(2);
         }
 
-        // The authority itself is read for `retired`, even when it sits outside
-        // the renderer roots — that is the half of the rule it is not exempt from.
+        // The authority is read for `retired` even when it sits OUTSIDE the
+        // renderer roots — that is the half of the rule it is not exempt from.
+        // It is read only once when it sits inside them, which it legitimately
+        // may: scanning it twice would report every retired symbol in it twice,
+        // and a doubled count is the kind of wrong that reads as two problems.
         let mut hits: Vec<Hit> = Vec::new();
         for path in &selected {
             if let Ok(text) = std::fs::read_to_string(path) {
                 hits.extend(scan(path, &text, &rule));
             }
         }
-        hits.extend(scan(&rule.authority, &authority_text, &rule));
+        if !selected.contains(&&rule.authority) {
+            hits.extend(scan(&rule.authority, &authority_text, &rule));
+        }
 
         if hits.is_empty() {
             println!(

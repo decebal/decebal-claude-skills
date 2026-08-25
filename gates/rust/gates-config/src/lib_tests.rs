@@ -87,8 +87,8 @@ fn arrays_of_tables_are_rejected_rather_than_misread() {
 
 #[test]
 fn a_comma_inside_a_quoted_list_element_does_not_split_it() {
-    let cfg = Config::parse("[id-refs]\nshapes = [\"t-[0-9a-f]{4,}\", \"bd-[0-9a-z]{3,}\"]\n")
-        .unwrap();
+    let cfg =
+        Config::parse("[id-refs]\nshapes = [\"t-[0-9a-f]{4,}\", \"bd-[0-9a-z]{3,}\"]\n").unwrap();
     assert_eq!(
         cfg.list("id-refs.shapes").unwrap(),
         vec!["t-[0-9a-f]{4,}", "bd-[0-9a-z]{3,}"]

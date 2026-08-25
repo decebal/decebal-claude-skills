@@ -58,6 +58,35 @@ fn a_layer_never_forbids_importing_itself() {
 }
 
 #[test]
+fn a_file_is_owned_by_the_layer_with_the_longest_matching_dir() {
+    let mut m = model();
+    m.order[1].dir = "src/".into();
+    let owner = m.owning_layer("src/domain/a.rs").unwrap();
+    assert_eq!(owner.name, "domain");
+}
+
+#[test]
+fn a_file_under_only_one_layer_is_owned_by_it() {
+    let m = model();
+    assert_eq!(
+        m.owning_layer("src/application/a.rs").unwrap().name,
+        "application"
+    );
+}
+
+#[test]
+fn a_file_under_no_declared_layer_is_owned_by_none() {
+    let m = model();
+    assert!(m.owning_layer("tooling/x.rs").is_none());
+}
+
+#[test]
+fn owning_layer_reaches_pure_layers_too() {
+    let m = model();
+    assert_eq!(m.owning_layer("src/domain/a.rs").unwrap().name, "domain");
+}
+
+#[test]
 fn the_import_needle_substitutes_the_target_layer() {
     let m = model();
     let edge = Edge {

@@ -46,6 +46,27 @@ impl Edge {
 }
 
 impl Model {
+    /// Every declared layer, ordered ones first.
+    pub fn layers(&self) -> impl Iterator<Item = &Layer> {
+        self.order.iter().chain(self.pure.iter())
+    }
+
+    /// The layer a file belongs to: the one whose `dir` is the LONGEST matching
+    /// prefix.
+    ///
+    /// Layer directories legitimately nest — a repo may put `application` at
+    /// `src/` and `domain` at `src/domain/`. Matching on "any prefix" then
+    /// attributes every domain file to BOTH layers, which double-counts each
+    /// violation and, worse, reads domain files as application files when
+    /// checking the edges application owns. Longest-prefix makes the
+    /// attribution single-valued, which is what a count can be trusted from —
+    /// and these counts are compared against ceilings.
+    pub fn owning_layer(&self, path: &str) -> Option<&Layer> {
+        self.layers()
+            .filter(|layer| path.starts_with(layer.dir.as_str()))
+            .max_by_key(|layer| layer.dir.len())
+    }
+
     /// Every pair the direction forbids.
     ///
     /// Two sources, and they are different rules: an ORDERED layer may not

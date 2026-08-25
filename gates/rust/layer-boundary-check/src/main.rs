@@ -47,6 +47,13 @@ use std::process::{Command, ExitCode};
 mod layers;
 use layers::{imports_in, is_test_file, Edge, Hit, Layer, Model};
 
+/// One layer file, attributed to exactly one layer.
+struct Source {
+    path: String,
+    text: String,
+    layer: String,
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let config_path = flag(&args, "--config").unwrap_or_else(|| "gates.toml".to_string());
@@ -79,18 +86,22 @@ fn main() -> ExitCode {
         }
     };
 
-    // Read every layer file ONCE. A four-layer model has twelve forbidden edges
-    // and re-reading the tree per edge is twelve full walks for one answer.
-    let mut sources: Vec<(String, String)> = Vec::new();
-    for layer in model.order.iter().chain(model.pure.iter()) {
-        for path in tracked
-            .iter()
-            .filter(|p| p.starts_with(layer.dir.as_str()))
-            .filter(|p| !is_test_file(p))
-        {
-            if let Ok(text) = std::fs::read_to_string(path) {
-                sources.push((path.clone(), text));
-            }
+    // Read every layer file ONCE, attributed to exactly ONE layer. A four-layer
+    // model has twelve forbidden edges, so re-reading the tree per edge is
+    // twelve full walks for one answer — and walking per layer instead would
+    // read a file once per layer whose directory contains it, which for nested
+    // directories is more than one.
+    let mut sources: Vec<Source> = Vec::new();
+    for path in tracked.iter().filter(|p| !is_test_file(p)) {
+        let Some(layer) = model.owning_layer(path) else {
+            continue;
+        };
+        if let Ok(text) = std::fs::read_to_string(path) {
+            sources.push(Source {
+                path: path.clone(),
+                text,
+                layer: layer.name.clone(),
+            });
         }
     }
     if sources.is_empty() {
@@ -110,9 +121,9 @@ fn main() -> ExitCode {
         let facade = model.facade_for(&edge);
         let hits: Vec<Hit> = sources
             .iter()
-            .filter(|(path, _)| path.starts_with(edge.from.dir.as_str()))
-            .filter(|(path, _)| facade != Some(path.as_str()))
-            .flat_map(|(path, text)| imports_in(path, text, &needle))
+            .filter(|s| s.layer == edge.from.name)
+            .filter(|s| facade != Some(s.path.as_str()))
+            .flat_map(|s| imports_in(&s.path, &s.text, &needle))
             .collect();
 
         let ceiling = model.ceiling_for(&edge);
