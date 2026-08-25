@@ -35,13 +35,20 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── layer-boundaries.md     # 4-layer direction as a test; opening a god module
 │   └── …                       # 15 rules total — see rules/README.md
 ├── gates/                      # The tooling the rules reference
-│   ├── rust/                   # 10 crates, 4 deps, 137 tests — one cargo workspace
+│   ├── rust/                   # 20 crates, 4 deps, 258 tests — one cargo workspace
 │   │   ├── claude-guard/       # the guard-rail hooks: infra, bash, comments
 │   │   ├── staged-scope/       # which gates does this diff need? default-deny
+│   │   ├── layer-boundary-check/    # the dependency direction, with ratcheting ceilings
+│   │   ├── authority-check/         # one file owns a verdict; the rest render it
+│   │   ├── forbidden-pattern-check/ # named patterns, named paths, one allowlist
+│   │   ├── test-script-check/       # a package whose suites run in no gate at all
+│   │   ├── contract-set-drift/      # two contract halves must declare the same SETS
+│   │   ├── trophy-check/            # every promised test must be a real test
 │   │   ├── check-test-hangs/   # no unbounded blocking I/O in tests
 │   │   ├── fmt-check/          # whole-repo rustfmt WITHOUT invoking cargo
 │   │   ├── render-agent-docs/  # one manifest → CLAUDE.md + AGENTS.md, --check
-│   │   └── …                   # rust-effective-diff, target-sweep, graph-audit
+│   │   └── …                   # vendor-attribution, workspace-isolation, price-table,
+│   │                           # dev-preflight, rust-effective-diff, target-sweep, graph-audit
 │   ├── sh/                     # git-hook glue: run_gate, dead-branch guard, worktrees
 │   ├── ts/                     # RemoteState<T> + its backstop gate, git keepalive
 │   ├── gates.toml              # scopes, inert paths, test-hang tiers
@@ -111,7 +118,7 @@ external dependency, nothing to skip:
 
 ```sh
 cargo test --manifest-path gates/rust/Cargo.toml -p claude-guard   # 63 tests
-cargo test --manifest-path gates/rust/Cargo.toml                   # 137, every gate
+cargo test --manifest-path gates/rust/Cargo.toml                   # 258, every gate
 ```
 
 CI runs them on every push to `skills/**` or `tests/**` via

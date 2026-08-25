@@ -12,6 +12,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "authority-check"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+]
+
+[[package]]
 name = "block-buffer"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -52,6 +59,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "contract-set-drift"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+ "serde_json",
+]
+
+[[package]]
 name = "cpufeatures"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -71,6 +86,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dev-preflight"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -83,6 +105,14 @@ dependencies = [
 [[package]]
 name = "fmt-check"
 version = "0.1.0"
+
+[[package]]
+name = "forbidden-pattern-check"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+ "regex",
+]
 
 [[package]]
 name = "gates-config"
@@ -113,6 +143,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
+name = "layer-boundary-check"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -123,6 +160,14 @@ name = "memchr"
 version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
+
+[[package]]
+name = "price-table-check"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+ "serde_json",
+]
 
 [[package]]
 name = "proc-macro2"
@@ -261,6 +306,22 @@ name = "target-sweep"
 version = "0.1.0"
 
 [[package]]
+name = "test-script-check"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+ "serde_json",
+]
+
+[[package]]
+name = "trophy-check"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+ "serde_json",
+]
+
+[[package]]
 name = "typenum"
 version = "1.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -273,10 +334,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
 
 [[package]]
+name = "vendor-attribution-check"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+]
+
+[[package]]
 name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+
+[[package]]
+name = "workspace-isolation-check"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+ "serde_json",
+]
 
 [[package]]
 name = "zmij"
