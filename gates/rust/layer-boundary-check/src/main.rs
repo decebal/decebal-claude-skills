@@ -166,9 +166,8 @@ fn report_breach(edge: &Edge, hits: &[Hit], ceiling: usize, facade: Option<&str>
     }
     match facade {
         Some(f) => eprintln!(
-            "\n  {} is the one sanctioned seam across this edge. Route through it,\n\
-             \x20 so a later migration shrinks one file instead of chasing import paths.",
-            f
+            "\n  {f} is the one sanctioned seam across this edge. Route through it,\n\
+             \x20 so a later migration shrinks one file instead of chasing import paths."
         ),
         None => eprintln!(
             "\n  The direction only points one way. Pass what the caller needs as a\n\
