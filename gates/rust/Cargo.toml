@@ -56,3 +56,7 @@ sha2 = { version = "0.10", default-features = false }
 
 [workspace.lints.clippy]
 absolute_paths = "warn"
+# A consumer repo vendoring these crates lints under ITS workspace, not this
+# one. Carrying the stricter of the two here keeps a vendored copy clean on
+# arrival instead of warning in someone else's build.
+uninlined_format_args = "warn"
