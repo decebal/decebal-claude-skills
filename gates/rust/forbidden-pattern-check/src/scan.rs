@@ -25,12 +25,20 @@ pub struct Rule {
     /// Read comment lines too. Off by default: a doc comment naming the banned
     /// symbol is usually explaining the ban.
     pub include_comments: bool,
+    /// Skip test files. Off by default, because a ban on a credential API or a
+    /// crypto primitive means it in tests too. Turn it on for a rule about
+    /// LAYERING, where a fixture writing a temp file is not the breach the rule
+    /// is looking for.
+    pub skip_tests: bool,
     pub why: String,
 }
 
 impl Rule {
     pub fn selects(&self, path: &str) -> bool {
         if self.allow.iter().any(|a| a == path) {
+            return false;
+        }
+        if self.skip_tests && is_test_file(path) {
             return false;
         }
         if !self.extensions.is_empty() && !has_extension(path, &self.extensions) {
@@ -69,6 +77,19 @@ pub fn scan(path: &str, content: &str, rule: &Rule) -> Vec<Hit> {
             text: line.trim().to_string(),
         })
         .collect()
+}
+
+/// A test file, under the conventions of every language these gates read.
+pub fn is_test_file(path: &str) -> bool {
+    let name = path.rsplit('/').next().unwrap_or(path);
+    path.split('/')
+        .any(|segment| matches!(segment, "tests" | "__tests__" | "__vtests__"))
+        || name == "tests.rs"
+        || name.ends_with("_tests.rs")
+        || name.ends_with("_test.rs")
+        || name.contains(".test.")
+        || name.contains(".spec.")
+        || name.contains(".vitest.")
 }
 
 pub fn has_extension(path: &str, extensions: &[String]) -> bool {

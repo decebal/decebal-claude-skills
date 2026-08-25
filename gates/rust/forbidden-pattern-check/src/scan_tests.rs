@@ -10,6 +10,7 @@ fn rule(patterns: &[&str]) -> Rule {
         patterns: patterns.iter().map(|p| Regex::new(p).unwrap()).collect(),
         allow: Vec::new(),
         include_comments: false,
+        skip_tests: false,
         why: "because".into(),
     }
 }
@@ -88,6 +89,30 @@ fn comment_openers_cover_the_languages_these_gates_read() {
     assert!(is_comment("  # shell"));
     assert!(is_comment("  <!-- html -->"));
     assert!(!is_comment("let x = 1; // trailing"));
+}
+
+#[test]
+fn tests_are_scanned_by_default_because_a_banned_api_is_banned_there_too() {
+    let r = rule(&[""]);
+    assert!(r.selects("src/thing_tests.rs"));
+}
+
+#[test]
+fn skip_tests_drops_every_test_convention() {
+    let mut r = rule(&[""]);
+    r.skip_tests = true;
+    assert!(!r.selects("src/thing_tests.rs"));
+    assert!(!r.selects("src/thing/tests.rs"));
+    assert!(!r.selects("src/tests/helper.rs"));
+    assert!(r.selects("src/thing.rs"));
+}
+
+#[test]
+fn skip_tests_does_not_drop_a_file_that_merely_contains_test() {
+    let mut r = rule(&[""]);
+    r.skip_tests = true;
+    assert!(r.selects("src/attestations.rs"));
+    assert!(r.selects("src/latest.rs"));
 }
 
 #[test]

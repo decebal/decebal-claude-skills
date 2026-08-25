@@ -24,6 +24,11 @@
 //! `"use\s+keyring"`, never `"use\\s+keyring"`. The doubled form compiles to a
 //! pattern that can never fire, and the gate then calls every file clean.
 //!
+//! `skip_tests = "true"` drops test files from a rule. It is OFF by default:
+//! a ban on a credential API or a crypto primitive means it in tests too. Turn
+//! it on for a rule about LAYERING, where a fixture writing a temp file is not
+//! the breach the rule is looking for.
+//!
 //! `roots` selects by directory prefix, `files` by exact path; a rule may use
 //! either or both. `allow` exempts a path — migration code, or the one file that
 //! IS the authority. Comment lines are skipped unless `include_comments = "true"`,
@@ -188,6 +193,7 @@ fn build_rule(cfg: &Config, name: &str) -> Result<Rule, String> {
         patterns,
         allow: cfg.list(&key("allow")).unwrap_or_default(),
         include_comments: cfg.string(&key("include_comments")) == Some("true"),
+        skip_tests: cfg.string(&key("skip_tests")) == Some("true"),
         why: cfg.string(&key("why")).unwrap_or_default().to_string(),
     })
 }
