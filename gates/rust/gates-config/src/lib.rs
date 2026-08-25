@@ -25,6 +25,19 @@
 //! That strictness is the point. A reader that ignores what it does not
 //! understand turns a typo'd key into a gate that silently checks nothing, which
 //! is indistinguishable from a gate that passes.
+//!
+//! # Strings are VERBATIM
+//!
+//! There is no escape processing: the text between the quotes is the value. So a
+//! regex is written the way it would be inside a raw string —
+//! `patterns = ["use\s+keyring"]`, NOT `"use\\s+keyring"`.
+//!
+//! This is worth stating loudly because the failure is silent and TOML habit
+//! points the wrong way. Doubling the backslash out of habit yields the literal
+//! two characters `\` `\`, the regex compiles fine, and it matches nothing — a
+//! gate that reports every file clean because its pattern can never fire. A
+//! quote is the one character a value therefore cannot contain, and asking for
+//! one is an error rather than a truncation.
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -164,6 +177,24 @@ impl Config {
         names
     }
 
+    /// The leaf keys directly under `table`, sorted. Where [`Config::tables_under`]
+    /// answers "which sub-tables exist", this answers "which keys does this one
+    /// table hold" — for a table whose KEY NAMES are the data, so no gate can
+    /// enumerate them in advance.
+    pub fn keys_under(&self, table: &str) -> Vec<String> {
+        let head = format!("{table}.");
+        let mut keys: Vec<String> = self
+            .values
+            .keys()
+            .filter_map(|k| k.strip_prefix(&head))
+            .filter(|rest| !rest.contains('.'))
+            .map(str::to_string)
+            .collect();
+        keys.sort();
+        keys.dedup();
+        keys
+    }
+
     pub fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
@@ -211,7 +242,7 @@ fn parse_list(raw: &str, line: usize) -> Result<Vec<String>, ParseError> {
             message: format!("malformed array: {raw}"),
         })?;
     let mut out = Vec::new();
-    for item in body.split(',') {
+    for item in split_outside_quotes(body) {
         let item = item.trim();
         if item.is_empty() {
             continue;
@@ -219,6 +250,29 @@ fn parse_list(raw: &str, line: usize) -> Result<Vec<String>, ParseError> {
         out.push(parse_string(item, line)?);
     }
     Ok(out)
+}
+
+/// Split on commas that are NOT inside a quoted string.
+///
+/// A plain `split(',')` truncates every element holding a comma, and the regex
+/// quantifier `{4,}` is exactly that shape — so `shapes = ["t-[0-9a-f]{4,}"]`,
+/// the form this config documents, failed to parse at all.
+fn split_outside_quotes(body: &str) -> Vec<&str> {
+    let mut parts = Vec::new();
+    let mut in_string = false;
+    let mut start = 0;
+    for (i, ch) in body.char_indices() {
+        match ch {
+            '"' => in_string = !in_string,
+            ',' if !in_string => {
+                parts.push(&body[start..i]);
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    parts.push(&body[start..]);
+    parts
 }
 
 #[cfg(test)]

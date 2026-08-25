@@ -54,9 +54,17 @@ run_gate "[hygiene] no unbounded blocking I/O in tests" \
   "check-test-hangs --config '$REPO_ROOT/gates.toml'"
 run_gate "[hygiene] Rust format (no cargo, no locks)" \
   "fmt-check"
+run_gate "[hygiene] vendored deps carry their attribution" \
+  "vendor-attribution-check --config '$REPO_ROOT/gates.toml'"
 
 # ── 5. Per scope ─────────────────────────────────────────────────────────────
 if has_scope backend; then
+  run_gate "[backend] the dependency direction holds" \
+    "layer-boundary-check --config '$REPO_ROOT/gates.toml'"
+  run_gate "[backend] forbidden symbols stay out of guarded paths" \
+    "forbidden-pattern-check --config '$REPO_ROOT/gates.toml'"
+  run_gate "[backend] the other half stays out of this build graph" \
+    "workspace-isolation-check --config '$REPO_ROOT/gates.toml'"
   # ONE fingerprint for the whole scope: build the test targets, then lint
   # --all-targets with the SAME features, then run them. Gates that differ in
   # feature set or check-vs-build mode each compile the graph from scratch.
@@ -68,11 +76,33 @@ if has_scope backend; then
 fi
 
 if has_scope frontend; then
+  # BEFORE the runners, not after: this one answers whether they will visit the
+  # package at all. A suite in a package with no `test` script is skipped by the
+  # line below it and reports nothing.
+  run_gate "[frontend] every package's scripts reach its own files" \
+    "test-script-check --config '$REPO_ROOT/gates.toml'"
   run_gate "[frontend] lint"      "bun run lint"
   run_gate "[frontend] typecheck" "bun run typecheck"
   run_gate "[frontend] tests"     "bun test"
+  run_gate "[frontend] one authority per derived verdict" \
+    "authority-check --config '$REPO_ROOT/gates.toml'"
   run_gate "[frontend] remote failures offer a way out" \
     "bun gates/ts/check-remote-recovery.ts apps/web/src packages/ui/src"
+fi
+
+# ── 6. Gates that need a document fetched first ──────────────────────────────
+# `contract-set-drift` and `price-table-check` read LOCAL files by design, so
+# the fetch is here rather than inside the binary — which keeps them runnable
+# offline and testable without a socket. A fetch that fails must not pass the
+# gate by leaving an empty file behind, so the download and the compare are
+# separate steps and the gate only runs if the download succeeded.
+if has_scope frontend && [[ -n "${CONTRACT_API_URL:-}" ]]; then
+  if curl -fsS "$CONTRACT_API_URL" -o /tmp/api-contract.json; then
+    run_gate "[frontend] the shipped bundle and the API agree, set for set" \
+      "contract-set-drift --left /tmp/api-contract.json --right apps/web/dist/contract.json --config '$REPO_ROOT/gates.toml'"
+  else
+    echo "  [·] contract fetch failed — skipping the drift gate (it is a deploy check, not a diff check)."
+  fi
 fi
 
 exit "$FAILED"

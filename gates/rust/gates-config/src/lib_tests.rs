@@ -84,3 +84,44 @@ fn arrays_of_tables_are_rejected_rather_than_misread() {
     let err = Config::parse("[[thing]]\nname = \"x\"\n").unwrap_err();
     assert!(err.message.contains("arrays of tables"), "{}", err.message);
 }
+
+#[test]
+fn a_comma_inside_a_quoted_list_element_does_not_split_it() {
+    let cfg = Config::parse("[id-refs]\nshapes = [\"t-[0-9a-f]{4,}\", \"bd-[0-9a-z]{3,}\"]\n")
+        .unwrap();
+    assert_eq!(
+        cfg.list("id-refs.shapes").unwrap(),
+        vec!["t-[0-9a-f]{4,}", "bd-[0-9a-z]{3,}"]
+    );
+}
+
+#[test]
+fn a_comma_inside_a_multiline_list_element_does_not_split_it() {
+    let cfg = Config::parse("[t]\nx = [\n  \"a{1,2}\",\n  \"b\",\n]\n").unwrap();
+    assert_eq!(cfg.list("t.x").unwrap(), vec!["a{1,2}", "b"]);
+}
+
+#[test]
+fn keys_under_lists_one_tables_own_keys() {
+    let cfg = Config::parse("[layers.ceiling]\na_to_b = \"3\"\nc_to_d = \"0\"\n").unwrap();
+    assert_eq!(cfg.keys_under("layers.ceiling"), vec!["a_to_b", "c_to_d"]);
+}
+
+#[test]
+fn keys_under_does_not_reach_into_a_nested_table() {
+    let cfg = Config::parse("[a]\nk = \"1\"\n\n[a.b]\ndeep = \"2\"\n").unwrap();
+    assert_eq!(cfg.keys_under("a"), vec!["k"]);
+    assert_eq!(cfg.keys_under("a.b"), vec!["deep"]);
+}
+
+#[test]
+fn keys_under_an_absent_table_is_empty_not_an_error() {
+    let cfg = Config::parse("[a]\nk = \"1\"\n").unwrap();
+    assert!(cfg.keys_under("nope").is_empty());
+}
+
+#[test]
+fn keys_under_finds_lists_as_well_as_strings() {
+    let cfg = Config::parse("[t]\nlist = [\"a\"]\nstr = \"b\"\n").unwrap();
+    assert_eq!(cfg.keys_under("t"), vec!["list", "str"]);
+}
