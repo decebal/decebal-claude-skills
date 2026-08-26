@@ -38,6 +38,27 @@ Start by understanding the current project context, then ask questions one at a 
 - Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
+- Register in the per-repo `.prime/` graph (see "Prime Indexing" below)
+
+**Prime Indexing:**
+After writing the design doc, register it as a node so `/create-prompt`, `create-plans`, and future brainstorming sessions can recall it:
+
+1. **Before starting the dialogue** (at the very beginning of the brainstorm, when the user's initial idea is known), call `mcp__prime__prime_recall { text: <user's stated idea>, top_k: 5, depth: 1 }` without `node_type` filter — surface ANY related prior work (brainstorms, plans, prompts) in this codebase. If matches above ~0.75 exist, mention them inline before asking the first question:
+
+"Related prior work in this repo: docs/plans/2026-04-12-vault-design.md (similarity 0.82). Want me to read it first?"
+
+2. `mcp__prime__prime_add_node`:
+   - type: `"brainstorm"`
+   - properties: `{ name: "<topic>-design", file: "docs/plans/YYYY-MM-DD-<topic>-design.md", topic: "<kebab-topic>", domain: <inferred>, created_at: <YYYY-MM-DD> }`
+   - Capture entity_id.
+
+3. `mcp__prime__prime_embed { id: <entity_id>, text: <validated design's one-liner + core architectural decisions, ~2–3 sentences> }` — server embeds via in-process fastembed. Enables future brainstorming/create-prompt invocations to discover this design.
+
+4. For each `@path/to/file` reference in the design body, ensure a `file` node exists (search by `path`, create if missing) and `mcp__prime__prime_add_edge { source: <brainstorm>, target: <file>, relation: "references" }`.
+
+5. If this brainstorm refined or replaced an earlier design on the same topic, also `mcp__prime__prime_add_edge { source: <new>, target: <prior>, relation: "supersedes" }`.
+
+Best-effort: Prime failures don't block git commit or implementation handoff. Requires `allsource-prime ≥ 0.21.3`.
 
 **Implementation (if continuing):**
 - Ask: "Ready to set up for implementation?"
