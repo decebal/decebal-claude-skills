@@ -12,7 +12,7 @@ when splitting is worth it and when it costs more in merge than it saves.
 
 ```
 1. PRD Generation   →   2. Beads Creation   →   3. Execution
-   (claude-cn-prd)        (claude-cn-beads)      (claude, reading `cn ready`)
+   (claude-prd)           (claude-beads)         (claude, reading `cn ready`)
 ```
 
 ## Stage 1: PRD Generation

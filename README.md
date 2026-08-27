@@ -20,7 +20,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── feature-spec/           # PRDs, requirements, scope (42 rules)
 │   ├── find-skills/            # Skill discovery & install
 │   ├── mcp-builder/            # MCP server creation guide
-│   ├── claude-create-beads-rust/  # PRD → beads conversion
+│   ├── claude-beads/           # PRD → beads conversion (auto-detects cn/br/bd)
 │   ├── claude-prd/             # PRD generation for agent execution
 │   ├── skill-creator/          # How to author skills
 │   ├── typescript/             # TS optimization (42 rules)
