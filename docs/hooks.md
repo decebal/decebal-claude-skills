@@ -84,6 +84,11 @@ This drives both behaviour and token cost — see
 | `updatedInput` (PreToolUse) | Replaces the tool input — rewrite instead of block |
 | `updatedToolOutput` (PostToolUse) | Replaces the tool result the model sees |
 
+## Copy-paste-ready examples
+
+Ready-to-use PreToolUse security/quality gate and Stop session-end checklist
+configs: [hooks-examples.md](hooks-examples.md).
+
 ## Managing Hooks
 
 The `hookify` plugin provides hook management capabilities:

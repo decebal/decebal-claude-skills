@@ -100,3 +100,37 @@ This is safe in the sense that nothing shared is lost: `.chronis/` is local
 ephemeral data, and the tasks in it can be recreated from the PRD. It is not
 undoable, though — there is no export, so anything recorded only in a task's
 event history goes with it.
+
+## Release tagging
+
+Three lessons paid for in production burns.
+
+### 1. Tags are immutable
+
+Never move or delete a tag once it's pushed. If a release needs a fix, bump the
+version (`v0.10.3` → `v0.10.4`) — never re-point an existing tag. A moved tag
+desynchronises container registries, crates.io, and every downstream consumer
+that already resolved the old SHA; some of them cache and will never see the
+change, so you get two artifacts claiming the same version.
+
+### 2. Never tag until ALL CI gates pass
+
+Tag only after the full pipeline is green locally. The v0.14.2 → v0.14.5 burn in
+AllSource Chronos came from tagging per-fix before full CI passed:
+
+| Tag | What happened |
+|-----|---------------|
+| v0.14.2 | tagged → CI failed on Elixir |
+| v0.14.3 | fixed Elixir, tagged → CI failed on Go |
+| v0.14.4 | fixed Go, tagged → new Rust lint failed |
+| v0.14.5 | finally clean |
+
+Four immutable tags burned for one release. **Rule:** run `make ci` (or the
+equivalent full pipeline) locally and let every gate — every language — pass
+before you tag. Never rush a tag to "kick off CI."
+
+### 3. Batch fixes into ONE release
+
+If several issues surface during a release, fix them all, re-run the full
+pipeline, then cut a single new tag. One tag per fix is what produced the burn
+above. Collect, verify once, tag once.

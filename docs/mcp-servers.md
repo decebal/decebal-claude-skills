@@ -69,3 +69,10 @@ Services requiring authentication are tracked in `~/.claude/mcp-needs-auth-cache
 1. Create a `.mcp.json` file in the external plugins directory
 2. Or use the `mcp-builder` skill to create a custom server
 3. For project-specific servers, configure in the project's `.claude/` directory
+
+## Local Log Server
+
+A high-value local pattern for desktop/background apps: a stdio MCP server that
+lets Claude read application logs at runtime (`list_logs`, `tail_log`,
+`get_errors`, `search_logs`, `log_stats`). See
+[mcp-log-server.md](mcp-log-server.md).
