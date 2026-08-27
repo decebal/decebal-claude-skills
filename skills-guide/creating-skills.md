@@ -42,6 +42,12 @@ trigger: keyword1, keyword2, phrase to match
 4. **Verifiable outputs** — Include acceptance criteria or checkboxes for validation
 5. **Tool awareness** — Reference specific tools (Bash, Read, Write) if the skill needs them
 
+## Composing Skills
+
+Skills chain: a PRD feeds a beads converter, a review skill leans on a language
+skill. Express those relationships with the optional `depends_on:` / `enhances:`
+frontmatter keys — see [skill-composition.md](skill-composition.md).
+
 ## Examples from Installed Skills
 
 ### Questionnaire Pattern (claude-prd)

@@ -1,6 +1,7 @@
 ---
 name: claude-beads
 description: "Convert a PRD to beads (epic + child tasks) for claude execution. Auto-detects the installed tracker CLI — chronis (cn), beads-rust (br), or beads (bd) — and creates an epic with a child bead per user story. Pairs with the claude-prd skill. Triggers on: create beads, convert prd to beads, cn beads, br beads, cn create."
+depends_on: [claude-prd]
 ---
 
 # Claude Code — Create Beads

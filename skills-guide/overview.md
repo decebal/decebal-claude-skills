@@ -42,6 +42,8 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 | **systematic-debugging** | Diagnose-before-fix workflow; two-tier triage → deep dive | "debug this", "why is this failing", "troubleshoot", "diagnose" |
 | **bundle-analysis** | Bundle size: snapshot/diff/budget, tree-shaking, deps | "check bundle size", "analyze bundle", "size diff", "tree-shake" |
 | **security-review** | CSP/crypto/injection/CORS review checklist | "security review", "check for vulnerabilities", "CSP compliance" |
+| **perf-review** | App-level hot-path performance review (allocations, blocking, batching) | "review for performance", "hot path review", "performance audit" |
+| **explain-module** | Structured module explanation: file:line, data-flow + dependency Mermaid | "how does X work?", "explain the Y module", "walk me through" |
 
 ### Backend & Deploy
 
@@ -84,7 +86,9 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 ├── security-review -> ~/.agents/skills/security-review
 ├── elixir-expert -> ~/.agents/skills/elixir-expert
 ├── fastify-expert -> ~/.agents/skills/fastify-expert
-└── gcp-cloudrun -> ~/.agents/skills/gcp-cloudrun
+├── gcp-cloudrun -> ~/.agents/skills/gcp-cloudrun
+├── explain-module -> ~/.agents/skills/explain-module
+└── perf-review -> ~/.agents/skills/perf-review
 ```
 
 ## Installing Skills

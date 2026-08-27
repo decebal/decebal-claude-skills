@@ -34,6 +34,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── elixir-expert/          # Phoenix/OTP: supervision, Rustler NIFs, Ecto (+ 2 refs)
 │   ├── fastify-expert/         # Fastify APIs: plugins, hooks, JWT, inject() tests (+ 2 refs)
 │   ├── gcp-cloudrun/           # Cloud Run deploy/rollback, Terraform, cold-start (+ 2 refs)
+│   ├── explain-module/         # Structured module explanation: file:line + Mermaid (+ 2 refs)
+│   ├── perf-review/            # App-level hot-path performance review (+ 4 refs)
 │   ├── skill-creator/          # How to author skills
 │   ├── typescript/             # TS optimization (42 rules)
 │   └── web-video/              # Screen recording → web-ready H.264 demo (+ poster/GIF) via ffmpeg (bundled script)
