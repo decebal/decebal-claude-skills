@@ -65,3 +65,31 @@ Custom status line using Bun:
   }
 }
 ```
+
+## Figma (design → code)
+
+Enable in `settings.json`:
+
+```json
+"enabledPlugins": { "figma": true }
+```
+
+It talks to Figma over an MCP server — two options:
+
+- **Figma Dev Mode MCP** (local, official): in the Figma desktop app, Dev Mode →
+  "Enable MCP server" (serves at `http://127.0.0.1:3845/sse`), then point the
+  client at it in `.mcp.json`:
+
+  ```json
+  {
+    "mcpServers": {
+      "figma": { "type": "sse", "url": "http://127.0.0.1:3845/sse" }
+    }
+  }
+  ```
+
+- **Remote Figma MCP**: authenticate via the client's OAuth flow (no local
+  server) when the desktop app isn't available.
+
+Pull frame specs, tokens, and component structure into a build task — pair with
+the `frontend-design` skill and `docs/spacing-tokens.md`.

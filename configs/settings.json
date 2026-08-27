@@ -9,7 +9,8 @@
 
   "enabledPlugins": {
     "rust-analyzer-lsp@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": true
+    "gopls-lsp@claude-plugins-official": true,
+    "figma": true
   },
 
   "// HOOKS": "Guard rails from hooks/ — see hooks/README.md. Drop this block if you did not install them",

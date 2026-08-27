@@ -99,3 +99,45 @@ claude "create beads from ./tasks/prd-user-auth.md"
 # 3. Work them
 claude "work the ready beads: cn ready --toon, claim each, implement, run its quality gates, cn done"
 ```
+
+## CLI Reference: `br` vs `cn`
+
+chronis (`cn`) is the successor to beads-rust (`br`) — agent-native, event-sourced,
+TOON-optimized. Treat `br` as deprecated. The syntax differs:
+
+| Command | beads-rust (`br`) | chronis (`cn`) |
+|---------|-------------------|----------------|
+| Create | `br create` | `cn task create --toon` |
+| Dependencies | `br dep add` | `cn dep add --toon` |
+| Sync | `br sync --flush-only` | `cn sync --toon` |
+| Close | `br close` | `cn done --toon` |
+| Claim | `br claim` | `cn claim --toon` |
+| Ready | — | `cn ready --toon` |
+| Tracker flag | `--tracker beads-rust` | `--tracker chronis` |
+
+`cn ready` has no `br` equivalent — it filters to unblocked, unclaimed work, which
+is what makes the "read the ready beads yourself" execution loop possible.
+
+## Session Protocol
+
+```bash
+# Start of session
+cn ready --toon                  # Find available work
+cn claim --toon <id>             # Claim a task
+
+# During session
+cn task create --toon "title" -p p1 -d "description"   # Create new tasks
+cn dep add --toon <issue> <depends-on>                 # Set dependencies
+
+# End of session
+cn done --toon <id>              # Mark completed
+cn sync --toon                   # Sync changes (pull → import → export → push)
+```
+
+## The `--toon` flag
+
+Pass `--toon` to **every** `cn` command. TOON output is ~50% fewer tokens than the
+JSON renderer — the key differentiator from `br`, and the reason a long session can
+run `cn` dozens of times without bloating context. The non-TOON renderer can also
+panic on multibyte (em-dash) titles in current builds, so `--toon` is the safe
+default, not just the cheap one.
