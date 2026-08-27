@@ -29,6 +29,16 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 |-------|---------|-----------------|
 | **claude-beads** | Convert PRDs to executable beads; auto-detects the tracker CLI (cn/br/bd) | "create beads", "convert prd to beads" |
 
+### Engineering Quality
+
+| Skill | Purpose | Trigger Phrases |
+|-------|---------|-----------------|
+| **rust-clean-architecture** | Layering enforced as a test (domain ← infra); visibility, splits | "which layer", "clean architecture", "split this module", "pub or pub(crate)" |
+| **rust-quality** | Workspace clippy/unsafe/rustdoc lint gates + cargo sort | "set up clippy", "workspace lints", "deny unsafe", "cargo sort" |
+| **integration-test** | Audit coverage, write un-hangable cross-boundary tests | "audit tests", "test coverage", "write integration tests" |
+| **arch** | C4 architecture diagrams in MermaidJS | "draw architecture", "create a diagram", "document system structure" |
+| **systematic-debugging** | Diagnose-before-fix workflow; two-tier triage → deep dive | "debug this", "why is this failing", "troubleshoot", "diagnose" |
+
 ### Meta
 
 | Skill | Purpose | Trigger Phrases |
@@ -50,7 +60,12 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 ├── find-skills -> ~/.agents/skills/find-skills
 ├── mcp-builder -> ~/.agents/skills/mcp-builder
 ├── claude-beads -> ~/.agents/skills/claude-beads
-└── claude-prd -> ~/.agents/skills/claude-prd
+├── claude-prd -> ~/.agents/skills/claude-prd
+├── rust-clean-architecture -> ~/.agents/skills/rust-clean-architecture
+├── rust-quality -> ~/.agents/skills/rust-quality
+├── integration-test -> ~/.agents/skills/integration-test
+├── arch -> ~/.agents/skills/arch
+└── systematic-debugging -> ~/.agents/skills/systematic-debugging
 ```
 
 ## Installing Skills

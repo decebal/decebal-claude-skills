@@ -22,6 +22,11 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── mcp-builder/            # MCP server creation guide
 │   ├── claude-beads/           # PRD → beads conversion (auto-detects cn/br/bd)
 │   ├── claude-prd/             # PRD generation for agent execution
+│   ├── rust-clean-architecture/ # Rust layering enforced as a test (domain ← infra)
+│   ├── rust-quality/           # Workspace clippy/unsafe/rustdoc lint gates + cargo sort
+│   ├── integration-test/       # Audit coverage; write un-hangable cross-boundary tests
+│   ├── arch/                   # C4 architecture diagrams in MermaidJS
+│   ├── systematic-debugging/   # Structured diagnose-before-fix workflow (+ 4 refs)
 │   ├── skill-creator/          # How to author skills
 │   ├── typescript/             # TS optimization (42 rules)
 │   └── web-video/              # Screen recording → web-ready H.264 demo (+ poster/GIF) via ffmpeg (bundled script)
