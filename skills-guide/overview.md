@@ -15,6 +15,8 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 | **mcp-builder** | Create MCP servers for external APIs | "build mcp server" |
 | **bun-testing** | bun:test — mocks, snapshots, coverage, integration | "bun test", "mock.module", "test with bun" |
 | **monorepo-expert** | Turborepo + Bun workspaces: pipeline, cache, filters | "turbo.json", "cache miss", "affected packages", "monorepo" |
+| **wasm-development** | WebAssembly: Emscripten + wasm-pack, JS boundary, opt/debug | "build WASM", "Emscripten", "wasm-pack", "wasm-bindgen" |
+| **protobuf-grpc** | Protobuf/gRPC: buf + protobuf-es, envelope encryption, compat | "proto files", "protobuf", "gRPC", "buf generate" |
 
 ### Planning & Design
 
@@ -84,7 +86,9 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 ├── security-review -> ~/.agents/skills/security-review
 ├── elixir-expert -> ~/.agents/skills/elixir-expert
 ├── fastify-expert -> ~/.agents/skills/fastify-expert
-└── gcp-cloudrun -> ~/.agents/skills/gcp-cloudrun
+├── gcp-cloudrun -> ~/.agents/skills/gcp-cloudrun
+├── wasm-development -> ~/.agents/skills/wasm-development
+└── protobuf-grpc -> ~/.agents/skills/protobuf-grpc
 ```
 
 ## Installing Skills
