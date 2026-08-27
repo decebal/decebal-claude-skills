@@ -36,6 +36,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── gcp-cloudrun/           # Cloud Run deploy/rollback, Terraform, cold-start (+ 2 refs)
 │   ├── explain-module/         # Structured module explanation: file:line + Mermaid (+ 2 refs)
 │   ├── perf-review/            # App-level hot-path performance review (+ 4 refs)
+│   ├── wasm-development/       # WASM: Emscripten + wasm-pack, JS boundary, opt (+ 5 refs)
+│   ├── protobuf-grpc/          # protobuf-es/buf, envelope encryption, compat (+ 5 refs)
 │   ├── skill-creator/          # How to author skills
 │   ├── typescript/             # TS optimization (42 rules)
 │   └── web-video/              # Screen recording → web-ready H.264 demo (+ poster/GIF) via ffmpeg (bundled script)
@@ -98,7 +100,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **Portable Rules** | [rules/README.md](rules/README.md) | 15 stack-agnostic rule fragments, each with the incident that produced it |
 | **Gates** | [gates/README.md](gates/README.md) | The tooling the rules reference — hooks, scope classifier, drift check |
 | **Getting Started** | [configs/settings.json](configs/settings.json) | Global settings with extended thinking, LSP, status line |
-| **Skills (full source)** | [skills/](skills/) | 11 skills with SKILL.md + all reference files |
+| **Skills (full source)** | [skills/](skills/) | 52 skills with SKILL.md + all reference files |
 | **CLAUDE.md Templates** | [templates/](templates/) | Battle-tested templates for different project types |
 | **Skills Guide** | [skills-guide/overview.md](skills-guide/overview.md) | Skills inventory, authoring guide, PRD → beads pipeline |
 | **MCP Servers** | [docs/mcp-servers.md](docs/mcp-servers.md) | GitHub, Linear, Slack, Supabase, Firebase, and more |
