@@ -27,7 +27,7 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 
 | Skill | Purpose | Trigger Phrases |
 |-------|---------|-----------------|
-| **claude-create-beads-rust** | Convert PRDs to executable beads | "create beads", "convert prd to beads" |
+| **claude-beads** | Convert PRDs to executable beads; auto-detects the tracker CLI (cn/br/bd) | "create beads", "convert prd to beads" |
 
 ### Meta
 
@@ -49,7 +49,7 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 ├── feature-spec -> ~/.agents/skills/feature-spec
 ├── find-skills -> ~/.agents/skills/find-skills
 ├── mcp-builder -> ~/.agents/skills/mcp-builder
-├── claude-create-beads-rust -> ~/.agents/skills/claude-create-beads-rust
+├── claude-beads -> ~/.agents/skills/claude-beads
 └── claude-prd -> ~/.agents/skills/claude-prd
 ```
 

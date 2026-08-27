@@ -1,13 +1,17 @@
 ---
-name: claude-cn-beads
-description: "Convert PRDs to beads for claude execution using chronis (cn CLI). Creates an epic with child beads for each user story. Use when you have a PRD and want to use claude with chronis as the task source. Triggers on: create beads, convert prd to beads, cn beads, cn create."
+name: claude-beads
+description: "Convert a PRD to beads (epic + child tasks) for claude execution. Auto-detects the installed tracker CLI — chronis (cn), beads-rust (br), or beads (bd) — and creates an epic with a child bead per user story. Pairs with the claude-prd skill. Triggers on: create beads, convert prd to beads, cn beads, br beads, cn create."
 ---
 
-# Claude Code - Create Beads (chronis)
+# Claude Code — Create Beads
 
-Converts PRDs to beads (epic + child tasks) for claude autonomous execution using **chronis** (`cn` CLI).
+Converts a PRD to beads (epic + child tasks) for claude autonomous execution. Pairs
+with the [`claude-prd`](../claude-prd/SKILL.md) skill, which generates the PRD.
 
-> **Note:** This skill uses the `cn` command from chronis. If you have the original beads (`bd`) installed instead, use the `claude-create-beads` skill. If you have beads-rust (`br`), use the `claude-create-beads-rust` skill.
+The examples below use **chronis** (`cn`) — the primary tracker. This skill
+auto-detects which tracker CLI is installed (see *Detect the Tracker CLI* below); if
+it's `br` or `bd` rather than `cn`, substitute its syntax using the
+[differences table](#differences-across-beads-clis) at the bottom.
 
 ---
 
@@ -20,6 +24,29 @@ Take a PRD (markdown file or text) and create beads using `cn` commands:
 4. Create **child beads** for each user story (with story-specific acceptance criteria only)
 5. Set up **dependencies** between beads (schema → backend → UI)
 6. Output ready for `claude "work the ready beads: cn ready --toon, claim each, implement, run its quality gates, cn done"`
+
+---
+
+## Detect the Tracker CLI
+
+Do this before anything else — it decides which command syntax the rest of this
+skill uses. Pick the first that applies:
+
+1. `cn` on `PATH` (or a `.chronis/` dir in the repo) → **chronis**, the primary
+   tracker. Use `cn` with `--toon` on every command, exactly as written below.
+2. else `br` on `PATH` → **beads-rust**. Use `br` syntax (no `--toon`).
+3. else `bd` on `PATH` (or a `.beads/` dir) → **beads** (Go). Use `bd` syntax.
+
+```bash
+if command -v cn >/dev/null 2>&1; then TRACKER=cn
+elif command -v br >/dev/null 2>&1; then TRACKER=br
+elif command -v bd >/dev/null 2>&1; then TRACKER=bd
+else echo "no bead tracker found (cn/br/bd)"; fi
+```
+
+The body below is written for `cn`. For `br`/`bd`, translate each command with the
+[differences table](#differences-across-beads-clis) — the shapes are identical
+(create → dep add → sync → close), only the binary name and a few flags change.
 
 ---
 
@@ -205,7 +232,7 @@ cn create --toon --type=epic \
 - [ ] `bun lint` passes
 EOF
 )" \
-  --external-ref="prd:./docs/proposals/feature-name-prd.md"
+  --external-ref="prd:./tasks/feature-name-prd.md"
 
 # Create child bead with story-specific criteria only
 cn create --toon \
@@ -338,7 +365,7 @@ Warm outreach for deck feedback.
 - [ ] `task ci` passes (includes typecheck + lint)
 EOF
 )" \
-  --external-ref="prd:./docs/proposals/friends-outreach-prd.md"
+  --external-ref="prd:./tasks/friends-outreach-prd.md"
 
 # US-001: Schema story (no browser gate, no deps)
 cn create --toon --parent=feature-abc \
@@ -455,7 +482,9 @@ claude will:
 
 ---
 
-## Differences from other beads CLIs
+## Differences across beads CLIs
+
+Step 0 picks one of these. Translate the `cn` commands above to the detected CLI:
 
 | Command | beads (`bd`) | beads-rust (`br`) | chronis (`cn`) |
 |---------|--------------|-------------------|----------------|

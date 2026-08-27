@@ -1,6 +1,6 @@
 ---
 name: claude-prd
-description: "Generate a Product Requirements Document (PRD) for claude task orchestration. Creates PRDs with user stories that can be converted to beads for automated execution. Triggers on: create a prd, write prd for, plan this feature, requirements for, spec out."
+description: "Generate a Product Requirements Document (PRD) for claude task orchestration. Creates PRDs with user stories, two-tier quality gates, and a testing-trophy plan that can be converted to beads for automated execution via the claude-beads skill. Triggers on: create a prd, write prd for, plan this feature, requirements for, spec out."
 ---
 
 # Claude Code PRD Generator
@@ -32,6 +32,7 @@ Ask questions one set at a time. Each answer should inform your next questions. 
 - **Success Criteria:** How do we know it's done?
 - **Integration:** How does it fit with existing features?
 - **Quality Gates:** What commands validate success, and which tier? (REQUIRED)
+- **Testing Trophy:** What test layers are needed? (unit, contract, integration, frontend, E2E) (REQUIRED)
 
 ### Format Questions Like This:
 
@@ -81,6 +82,28 @@ After each response, decide whether to:
 
 Typically 2-4 rounds of questions are needed.
 
+### Testing Trophy Question (REQUIRED)
+
+Always ask about test coverage expectations:
+
+```
+What test layers does this epic need?
+   A. Unit only (pure logic, projections, state machines)
+   B. Unit + Contract (data shapes across IPC boundary)
+   C. Unit + Contract + Integration (cross-service flows)
+   D. Full trophy: Unit + Contract + Integration + Frontend + E2E
+   E. Other: [specify]
+
+Which behaviors are "block merge" critical?
+   A. Auto-completion / background logic (bugs are invisible to users)
+   B. Data filtering / query correctness (wrong data shown)
+   C. Orchestration (wrong things triggered)
+   D. All of the above
+   E. Other: [specify]
+```
+
+Use the answers to populate the Testing Trophy section in the PRD.
+
 ---
 
 ## Step 2: PRD Structure
@@ -95,7 +118,7 @@ Specific, measurable objectives (bullet list).
 
 ### 3. Quality Gates (Two Tiers)
 
-**CRITICAL:** Split gates into two tiers. The conversion tool (claude-create-beads-rust / `cn` CLI) reads this section directly.
+**CRITICAL:** Split gates into two tiers. The conversion tool (the `claude-beads` skill) reads this section directly.
 
 ```markdown
 ## Quality Gates
@@ -155,25 +178,113 @@ Every criterion must be something the agent can concretely verify:
 
 **Note:** Do NOT include epic-level gates (typecheck, lint, ci) in individual story criteria — they are defined once in the Quality Gates section and run on epic completion only. Story-level gates (browser verification, endpoint testing) DO belong in the relevant stories.
 
-### 5. Functional Requirements
+### 5. Testing Trophy
+
+**REQUIRED for every epic.** Define the expected test coverage across all layers BEFORE implementation begins. This prevents shipping features with test debt.
+
+The testing trophy prioritizes integration and contract tests over unit tests and E2E:
+
+```
+         ╭───────╮
+         │  E2E  │  Few, slow, high confidence
+      ╭──┴───────┴──╮
+      │ Integration  │  Cross-boundary flows
+   ╭──┴─────────────┴──╮
+   │  Contract/Handler  │  Data shapes, API boundaries
+╭──┴───────────────────┴──╮
+│     Unit (logic only)    │  Pure functions, state machines
+╰──────────────────────────╯
+```
+
+**For each layer, list specific tests the epic requires:**
+
+```markdown
+## Testing Trophy
+
+### Unit Tests
+- [ ] [Projection] TaskRunProjection handles Started/Completed events (N tests)
+- [ ] [Store] get_outputs filters deliverable steps only
+- [ ] [Logic] auto-completion derives correct status from sibling runs
+
+### Contract Tests
+- [ ] [Handler] list_task_runs returns sorted TaskRunSummary array
+- [ ] [Handler] run_job returns task_run_id, creates workflows
+- [ ] [Handler] get_task_run_outputs filters is_deliverable == true
+- [ ] [Frontend API] listTaskRuns/runJob/getTaskRunOutputs match handler shapes
+
+### Integration Tests
+- [ ] [Service] run_job creates TaskRun + triggers linked workflows
+- [ ] [Flow] workflow completion → auto-completes parent TaskRun
+
+### Frontend Tests
+- [ ] [Component] Empty state shows Run Job CTA
+- [ ] [Component] Accordion expand loads outputs
+- [ ] [Component] Approve/Reject actions invoke correct commands
+```
+
+**TDD-First Rules:**
+
+Every story follows test-driven development. Tests are written BEFORE or ALONGSIDE implementation, never after.
+
+- **Every user story** must list its specific tests in the acceptance criteria: `- [ ] Test: [description] (file: [path])`
+- **Backend stories** follow red-green-refactor:
+  1. First criterion: write failing test(s) for the expected behavior
+  2. Middle criteria: implement until tests pass
+  3. Last criterion: verify all tests green
+- **UI stories** include contract tests for data shapes: `- [ ] Contract test: [invoke command] returns expected shape`
+- **Each story carries its own tests** — no "write all tests at the end" stories
+- **Epic-level quality gates** include: `Testing trophy complete — all layers covered per the Testing Trophy section`
+
+**Test Placement in Stories (examples):**
+
+```markdown
+### US-003: Create TaskRun entity [Backend]
+**Acceptance Criteria:**
+- [ ] Test: TaskRunProjection handles Started event and queries by ID (red first)
+- [ ] Test: TaskRunProjection derives status from child workflow runs
+- [ ] TaskRun struct with fields: task_run_id, job_id, status, ...
+- [ ] AllSource projection registered
+- [ ] All tests green: cargo test task_run
+
+### US-007: Expandable accordion [UI]
+**Acceptance Criteria:**
+- [ ] Contract test: getTaskRunOutputs returns WorkflowRunOutputs[] with nested steps
+- [ ] Contract test: approve_step_run accepts stepRunId + disposition
+- [ ] Accordion expands on click, loads outputs via getTaskRunOutputs
+- [ ] All tests green: bun test job-detail-runs
+```
+
+**Classify tests by deployment gate:**
+- **Block merge:** Implicit/background logic (auto-completion, data filtering, orchestration) — bugs here are invisible to users
+- **Block release:** Handler contracts, frontend component behavior, review action correctness
+- **Follow-up OK:** E2E, visual regression, performance edge cases
+
+**Anti-patterns to reject:**
+- ❌ Shipping all stories without tests, then adding a "write tests" story at the end
+- ❌ Only testing projections (base of trophy) while skipping contract and integration layers
+- ❌ "It's just UI" — interactive logic (accordion, review, state machines) needs contract tests
+- ❌ Tests that verify implementation details instead of behavior ("function was called" vs "output is correct")
+- ❌ Acceptance criteria that say "tests added" without naming the specific tests
+
+### 6. Functional Requirements
 Numbered list of specific functionalities:
 - "FR-1: The system must allow users to..."
 - "FR-2: When a user clicks X, the system must..."
 
 Be explicit and unambiguous.
 
-### 6. Non-Goals (Out of Scope)
+### 7. Non-Goals (Out of Scope)
 What this feature will NOT include. Critical for managing scope.
 
-### 7. Technical Considerations (Optional)
+### 8. Technical Considerations (Optional)
 - Known constraints or dependencies
 - Integration points with existing systems
 - Performance requirements
 
-### 8. Success Metrics
+### 9. Success Metrics
 How will success be measured?
 
-### 9. Open Questions
+### 10. Open Questions
 Remaining questions or areas needing clarification.
 
 ---
@@ -365,8 +476,13 @@ Before outputting the PRD:
 
 - [ ] Asked clarifying questions with lettered options
 - [ ] Asked about quality gates with two-tier classification (REQUIRED)
+- [ ] Asked about testing trophy layers (REQUIRED)
 - [ ] Asked follow-up questions when needed
 - [ ] Quality Gates section has Epic-Level and Story-Level subsections
+- [ ] **Testing Trophy section exists** with specific tests per layer (unit, contract, integration, frontend)
+- [ ] **Each backend story** names its tests in acceptance criteria (TDD: test first)
+- [ ] **Each UI story** has contract test for data shape from invoke
+- [ ] **Block-merge tests** identified for implicit/background logic
 - [ ] Epic-level gates are general commands (typecheck, lint, ci) — NOT in individual stories
 - [ ] Story-level gates are assigned to relevant stories (UI → browser, backend → endpoint check)
 - [ ] Stories tagged with type: `[Schema]`, `[Backend]`, `[UI]`, `[Integration]`

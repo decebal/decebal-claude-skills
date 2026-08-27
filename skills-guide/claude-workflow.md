@@ -11,7 +11,7 @@ parallelism is one worktree per agent — see
 
 ```
 1. PRD Generation   →   2. Beads Creation           →   3. Execution
-   (claude-prd)           (claude-create-beads-rust)      (claude, reading `cn ready`)
+   (claude-prd)           (claude-beads)                  (claude, reading `cn ready`)
 ```
 
 ## Stage 1: PRD Generation
