@@ -13,6 +13,8 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 | **bun-development** | Bun runtime, migration from Node | Working with Bun projects |
 | **docker-expert** | Docker builds, security, orchestration | Dockerfile work, container issues |
 | **mcp-builder** | Create MCP servers for external APIs | "build mcp server" |
+| **bun-testing** | bun:test — mocks, snapshots, coverage, integration | "bun test", "mock.module", "test with bun" |
+| **monorepo-expert** | Turborepo + Bun workspaces: pipeline, cache, filters | "turbo.json", "cache miss", "affected packages", "monorepo" |
 
 ### Planning & Design
 
@@ -38,6 +40,8 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 | **integration-test** | Audit coverage, write un-hangable cross-boundary tests | "audit tests", "test coverage", "write integration tests" |
 | **arch** | C4 architecture diagrams in MermaidJS | "draw architecture", "create a diagram", "document system structure" |
 | **systematic-debugging** | Diagnose-before-fix workflow; two-tier triage → deep dive | "debug this", "why is this failing", "troubleshoot", "diagnose" |
+| **bundle-analysis** | Bundle size: snapshot/diff/budget, tree-shaking, deps | "check bundle size", "analyze bundle", "size diff", "tree-shake" |
+| **security-review** | CSP/crypto/injection/CORS review checklist | "security review", "check for vulnerabilities", "CSP compliance" |
 
 ### Meta
 
@@ -65,7 +69,11 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 ├── rust-quality -> ~/.agents/skills/rust-quality
 ├── integration-test -> ~/.agents/skills/integration-test
 ├── arch -> ~/.agents/skills/arch
-└── systematic-debugging -> ~/.agents/skills/systematic-debugging
+├── systematic-debugging -> ~/.agents/skills/systematic-debugging
+├── bun-testing -> ~/.agents/skills/bun-testing
+├── monorepo-expert -> ~/.agents/skills/monorepo-expert
+├── bundle-analysis -> ~/.agents/skills/bundle-analysis
+└── security-review -> ~/.agents/skills/security-review
 ```
 
 ## Installing Skills

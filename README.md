@@ -27,6 +27,10 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── integration-test/       # Audit coverage; write un-hangable cross-boundary tests
 │   ├── arch/                   # C4 architecture diagrams in MermaidJS
 │   ├── systematic-debugging/   # Structured diagnose-before-fix workflow (+ 4 refs)
+│   ├── bun-testing/            # bun:test — mocking, snapshots, coverage, integration
+│   ├── monorepo-expert/        # Turborepo + Bun workspaces: pipeline, cache, filters
+│   ├── bundle-analysis/        # Bundle size: snapshot/diff/budget, tree-shaking
+│   ├── security-review/        # CSP/crypto/injection review checklist (+ 4 refs)
 │   ├── skill-creator/          # How to author skills
 │   ├── typescript/             # TS optimization (42 rules)
 │   └── web-video/              # Screen recording → web-ready H.264 demo (+ poster/GIF) via ffmpeg (bundled script)
