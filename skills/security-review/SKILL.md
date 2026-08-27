@@ -1,6 +1,7 @@
 ---
 name: security-review
 description: Security review checklist for web/SPA code and browser SDKs — CSP compliance (no eval/new Function/inline style/javascript: URIs), credential exposure, XSS/SQL/command injection, WebCrypto correctness, CORS, cookie flags, SRI, WebSocket, and CSP-safe library choices. Use when reviewing a diff or a file for security, before shipping browser SDK code, or when the user asks for a "security review", "security audit", "check for vulnerabilities", "is this safe", "CSP violation", "XSS check", or "crypto review". Composes with a general code-review skill.
+enhances: [typescript]
 ---
 
 # Security Review
