@@ -43,6 +43,14 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 | **bundle-analysis** | Bundle size: snapshot/diff/budget, tree-shaking, deps | "check bundle size", "analyze bundle", "size diff", "tree-shake" |
 | **security-review** | CSP/crypto/injection/CORS review checklist | "security review", "check for vulnerabilities", "CSP compliance" |
 
+### Backend & Deploy
+
+| Skill | Purpose | Trigger Phrases |
+|-------|---------|-----------------|
+| **elixir-expert** | Phoenix/OTP: supervision trees, Rustler NIFs, Ecto, releases | "Phoenix", "GenServer", "supervisor", "Rustler NIF", "mix release" |
+| **fastify-expert** | Fastify APIs: plugins, lifecycle hooks, JWT, `inject()` tests | "fastify", "route plugin", "preHandler hook", "fastify jwt" |
+| **gcp-cloudrun** | Cloud Run deploy/rollback, Terraform, cold-start/OOM debug | "deploy to cloud run", "rollback deployment", "terraform cloud run" |
+
 ### Meta
 
 | Skill | Purpose | Trigger Phrases |
@@ -73,7 +81,10 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 ├── bun-testing -> ~/.agents/skills/bun-testing
 ├── monorepo-expert -> ~/.agents/skills/monorepo-expert
 ├── bundle-analysis -> ~/.agents/skills/bundle-analysis
-└── security-review -> ~/.agents/skills/security-review
+├── security-review -> ~/.agents/skills/security-review
+├── elixir-expert -> ~/.agents/skills/elixir-expert
+├── fastify-expert -> ~/.agents/skills/fastify-expert
+└── gcp-cloudrun -> ~/.agents/skills/gcp-cloudrun
 ```
 
 ## Installing Skills
