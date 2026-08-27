@@ -22,17 +22,18 @@ Portable rules live in [`rules/`](../rules/). Copy the set you want to
 
 ## Stack
 - Desktop framework: Tauri 2 ({macOS/Windows})
-- Backend: Rust (clean architecture, 4 layers)
-- Frontend: Svelte 5 + TypeScript
-- Persistence: {SQLite via Turso / an event store}
+- Backend: Rust (clean architecture, 4 layers), IPC via **AllFrame** typed router
+- Frontend: Svelte 5 (runes) + TypeScript, domain architecture
+- Persistence: **AllSource** event sourcing — events are the source of truth;
+  in-memory projections are rebuilt from the event log on startup (no SQLite/ORM)
 - Styling: Tailwind CSS
 
 ## Commands
 ```bash
-task dev             # Start Tauri dev mode
-task build           # Build production app
-task test            # cargo nextest run --features test-support
-task lint            # Lint frontend + clippy
+bun run dev                      # Start all (frontend + backend)
+bun run quality                  # Lint + format + typecheck + test
+bun test                         # Frontend tests (Bun)
+cargo test -- --test-threads=1   # Rust tests (sequential — shared event-store state)
 ```
 
 ## Project Structure
@@ -53,10 +54,16 @@ src/
 ```
 
 ## Architecture
-- Frontend ↔ Backend via Tauri IPC (`invoke()`)
+- Frontend ↔ Backend via **AllFrame** typed handlers, not raw `#[tauri::command]`:
+  `register_typed`, `register_result_with_args`, `register_with_state`. Handlers
+  are thin delegates — business logic lives in `application/services/`
+- **AllSource** event sourcing: write events, derive state; projections are
+  in-memory and rebuilt from the log on startup
 - Dependency direction: presentation → application → infrastructure ← domain,
   **enforced by an architecture test suite**, not by convention
 - Event streams: Activity (telemetry, never toasts) vs Alerts (always toasts)
+- Frontend is domain-organized (`domains/{name}/` with `components/`, `state/`,
+  `services/`), not organized by component type
 - Services never import infrastructure directly — go through a facade
 
 ## Conventions
@@ -64,9 +71,14 @@ src/
   is not needed. Serialize only what is machine-global (the OS keychain) in one
   named group with `max-threads = 1`
 - **Invoke args are camelCase** — `invoke("cmd", { workflowId })`, not
-  `{ workflow_id }`. Gate it; a name mismatch is a silently dead command
+  `{ workflow_id }`. AllFrame does NOT auto-convert; a name mismatch is a
+  silently dead command. Gate it
+- **Svelte 5 runes** — `$state`, `$derived`, `$effect`; NOT `writable`/`derived`
+  stores. Domain state is a rune-based module under `domains/{name}/state/`
 - Frontend: typed IPC wrappers, one per domain, checked against a command map
-- Errors: Rust `thiserror` types mapped to human-readable frontend messages
+- Errors: `notifyError(e, source, phase)` for user-facing failures;
+  `logError(e, source, phase)` for dev-only. Rust `thiserror` types map to
+  human-readable frontend messages
 - Clipboard: never `navigator.clipboard` — it silently fails in the desktop
   webview. Use a wrapper
 

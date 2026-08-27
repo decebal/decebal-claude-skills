@@ -74,7 +74,19 @@ For UI stories that need visual diff verification, the acceptance criteria shoul
 - `- [ ] Playwright e2e test passes: bunx playwright test tests/<feature>.spec.ts`
 - `- [ ] Visual snapshot updated and matches expected (bunx playwright test --update-snapshots)`
 
-### Quality gate command mapping
+### Detect the project runtime first
+
+This skill applies to any chronis project, not just JS/TS. Before running any
+gate, detect the runtime from what's in the repo and use ITS runner — the bun
+table below is the JS/TS case, not a universal default:
+
+- `Cargo.toml` → `cargo test` / `cargo clippy -- -D warnings` / `cargo fmt --check`
+- `mix.exs` → `mix test` / `mix format --check-formatted` / `mix credo`
+- `go.mod` → `go test ./...` / `go vet ./...` / `gofmt -l`
+- `bun.lock` / `package.json` → the bun table below
+- A `Taskfile.yml` / `Makefile` with the right target (`task ci`, `make test`) wins over all of the above — prefer it
+
+### Quality gate command mapping (JS/TS projects)
 
 | What | Command |
 |------|---------|
@@ -263,7 +275,7 @@ cn dep add --toon feature-003 feature-002  # US-003 depends on US-002
 
 ## Conversion Rules
 
-1. **Detect tooling**: check for Taskfile.yml/Makefile, always use bun/bunx
+1. **Detect tooling**: prefer a Taskfile.yml/Makefile target; else use the project runtime's runner (see "Detect the project runtime first") — bun/bunx for JS/TS, cargo for Rust, mix for Elixir, go for Go
 2. **Classify Quality Gates** from PRD into story-level vs. epic-level
 3. **Epic-level gates** go in the epic description (`task ci`/`make ci`, `bun typecheck`, `bun lint`)
 4. **Story-level gates** go in individual bead descriptions (browser verification for UI stories)
