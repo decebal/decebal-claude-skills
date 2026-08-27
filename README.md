@@ -100,7 +100,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **Portable Rules** | [rules/README.md](rules/README.md) | 15 stack-agnostic rule fragments, each with the incident that produced it |
 | **Gates** | [gates/README.md](gates/README.md) | The tooling the rules reference — hooks, scope classifier, drift check |
 | **Getting Started** | [configs/settings.json](configs/settings.json) | Global settings with extended thinking, LSP, status line |
-| **Skills (full source)** | [skills/](skills/) | 11 skills with SKILL.md + all reference files |
+| **Skills (full source)** | [skills/](skills/) | 52 skills with SKILL.md + all reference files |
 | **CLAUDE.md Templates** | [templates/](templates/) | Battle-tested templates for different project types |
 | **Skills Guide** | [skills-guide/overview.md](skills-guide/overview.md) | Skills inventory, authoring guide, PRD → beads pipeline |
 | **MCP Servers** | [docs/mcp-servers.md](docs/mcp-servers.md) | GitHub, Linear, Slack, Supabase, Firebase, and more |
