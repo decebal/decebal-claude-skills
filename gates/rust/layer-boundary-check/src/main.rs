@@ -10,8 +10,9 @@
 //! order  = ["presentation", "application", "infrastructure"]
 //! # Layers outside the ordering that may import no other layer at all.
 //! pure   = ["domain"]
-//! # How an import of layer X is spelled. `{layer}` is the layer's NAME.
-//! import = "use crate::{layer}"
+//! # How a path into another layer starts. A reference counts wherever it appears, so a
+//! # fully-qualified `crate::presentation::f()` is an import too, not just a `use`.
+//! path_prefix = "crate::"
 //!
 //! [layers.dir]
 //! presentation   = "apps/desktop/src/presentation/"
@@ -45,7 +46,7 @@ use std::collections::BTreeMap;
 use std::process::{Command, ExitCode};
 
 mod layers;
-use layers::{imports_in, is_test_file, Edge, Hit, Layer, Model};
+use layers::{is_test_file, references_in, Edge, Hit, Layer, Model};
 
 /// One layer file, attributed to exactly one layer.
 struct Source {
@@ -117,13 +118,12 @@ fn main() -> ExitCode {
 
     for edge in model.forbidden_edges() {
         checked += 1;
-        let needle = model.import_of(&edge);
         let facade = model.facade_for(&edge);
         let hits: Vec<Hit> = sources
             .iter()
             .filter(|s| s.layer == edge.from.name)
             .filter(|s| facade != Some(s.path.as_str()))
-            .flat_map(|s| imports_in(&s.path, &s.text, &needle))
+            .flat_map(|s| references_in(&s.path, &s.text, &model.path_prefix, &edge.to.name))
             .collect();
 
         let ceiling = model.ceiling_for(&edge);
@@ -177,6 +177,18 @@ fn report_breach(edge: &Edge, hits: &[Hit], ceiling: usize, facade: Option<&str>
 }
 
 fn build_model(cfg: &Config) -> Result<Model, String> {
+    // Refuse the old key rather than ignore it. Its value was a `use`-prefixed needle, so a
+    // config still carrying it was scanning for use statements only and reporting zero for
+    // every fully-qualified upward call — a silently blind gate is what this replaced.
+    if cfg.string("layers.import").is_some() {
+        return Err(concat!(
+            "`layers.import` is no longer read. It matched `use` statements only, so a ",
+            "fully-qualified call like `crate::ui::f()` was invisible and the gate reported ",
+            "zero. Replace it with `path_prefix = \"crate::\"` and re-run — expect ",
+            "violations that were always there."
+        )
+        .to_string());
+    }
     let names = cfg
         .list("layers.order")
         .ok_or_else(|| "no `order` declared".to_string())?;
@@ -222,9 +234,9 @@ fn build_model(cfg: &Config) -> Result<Model, String> {
     Ok(Model {
         order,
         pure,
-        import_template: cfg
-            .string("layers.import")
-            .unwrap_or("use crate::{layer}")
+        path_prefix: cfg
+            .string("layers.path_prefix")
+            .unwrap_or("crate::")
             .to_string(),
         ceilings,
         facades,
