@@ -1,0 +1,7 @@
+{
+  "platform": "google",
+  "locale": "en-US",
+  "name": "This app name is longer than thirty characters",
+  "short_description": "Plan focused work.",
+  "full_description": "Plan focused work with your team."
+}

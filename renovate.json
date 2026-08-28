@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "minimumReleaseAge": "7 days",
+  "semanticCommits": "enabled",
+  "packageRules": [
+    {
+      "description": "Group patch-level Rust runtime maintenance",
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "Rust patch dependencies"
+    },
+    {
+      "description": "Group GitHub Actions maintenance",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    }
+  ]
+}

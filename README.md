@@ -38,6 +38,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── perf-review/            # App-level hot-path performance review (+ 4 refs)
 │   ├── wasm-development/       # WASM: Emscripten + wasm-pack, JS boundary, opt (+ 5 refs)
 │   ├── protobuf-grpc/          # protobuf-es/buf, envelope encryption, compat (+ 5 refs)
+│   ├── claude-seo/             # Evidence-led SEO + safe Rust audit/sitemap/drift CLI
+│   ├── aso-lint/               # App Store/Google Play optimization + Rust linter
 │   ├── skill-creator/          # How to author skills
 │   ├── typescript/             # TS optimization (42 rules)
 │   └── web-video/              # Screen recording → web-ready H.264 demo (+ poster/GIF) via ffmpeg (bundled script)
@@ -51,7 +53,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── layer-boundaries.md     # 4-layer direction as a test; opening a god module
 │   └── …                       # 15 rules total — see rules/README.md
 ├── gates/                      # The tooling the rules reference
-│   ├── rust/                   # 20 crates, 4 deps, 258 tests — one cargo workspace
+│   ├── rust/                   # 20 crates, 4 deps, 265 tests — one cargo workspace
 │   │   ├── claude-guard/       # the guard-rail hooks: infra, bash, comments
 │   │   ├── staged-scope/       # which gates does this diff need? default-deny
 │   │   ├── layer-boundary-check/    # the dependency direction, with ratcheting ceilings
@@ -100,7 +102,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **Portable Rules** | [rules/README.md](rules/README.md) | 15 stack-agnostic rule fragments, each with the incident that produced it |
 | **Gates** | [gates/README.md](gates/README.md) | The tooling the rules reference — hooks, scope classifier, drift check |
 | **Getting Started** | [configs/settings.json](configs/settings.json) | Global settings with extended thinking, LSP, status line |
-| **Skills (full source)** | [skills/](skills/) | 52 skills with SKILL.md + all reference files |
+| **Skills (full source)** | [skills/](skills/) | 54 skills with SKILL.md + all reference files |
 | **CLAUDE.md Templates** | [templates/](templates/) | Battle-tested templates for different project types |
 | **Skills Guide** | [skills-guide/overview.md](skills-guide/overview.md) | Skills inventory, authoring guide, PRD → beads pipeline |
 | **MCP Servers** | [docs/mcp-servers.md](docs/mcp-servers.md) | GitHub, Linear, Slack, Supabase, Firebase, and more |
@@ -117,6 +119,11 @@ Some skills bundle runnable scripts (not just instructions):
   sandbox. See `skills/blog-image/examples/sample-og.webp`.
 - **`web-video`** — `optimize_video.sh` (screen recording → web-ready H.264 + poster + GIF).
   Needs `ffmpeg`.
+- **`claude-seo`** — Rust `claude-seo` CLI for bounded static HTML audits, sitemap
+  inspection, high-risk field drift, and capability diagnosis. Public fetches reject
+  private/local targets, revalidate redirects, pin validated DNS, and cap time/bytes.
+- **`aso-lint`** — Rust `aso-lint` CLI for Apple/Google metadata limits, starter
+  templates, stable rule IDs, and two-proportion experiment snapshots.
 
 The guard-rail hooks are runnable too — three PreToolUse/PostToolUse guards in one
 binary. See [hooks/README.md](hooks/README.md).
@@ -134,21 +141,38 @@ external dependency, nothing to skip:
 
 ```sh
 cargo test --manifest-path gates/rust/Cargo.toml -p claude-guard   # 63 tests
-cargo test --manifest-path gates/rust/Cargo.toml                   # 258, every gate
+cargo test --manifest-path gates/rust/Cargo.toml                   # 265, every gate
+cargo test --manifest-path skills/claude-seo/scripts/Cargo.toml   # unit + CLI fixtures
+cargo test --manifest-path skills/aso-lint/scripts/Cargo.toml     # unit + CLI fixtures
 ```
 
 CI runs them on every push to `skills/**` or `tests/**` via
 [`.github/workflows/test-skills.yml`](.github/workflows/test-skills.yml)
-(installs `ffmpeg` + `uv`).
+(installs `ffmpeg`, `uv`, and stable Rust with rustfmt/Clippy).
 
 ### Install a skill globally (Claude Code)
 
 ```sh
 cp -R skills/blog-image ~/.claude/skills/blog-image
 cp -R skills/web-video  ~/.claude/skills/web-video
+cp -R skills/claude-seo ~/.claude/skills/claude-seo
+cp -R skills/aso-lint   ~/.claude/skills/aso-lint
 ```
 
 For Claude Desktop: upload the skill folder (SKILL.md + scripts) via Settings → Skills.
+
+## SEO suite
+
+Two skills share one evidence contract:
+
+| Skill | Use it for | Deterministic Rust evidence | Honest boundary |
+|---|---|---|---|
+| [`claude-seo`](skills/claude-seo/) | Technical/on-page audits, schema, sitemaps, hreflang, drift, content plans, GEO | Static HTML signals, public response status, sitemap XML, audit diffs | Search/analytics/backlink/maps/render data stays `setup required` until observed |
+| [`aso-lint`](skills/aso-lint/) | Apple App Store and Google Play listings, locales, visuals, experiments | Metadata budgets, keyword bytes, templates, experiment math | Store approval, rank, demand, downloads, and lift are never inferred |
+
+Both ship locked Cargo workspaces, strict Clippy/rustdoc policy, fixture-driven
+CLI tests, upstream MIT attribution, and progressive skill references. See
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for provenance.
 
 ## Key Principles
 

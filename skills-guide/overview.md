@@ -18,6 +18,13 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 | **wasm-development** | WebAssembly: Emscripten + wasm-pack, JS boundary, opt/debug | "build WASM", "Emscripten", "wasm-pack", "wasm-bindgen" |
 | **protobuf-grpc** | Protobuf/gRPC: buf + protobuf-es, envelope encryption, compat | "proto files", "protobuf", "gRPC", "buf generate" |
 
+### SEO
+
+| Skill | Purpose | Trigger Phrases |
+|-------|---------|-----------------|
+| **claude-seo** | Evidence-led technical/content/GEO audits with safe Rust static analysis | "SEO audit", "technical SEO", "schema", "sitemap", "traffic drop", "GEO" |
+| **aso-lint** | Apple App Store + Google Play metadata, research, visuals, and experiments with Rust linting | "ASO audit", "app keywords", "store listing", "listing experiment" |
+
 ### Planning & Design
 
 | Skill | Purpose | Trigger Phrases |
@@ -92,7 +99,9 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 ├── explain-module -> ~/.agents/skills/explain-module
 ├── perf-review -> ~/.agents/skills/perf-review
 ├── wasm-development -> ~/.agents/skills/wasm-development
-└── protobuf-grpc -> ~/.agents/skills/protobuf-grpc
+├── protobuf-grpc -> ~/.agents/skills/protobuf-grpc
+├── claude-seo -> ~/.agents/skills/claude-seo
+└── aso-lint -> ~/.agents/skills/aso-lint
 ```
 
 ## Installing Skills
