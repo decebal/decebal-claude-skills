@@ -99,11 +99,15 @@ extensions = ["rs", "ts", "tsx", "svelte"]
 # ── Layer boundaries ─────────────────────────────────────────────────────────
 # `layer-boundary-check` derives the forbidden pairs from the DIRECTION, so
 # adding a layer does not mean hand-writing N more patterns.
+#
+# `path_prefix` matches a reference WHEREVER it appears, not only after `use`. A
+# fully-qualified `crate::presentation::f()` is an upward import too, and a gate
+# that only read use statements reported zero for exactly that shape.
 
 [layers]
 order  = ["presentation", "application", "infrastructure"]
 pure   = ["domain"]
-import = "use crate::{layer}"
+path_prefix = "crate::"
 
 [layers.dir]
 presentation   = "apps/api/src/presentation/"
