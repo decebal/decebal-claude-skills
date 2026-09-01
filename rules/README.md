@@ -14,6 +14,7 @@ the next agent under deadline; a prohibition with a cost attached does not.
 | [agent-parallelism.md](agent-parallelism.md) | Split by file count not concept; one worktree per agent; never two builds at once; seeding and cleanup |
 | [timeouts.md](timeouts.md) | The 5-minute ceiling on every gate, and how to fit under it |
 | [definition-of-done.md](definition-of-done.md) | End-to-end or not done; size is never a signal; blocks are routed around |
+| [estimation.md](estimation.md) | Never estimate in time; rock/sand/water is confidence, not size; the betting table |
 | [comments.md](comments.md) | What a comment must earn; never narrate the fix |
 | [debugging-discipline.md](debugging-discipline.md) | Instrument before theorizing; revert before layering; find the regression commit |
 | [token-efficiency.md](token-efficiency.md) | Targeted reads, mental cache, batched calls, minimal diffs |
@@ -54,10 +55,10 @@ cp rules/*.md ~/.claude/rules/
 
 ## Picking a subset
 
-Don't take all fifteen. Context is the budget.
+Don't take all sixteen. Context is the budget.
 
 - **Any repo, any stack:** `git-discipline`, `evidence-discipline`, `comments`,
-  `definition-of-done`, `token-efficiency`.
+  `definition-of-done`, `estimation`, `token-efficiency`.
 - **Multi-agent work:** add `agent-parallelism`, `timeouts`.
 - **Has a test suite and hooks:** add `testing-gates`.
 - **Layered backend:** add `layer-boundaries`, `dependency-hygiene`.
