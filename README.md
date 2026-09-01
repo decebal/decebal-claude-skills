@@ -51,7 +51,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── definition-of-done.md   # End-to-end or not done; size is never a signal
 │   ├── testing-gates.md        # What actually enforces anything; un-hangable tests
 │   ├── layer-boundaries.md     # 4-layer direction as a test; opening a god module
-│   └── …                       # 15 rules total — see rules/README.md
+│   └── …                       # 16 rules total — see rules/README.md
 ├── gates/                      # The tooling the rules reference
 │   ├── rust/                   # 20 crates, 4 deps, 265 tests — one cargo workspace
 │   │   ├── claude-guard/       # the guard-rail hooks: infra, bash, comments
