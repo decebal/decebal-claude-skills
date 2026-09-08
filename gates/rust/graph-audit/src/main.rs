@@ -36,6 +36,15 @@ struct Oracle {
     src_files: HashSet<String>,
     /// basename -> all full paths carrying it (for rename suggestions).
     by_basename: HashMap<String, Vec<String>>,
+    /// The commit the graph was built at, when it records one.
+    built_at_commit: Option<String>,
+    /// Ids referenced by a link or hyperedge that no node object defines.
+    ///
+    /// A reference with no node is a claim the graph makes and cannot support. They arise
+    /// because the extraction cache is keyed per FILE while a cached fragment may name ids
+    /// owned by OTHER files: edit one of those and the fragment is reused verbatim, still
+    /// pointing at ids that no longer exist.
+    dangling: Vec<String>,
 }
 
 impl Oracle {
@@ -67,10 +76,101 @@ impl Oracle {
                 }
             }
         }
+        let mut defined = HashSet::new();
+        if let Some(nodes) = v.get("nodes").and_then(|n| n.as_array()) {
+            for n in nodes {
+                if let Some(id) = n.get("id").and_then(|i| i.as_str()) {
+                    defined.insert(id.to_string());
+                }
+            }
+        }
+        // Edges live under `links` in networkx node-link JSON, never `edges`. Reading the
+        // wrong key here reports a clean graph over thousands of unchecked endpoints.
+        let mut dangling: Vec<String> = Vec::new();
+        let mut seen = HashSet::new();
+        let mut note = |id: &str, dangling: &mut Vec<String>, seen: &mut HashSet<String>| {
+            if !defined.contains(id) && seen.insert(id.to_string()) {
+                dangling.push(id.to_string());
+            }
+        };
+        if let Some(links) = v.get("links").and_then(|l| l.as_array()) {
+            for e in links {
+                for key in ["source", "target"] {
+                    if let Some(id) = e.get(key).and_then(|s| s.as_str()) {
+                        note(id, &mut dangling, &mut seen);
+                    }
+                }
+            }
+        }
+        if let Some(hyper) = v.get("hyperedges").and_then(|h| h.as_array()) {
+            for h in hyper {
+                if let Some(ids) = h.get("nodes").and_then(|n| n.as_array()) {
+                    for id in ids.iter().filter_map(|i| i.as_str()) {
+                        note(id, &mut dangling, &mut seen);
+                    }
+                }
+            }
+        }
+        dangling.sort();
         Oracle {
             src_files,
             by_basename,
+            built_at_commit: v
+                .get("built_at_commit")
+                .and_then(|c| c.as_str())
+                .map(str::to_string),
+            dangling,
         }
+    }
+
+    /// What this oracle is, and what it therefore cannot be trusted about.
+    ///
+    /// The tool answers "does this path exist" from a SNAPSHOT. A snapshot taken before a
+    /// file was deleted still contains it, so every finding below is only as current as
+    /// the commit named here — and saying so is the difference between an oracle and a
+    /// confident guess.
+    fn provenance(&self) -> String {
+        let mut s = String::from("## Oracle provenance\n\n");
+        match &self.built_at_commit {
+            Some(c) => {
+                let short = c.chars().take(7).collect::<String>();
+                match commits_since(c) {
+                    Some(0) => s.push_str(&format!("- Graph built at `{short}`, which is HEAD.\n")),
+                    Some(n) => s.push_str(&format!(
+                        "- **Graph is {n} commit(s) behind HEAD** (built at `{short}`). \
+                         Anything added or deleted since is invisible to this audit, so a \
+                         path it calls present may already be gone. Rebuild before acting \
+                         on a path finding.\n"
+                    )),
+                    None => s.push_str(&format!(
+                        "- Graph built at `{short}`, which this checkout does not contain. \
+                         Staleness is unknown.\n"
+                    )),
+                }
+            }
+            None => s.push_str(
+                "- Graph records no `built_at_commit`, so its staleness cannot be \
+                 established at all.\n",
+            ),
+        }
+        if self.dangling.is_empty() {
+            s.push_str("- Every referenced node id resolves to a node.\n");
+        } else {
+            s.push_str(&format!(
+                "- **{} referenced node id(s) have no node object.** The extraction cache \
+                 is keyed per file, so a cached fragment can keep naming ids owned by a \
+                 file that has since changed. Each one is an assertion the graph cannot \
+                 support:\n",
+                self.dangling.len()
+            ));
+            for id in self.dangling.iter().take(20) {
+                s.push_str(&format!("  - `{id}`\n"));
+            }
+            if self.dangling.len() > 20 {
+                s.push_str(&format!("  - … and {} more\n", self.dangling.len() - 20));
+            }
+        }
+        s
     }
 
     /// Resolve a referenced path against graph + filesystem.
@@ -410,6 +510,21 @@ fn audit_tasks(oracle: &Oracle) -> String {
     out
 }
 
+/// Commits on `HEAD` that `commit` does not have, or `None` if git cannot say.
+///
+/// `None` is the honest answer for a shallow clone, a missing `git`, or a commit this
+/// checkout has never seen — all of which mean "unknown", not "current".
+fn commits_since(commit: &str) -> Option<u64> {
+    let out = Command::new("git")
+        .args(["rev-list", "--count", &format!("{commit}..HEAD")])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    String::from_utf8_lossy(&out.stdout).trim().parse().ok()
+}
+
 fn cn(args: &[&str]) -> String {
     Command::new("cn")
         .args(args)
@@ -462,8 +577,26 @@ fn main() {
         "[graph-audit] oracle: {} graph files indexed",
         oracle.src_files.len()
     );
+    if let Some(n) = oracle.built_at_commit.as_deref().and_then(commits_since) {
+        if n > 0 {
+            eprintln!(
+                "[graph-audit] WARNING: graph is {n} commit(s) behind HEAD — rebuild before \
+                 acting on a path finding"
+            );
+        }
+    }
+    if !oracle.dangling.is_empty() {
+        eprintln!(
+            "[graph-audit] WARNING: {} referenced node id(s) have no node object",
+            oracle.dangling.len()
+        );
+    }
 
     let mut report = String::new();
+    // Provenance leads the report, not a footnote: a reader who acts on a finding without
+    // knowing the snapshot's age is the failure this section exists to prevent.
+    report.push_str(&oracle.provenance());
+    report.push_str("\n---\n\n");
     match mode.as_str() {
         "docs" => report.push_str(&audit_docs(&oracle, &living, &historical)),
         "tasks" | "beads" => report.push_str(&audit_tasks(&oracle)),
