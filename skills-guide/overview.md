@@ -68,6 +68,7 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 |-------|---------|-----------------|
 | **find-skills** | Discover & install new skills | "find a skill for X", "how do I do X" |
 | **skill-creator** | Guide for authoring new skills | "create a new skill" |
+| **forge-prove-it** | Census this repo's gates, then write it a calibrated prove-it reviewer | "generate a prove-it", "give this repo a feature reviewer" |
 
 ## Skill Locations
 
