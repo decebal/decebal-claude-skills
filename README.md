@@ -19,6 +19,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── docker-expert/          # Docker optimization & security
 │   ├── feature-spec/           # PRDs, requirements, scope (42 rules)
 │   ├── find-skills/            # Skill discovery & install
+│   ├── forge-prove-it/         # Census a repo's gates → write it a prove-it reviewer
 │   ├── mcp-builder/            # MCP server creation guide
 │   ├── claude-beads/           # PRD → beads conversion (auto-detects cn/br/bd)
 │   ├── claude-prd/             # PRD generation for agent execution
