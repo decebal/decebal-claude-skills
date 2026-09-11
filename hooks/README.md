@@ -1,12 +1,13 @@
 # Guard-rail hooks
 
-Three hooks that make an agent safer and cheaper to run, shipped as **one
+Four hooks that make an agent safer and cheaper to run, shipped as **one
 binary** — [`gates/rust/claude-guard`](../gates/rust/claude-guard).
 
 | Subcommand | Event | Effect |
 |---|---|---|
 | `claude-guard infra-guard` | PreToolUse, Bash | Denies or prompts on high-blast-radius commands, by blast radius rather than apparent simplicity |
 | `claude-guard bash-hygiene` | PreToolUse, Bash | Blocks compound commands, substitution and combined redirects. Rewrites a repairable `2>&1` instead of blocking it |
+| `claude-guard prompt-number` | PreToolUse, Write/Edit | Denies creating `.prompts/NNN-*.md` when the number was never allocated |
 | `claude-guard comment-hygiene` | PostToolUse, Edit/Write | Feeds back the comment lines an edit added, to be justified or deleted |
 | `claude-guard trust '<cmd>'` | — | Vet a wrapper chain, record the judgement as a content hash |
 
@@ -43,7 +44,9 @@ Register them in `~/.claude/settings.json`:
       { "matcher": "Bash",
         "hooks": [{ "type": "command", "command": "claude-guard infra-guard", "timeout": 10 }] },
       { "matcher": "Bash",
-        "hooks": [{ "type": "command", "command": "claude-guard bash-hygiene", "timeout": 5 }] }
+        "hooks": [{ "type": "command", "command": "claude-guard bash-hygiene", "timeout": 5 }] },
+      { "matcher": "Write|Edit",
+        "hooks": [{ "type": "command", "command": "claude-guard prompt-number", "timeout": 5 }] }
     ],
     "PostToolUse": [
       { "matcher": "Edit|Write|MultiEdit",
@@ -120,6 +123,35 @@ silence a prompt removes the protection instead of fixing it.
 
 The first two are backstopped by the literal layer plus the trust hashes.
 
+## prompt-number
+
+Denies a `Write` or `Edit` that would CREATE `.prompts/NNN-<slug>.md` when
+`.prompts/.numbers/NNN` does not exist. That claim file is how
+[`prompt-id`](../gates/rust/prompt-id) reserves a number, and reserving it is the
+only thing that stops two worktrees being handed the same one — `.prompts/` is
+gitignored, so each worktree holds its own near-empty copy and a session that
+numbers by looking around lands on a number the main checkout already used.
+
+**This exists because prose could not reach the call that caused the damage.**
+The file that made it a rule was created by a bare `Write`, in a session that
+never invoked the slash command carrying the instruction; it reasoned about the
+naming convention and never about allocation. There was no wording anywhere that
+would have been read. A tool-call guard is read by construction.
+
+It fails open in every direction that is not that exact call:
+
+| Situation | Why it allows |
+|---|---|
+| The file already exists | Editing an old prompt is ordinary work. The damage is issuing a number, not revising a file |
+| The store has no `.numbers/` | The repo never adopted the allocator; denying there is hostile and prevents nothing |
+| `.prompts/completed/NNN-…` | An archive move, not an allocation |
+| `.prompts/NNN-topic/NNN-topic.md` | A stage inside a directory whose number was claimed when the directory was made |
+| Anything outside a `.prompts/` directory | Not this guard's ground |
+
+The remediation names `prompt-id alloc <slug>`, which claims the number and
+creates the file, so there is no window between being handed a number and using
+it.
+
 ## Token cost
 
 What a hook emits on certain channels is billed to the model's context, so payload
@@ -149,7 +181,7 @@ ceilings that FAIL — a report tells you the payload grew after you shipped it,
 and only if someone runs it. See `payload_size_tests.rs`.
 
 Current: `comment-hygiene` ~57 tok, `bash-hygiene` block ~31 tok, `infra-guard`
-deny ~25 tok.
+deny ~25 tok, `prompt-number` deny ~45 tok.
 
 ## Tests
 

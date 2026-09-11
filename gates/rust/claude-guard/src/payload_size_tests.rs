@@ -10,6 +10,7 @@
 use crate::bash_hygiene;
 use crate::comment_hygiene;
 use crate::infra::{self, Decision};
+use crate::prompt_number;
 use serde_json::json;
 
 /// Rough token estimate at 4 bytes per token, matching the shell script's `/4`.
@@ -75,6 +76,17 @@ fn an_ask_reason_reaches_the_user_not_the_model() {
         panic!("expected an ask");
     };
     assert_under("infra-guard ask reason", &reason, 40);
+}
+
+#[test]
+fn the_prompt_number_refusal_names_the_fix_without_arguing_for_it() {
+    // Also a billed deny. The reasoning belongs in the crate's README, not in
+    // every firing.
+    assert_under(
+        "prompt-number deny reason",
+        &prompt_number::reason("208"),
+        50,
+    );
 }
 
 #[test]

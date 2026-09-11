@@ -1,0 +1,27 @@
+# prompt-id — one prompt-number namespace per repo.
+#
+# Zero dependencies, on purpose: it runs from a slash command on every prompt
+# creation, and it is also the thing `claude-guard prompt-number` tells a model
+# to run when it refuses a write. A tool on that path must not be able to fail
+# because a crate did not resolve.
+#
+# It builds with plain `rustc` and needs no cargo at all:
+#
+#     rustc --edition 2021 -O src/main.rs -o ~/.claude/bin/prompt-id
+#
+# The manifest exists so its tests run in this workspace's `cargo test` with
+# every other gate. A tool whose tests run nowhere is indistinguishable from one
+# that passes (rules/testing-gates.md).
+[package]
+name = "prompt-id"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "prompt-id"
+path = "src/main.rs"
+
+[lints]
+workspace = true
