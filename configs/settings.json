@@ -9,8 +9,7 @@
 
   "enabledPlugins": {
     "rust-analyzer-lsp@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": true,
-    "figma": true
+    "gopls-lsp@claude-plugins-official": true
   },
 
   "// HOOKS": "Guard rails from hooks/ — see hooks/README.md. Drop this block if you did not install them",
@@ -26,6 +25,12 @@
         "matcher": "Bash",
         "hooks": [
           { "type": "command", "command": "claude-guard bash-hygiene", "timeout": 5 }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "claude-guard prompt-number", "timeout": 5 }
         ]
       }
     ],

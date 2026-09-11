@@ -3,6 +3,7 @@
 //! ```text
 //! claude-guard infra-guard        # PreToolUse, Bash
 //! claude-guard bash-hygiene       # PreToolUse, Bash
+//! claude-guard prompt-number      # PreToolUse, Write|Edit
 //! claude-guard comment-hygiene    # PostToolUse, Edit|Write|MultiEdit
 //! claude-guard trust '<command>'  # vet a wrapper chain, record the judgement
 //! ```
@@ -18,6 +19,7 @@ mod bash_hygiene;
 mod comment_hygiene;
 mod hook;
 mod infra;
+mod prompt_number;
 mod trust;
 
 #[cfg(test)]
@@ -34,9 +36,14 @@ fn main() -> ExitCode {
         return trust::run(args.get(1).map(String::as_str).unwrap_or(""));
     }
 
-    let hookish = matches!(sub, "infra-guard" | "bash-hygiene" | "comment-hygiene");
+    let hookish = matches!(
+        sub,
+        "infra-guard" | "bash-hygiene" | "prompt-number" | "comment-hygiene"
+    );
     if !hookish {
-        eprintln!("usage: claude-guard <infra-guard|bash-hygiene|comment-hygiene|trust>");
+        eprintln!(
+            "usage: claude-guard <infra-guard|bash-hygiene|prompt-number|comment-hygiene|trust>"
+        );
         return ExitCode::from(2);
     }
 
@@ -47,6 +54,7 @@ fn main() -> ExitCode {
     match sub {
         "infra-guard" => infra::run(&payload),
         "bash-hygiene" => bash_hygiene::run(&payload),
+        "prompt-number" => prompt_number::run(&payload),
         "comment-hygiene" => comment_hygiene::run(&payload),
         _ => unreachable!("checked above"),
     }

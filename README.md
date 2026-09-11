@@ -54,8 +54,9 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── layer-boundaries.md     # 4-layer direction as a test; opening a god module
 │   └── …                       # 16 rules total — see rules/README.md
 ├── gates/                      # The tooling the rules reference
-│   ├── rust/                   # 20 crates, 4 deps, 265 tests — one cargo workspace
-│   │   ├── claude-guard/       # the guard-rail hooks: infra, bash, comments
+│   ├── rust/                   # 21 crates, 4 deps, 307 tests — one cargo workspace
+│   │   ├── claude-guard/       # the guard-rail hooks: infra, bash, prompt numbers, comments
+│   │   ├── prompt-id/          # one prompt-number namespace per repo, across worktrees
 │   │   ├── staged-scope/       # which gates does this diff need? default-deny
 │   │   ├── layer-boundary-check/    # the dependency direction, with ratcheting ceilings
 │   │   ├── authority-check/         # one file owns a verdict; the rest render it
@@ -109,7 +110,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **MCP Servers** | [docs/mcp-servers.md](docs/mcp-servers.md) | GitHub, Linear, Slack, Supabase, Firebase, and more |
 | **Permissions** | [docs/permissions.md](docs/permissions.md) | Granular command allowlists by project type |
 | **Token Efficiency** | [docs/token-efficiency.md](docs/token-efficiency.md) | Patterns for staying within context limits |
-| **Guard-rail hooks** | [hooks/README.md](hooks/README.md) | Blast-radius guard, Bash hygiene, comment hygiene — install steps + pattern list |
+| **Guard-rail hooks** | [hooks/README.md](hooks/README.md) | Blast-radius guard, Bash hygiene, prompt-number guard, comment hygiene — install steps + pattern list |
+| **Prompt numbering** | [gates/rust/prompt-id/README.md](gates/rust/prompt-id/README.md) | One `.prompts/` namespace across worktrees: allocate, archive, find what already shipped |
 
 ## Executable skills & tests
 
@@ -126,8 +128,9 @@ Some skills bundle runnable scripts (not just instructions):
 - **`aso-lint`** — Rust `aso-lint` CLI for Apple/Google metadata limits, starter
   templates, stable rule IDs, and two-proportion experiment snapshots.
 
-The guard-rail hooks are runnable too — three PreToolUse/PostToolUse guards in one
-binary. See [hooks/README.md](hooks/README.md).
+The guard-rail hooks are runnable too — four PreToolUse/PostToolUse guards in one
+binary. See [hooks/README.md](hooks/README.md). `prompt-id` is a binary as well:
+`cargo install --path gates/rust/prompt-id`.
 
 Run the skill tests (dep-aware — each self-skips when its deps are missing):
 
@@ -141,8 +144,9 @@ The guard-rail hooks are Rust, and their tests come with the workspace — no
 external dependency, nothing to skip:
 
 ```sh
-cargo test --manifest-path gates/rust/Cargo.toml -p claude-guard   # 63 tests
-cargo test --manifest-path gates/rust/Cargo.toml                   # 265, every gate
+cargo test --manifest-path gates/rust/Cargo.toml -p claude-guard   # 72 tests
+cargo test --manifest-path gates/rust/Cargo.toml -p prompt-id      # 25 tests
+cargo test --manifest-path gates/rust/Cargo.toml                   # 307, every gate
 cargo test --manifest-path skills/claude-seo/scripts/Cargo.toml   # unit + CLI fixtures
 cargo test --manifest-path skills/aso-lint/scripts/Cargo.toml     # unit + CLI fixtures
 ```
