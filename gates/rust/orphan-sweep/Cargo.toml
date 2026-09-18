@@ -1,0 +1,41 @@
+# orphan-sweep — find processes whose parent died and left them running.
+#
+# A child reparented to init (PPID 1) is invisible to every tool that reasons
+# about YOUR jobs: no job list, no task tracker, no "what is running" mental
+# model. It shows up only as a machine that is busy while the operator believes
+# it is idle.
+#
+# Measured 2026-09-18 on a 12-core Mac reported as "nothing running that
+# justifies it": load average 92, peaking 251, 0% idle. Two independent leaks,
+# one invariant (rules/process-ownership.md):
+#
+#   1. A browser-automation daemon exited without reaping its headless browser.
+#      Nine orphaned trees, 92 processes, software-rasterizing at 100% CPU each
+#      — ~810% CPU, 8 of 12 cores. Oldest orphan: 3 days.
+#
+#   2. A statusline shelled out on a worker thread and abandoned it. Its host
+#      killed the binary at its 800ms budget; the thread died and the 7-second
+#      child survived, once per render across 7 sessions.
+#
+# After killing both: load 3.2, 83% idle. Nothing else changed.
+#
+# Zero dependencies (rules/dependency-hygiene.md): it runs `ps` and parses it.
+[package]
+name = "orphan-sweep"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "orphan_sweep"
+path = "src/lib.rs"
+
+[[bin]]
+name = "orphan-sweep"
+path = "src/main.rs"
+
+[dependencies]
+
+[lints]
+workspace = true

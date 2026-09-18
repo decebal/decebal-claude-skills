@@ -13,6 +13,7 @@ the next agent under deadline; a prohibition with a cost attached does not.
 | [evidence-discipline.md](evidence-discipline.md) | Check the destination before trusting an absence; read runtime state, never guess it |
 | [agent-parallelism.md](agent-parallelism.md) | Split by file count not concept; one worktree per agent; never two builds at once; seeding and cleanup |
 | [timeouts.md](timeouts.md) | The 5-minute ceiling on every gate, and how to fit under it |
+| [process-ownership.md](process-ownership.md) | Every child has a parent that reaps it; bounded/cached/reaped hot-path spawns; the PPID-1 sweep |
 | [definition-of-done.md](definition-of-done.md) | End-to-end or not done; size is never a signal; blocks are routed around |
 | [estimation.md](estimation.md) | Never estimate in time; rock/sand/water is confidence, not size; the betting table |
 | [comments.md](comments.md) | What a comment must earn; never narrate the fix |
@@ -55,11 +56,13 @@ cp rules/*.md ~/.claude/rules/
 
 ## Picking a subset
 
-Don't take all sixteen. Context is the budget.
+Don't take all seventeen. Context is the budget.
 
 - **Any repo, any stack:** `git-discipline`, `evidence-discipline`, `comments`,
   `definition-of-done`, `estimation`, `token-efficiency`.
-- **Multi-agent work:** add `agent-parallelism`, `timeouts`.
+- **Multi-agent work:** add `agent-parallelism`, `timeouts`, `process-ownership`.
+- **Anything that shells out on a hot path** (statusline, hook, watcher, poller),
+  or drives a browser/emulator/container from an agent: add `process-ownership`.
 - **Has a test suite and hooks:** add `testing-gates`.
 - **Layered backend:** add `layer-boundaries`, `dependency-hygiene`.
 - **Has a UI:** add `ui-remote-states`, `error-channels`, `event-streams`.
