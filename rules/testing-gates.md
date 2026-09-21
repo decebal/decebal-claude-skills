@@ -62,6 +62,24 @@ That is the reverse of most hooks' own order, which puts the ten-minute compiles
 first — so the cheap check that would have named your defect in three seconds
 never runs.
 
+**"Seconds once warm" is a concession — ask why a scan needs a compiler at all.**
+A ratchet that only reads source text has no inherent build dependency. It
+*inherits* one by being packaged as a compiled test, and then it cannot run until
+the test targets build — which puts the cheapest, most discriminating check in
+the repo **behind** the slowest gates. That is this section's own inversion, made
+structural rather than accidental, and reordering the hook cannot fix it.
+
+Measured: a text scan for a banned credential filename — a string list matched
+against file contents, no compilation required — failed in **8.2s** and named the
+defect in one sentence. Because it lived in the compiled architecture binary it
+ran only after two gates had each burned 300s and been killed, and after a cold
+workspace test build. The defect was a string in a file written an hour earlier.
+
+So package a source-text check as a script the no-compile phase runs, beside the
+format and banned-id scans, not as a test. The general form of this question is
+in [timeouts.md](timeouts.md) — including the requirement to prove that moving a
+check's phase did not change its verdicts.
+
 **A build command is not a test run.** `cargo check`, `clippy`, and any
 `--no-run` / build-only invocation COMPILE an assertion without EXECUTING it. A
 whole class of gate — the architecture ratchet, the size cap — is invisible to
