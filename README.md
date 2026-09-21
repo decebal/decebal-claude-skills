@@ -20,6 +20,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── feature-spec/           # PRDs, requirements, scope (42 rules)
 │   ├── find-skills/            # Skill discovery & install
 │   ├── forge-prove-it/         # Census a repo's gates → write it a prove-it reviewer
+│   ├── pr-proof/               # Build the HTML evidence report a PR ships (+ template)
 │   ├── mcp-builder/            # MCP server creation guide
 │   ├── claude-beads/           # PRD → beads conversion (auto-detects cn/br/bd)
 │   ├── claude-prd/             # PRD generation for agent execution
