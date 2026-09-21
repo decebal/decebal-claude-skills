@@ -33,11 +33,12 @@ full pattern list in [`hooks/README.md`](../hooks/README.md):
 |------|-------|--------|
 | `claude-guard infra-guard` | PreToolUse, Bash | Denies live-service mutation, `terraform apply`/state surgery, storage deletion, package publishes, protected-branch force-pushes. Follows `make`/`bash`/`npm run` wrapper chains and classifies what they actually run |
 | `claude-guard bash-hygiene` | PreToolUse, Bash | Blocks compound commands and substitution; rewrites a repairable `2>&1` rather than blocking it |
+| `claude-guard prompt-number` | PreToolUse, Write/Edit | Denies creating `.prompts/NNN-*.md` when `.prompts/.numbers/NNN` does not exist, naming `prompt-id alloc <slug>` in the reason |
 | `claude-guard comment-hygiene` | PostToolUse, Edit/Write | Feeds back comment lines an edit added, to be justified or deleted |
 
 ```sh
 cargo install --path gates/rust/claude-guard
-cargo test --manifest-path gates/rust/Cargo.toml -p claude-guard   # 63 tests
+cargo test --manifest-path gates/rust/Cargo.toml -p claude-guard   # 72 tests
 ```
 
 One binary rather than five shell scripts: a hook needing `jq` becomes a silent

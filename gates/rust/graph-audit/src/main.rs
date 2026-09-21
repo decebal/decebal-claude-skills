@@ -88,7 +88,7 @@ impl Oracle {
         // wrong key here reports a clean graph over thousands of unchecked endpoints.
         let mut dangling: Vec<String> = Vec::new();
         let mut seen = HashSet::new();
-        let mut note = |id: &str, dangling: &mut Vec<String>, seen: &mut HashSet<String>| {
+        let note = |id: &str, dangling: &mut Vec<String>, seen: &mut HashSet<String>| {
             if !defined.contains(id) && seen.insert(id.to_string()) {
                 dangling.push(id.to_string());
             }
