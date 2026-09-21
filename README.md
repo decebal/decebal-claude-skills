@@ -74,6 +74,9 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   └── examples/pre-push       # a worked git hook wiring all of it together
 ├── hooks/README.md             # Guard-rail hooks: install, patterns, token cost
 │                               # (the code is gates/rust/claude-guard)
+├── commands/                   # Slash commands (install to ~/.claude/commands/)
+│   ├── create-prompt.md        # /create-prompt — author a prompt another Claude executes
+│   └── run-prompt.md           # /run-prompt — dispatch one or more to sub-task contexts
 ├── configs/                    # Reference configurations
 │   ├── settings.json           # Global settings reference
 │   ├── settings.local.json     # Project permission patterns
