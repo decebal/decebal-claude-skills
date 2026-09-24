@@ -1,7 +1,6 @@
 ---
 name: claude-beads
 description: "Convert a PRD to beads (epic + child tasks) for claude execution. Auto-detects the installed tracker CLI — chronis (cn), beads-rust (br), or beads (bd) — and creates an epic with a child bead per user story. Pairs with the claude-prd skill. Triggers on: create beads, convert prd to beads, cn beads, br beads, cn create."
-depends_on: [claude-prd]
 ---
 
 # Claude Code — Create Beads
@@ -19,12 +18,38 @@ it's `br` or `bd` rather than `cn`, substitute its syntax using the
 ## The Job
 
 Take a PRD (markdown file or text) and create beads using `cn` commands:
-1. **Detect project tooling** (build runner, package manager)
-2. **Classify Quality Gates** into story-specific vs. epic-level
-3. Create an **epic** bead (with epic-level quality gates)
-4. Create **child beads** for each user story (with story-specific acceptance criteria only)
-5. Set up **dependencies** between beads (schema → backend → UI)
-6. Output ready for `claude "work the ready beads: cn ready --toon, claim each, implement, run its quality gates, cn done"`
+1. **Audit existing open beads** for actionability before adding more
+2. **Detect project tooling** (build runner, package manager)
+3. **Classify Quality Gates** into story-specific vs. epic-level
+4. Create an **epic** bead (with epic-level quality gates)
+5. Create **child beads** for each user story (with story-specific acceptance criteria only)
+6. Set up **dependencies** between beads (schema → backend → UI)
+7. Re-audit the resulting graph and output the ready execution loop
+
+## Actionability invariant
+
+Beads are executable agent work, not reminders, approval requests, waiting rooms,
+or outcome trackers. Read [references/actionability.md](references/actionability.md)
+before creating or auditing beads.
+
+Hard rules:
+
+- Every open bead must contain a repository, tool, analysis, or evidence artifact
+  an agent can produce now.
+- A bead may be blocked only by another bead ID. Human, founder, legal, vendor,
+  platform, payment, credential, traffic, time, reply, or customer state never
+  belongs in `blocked_by` or an acceptance criterion.
+- Move manual and external actions into the repository's existing matching
+  runbook. If none exists, use `docs/manual-and-external-actions.md`.
+- A bead may prepare an external-action packet, checklist, message draft, review
+  bundle, or decision brief. Close it when that artifact is verified; do not keep
+  it open until somebody acts.
+- When an external result arrives, create a new bead only for concrete follow-up
+  work now executable from that result. Never keep a dormant bead waiting.
+- Audit existing open/in-progress beads before adding new ones. Rewrite mixed
+  beads around their agent-owned deliverable. Migrate external-only beads to docs
+  and close them with a reason that says tracking moved; never claim the external
+  action itself completed.
 
 ---
 
@@ -195,8 +220,11 @@ Each bead's description contains `- [ ]` checkboxes. The agent must:
 
 1. Work through each criterion
 2. Verify it is satisfied (run a command, check output, inspect code)
-3. Mark it `- [x]` in the bead description (via `cn edit --toon` or comment)
-4. Only close the bead when ALL items are `- [x]`
+3. Run `cn show <id> --toon`, preserve the full current description, and change
+   only that criterion from `- [ ]` to `- [x]`
+4. Replace the description by piping the updated full text to
+   `cn task edit <id> --description - --toon`
+5. Only close the bead when ALL items are `- [x]`
 
 ### Writing verifiable criteria
 
@@ -218,12 +246,11 @@ Every criterion must be something the agent can concretely verify:
 
 ## Output Format
 
-Beads use `cn create` command with **HEREDOC syntax** to safely handle special characters:
+Beads use `cn task create` with **HEREDOC syntax** to safely handle special characters:
 
 ```bash
 # Create epic with epic-level quality gates
-cn create --toon --type=epic \
-  --title="[Feature Name]" \
+cn task create "[Feature Name]" --toon --type epic \
   --description="$(cat <<'EOF'
 [Feature description from PRD]
 
@@ -232,13 +259,11 @@ cn create --toon --type=epic \
 - [ ] `bun typecheck` passes
 - [ ] `bun lint` passes
 EOF
-)" \
-  --external-ref="prd:./tasks/feature-name-prd.md"
+)"
 
 # Create child bead with story-specific criteria only
-cn create --toon \
-  --parent=EPIC_ID \
-  --title="[Story Title]" \
+cn task create "[Story Title]" --toon \
+  --parent EPIC_ID \
   --description="$(cat <<'EOF'
 [Story description]
 
@@ -250,7 +275,7 @@ cn create --toon \
 Mark each item [x] as you complete it. Only close when all are checked.
 EOF
 )" \
-  --priority=[1-4]
+  --priority p1
 ```
 
 > **CRITICAL:** Always use `<<'EOF'` (single-quoted) for the HEREDOC delimiter. This prevents shell interpretation of backticks, `$variables`, and `()` in descriptions.
@@ -313,6 +338,7 @@ cn dep add --toon feature-003 feature-002  # US-003 depends on US-002
 8. **Subsequent stories**: Depend on their predecessors
 9. **Priority**: Based on dependency order, then document order (1=high, 2=medium, 3=low)
 10. **All stories**: Include the instruction to mark items `[x]` and only close when all checked
+11. **Actionability**: No story waits for manual action, approval, outreach, payment, credentials, external review, third-party response, elapsed time, traffic, or customer outcome
 
 ---
 
@@ -357,20 +383,19 @@ For UI stories:
 **Output beads:**
 ```bash
 # Create epic with epic-level quality gates
-cn create --toon --type=epic \
-  --title="Friends Outreach Track" \
+cn task create "Outreach Preparation Track" --toon --type epic \
   --description="$(cat <<'EOF'
-Warm outreach for deck feedback.
+Prepare a reviewable outreach workflow and message packet. Sending, replies, and
+follow-up timing live in docs/manual-and-external-actions.md.
 
 ## Epic Quality Gates (run on completion)
 - [ ] `task ci` passes (includes typecheck + lint)
 EOF
-)" \
-  --external-ref="prd:./tasks/friends-outreach-prd.md"
+)"
 
 # US-001: Schema story (no browser gate, no deps)
-cn create --toon --parent=feature-abc \
-  --title="US-001: Add investorType field to investor table" \
+cn task create "US-001: Add investorType field to investor table" --toon \
+  --parent feature-abc \
   --description="$(cat <<'EOF'
 As a developer, I need to categorize investors as 'cold' or 'friend'.
 
@@ -382,11 +407,11 @@ As a developer, I need to categorize investors as 'cold' or 'friend'.
 Mark each item [x] as you complete it. Only close when all are checked.
 EOF
 )" \
-  --priority=1
+  --priority p0
 
 # US-002: UI story (includes browser verification gate)
-cn create --toon --parent=feature-abc \
-  --title="US-002: Add type toggle to investor list rows" \
+cn task create "US-002: Add type toggle to investor list rows" --toon \
+  --parent feature-abc \
   --description="$(cat <<'EOF'
 As Ryan, I want to toggle investor type directly from the list.
 
@@ -399,13 +424,13 @@ As Ryan, I want to toggle investor type directly from the list.
 Mark each item [x] as you complete it. Only close when all are checked.
 EOF
 )" \
-  --priority=2
+  --priority p1
 
 cn dep add --toon feature-002 feature-001
 
 # US-003: UI story (includes browser verification gate)
-cn create --toon --parent=feature-abc \
-  --title="US-003: Filter investors by type" \
+cn task create "US-003: Filter investors by type" --toon \
+  --parent feature-abc \
   --description="$(cat <<'EOF'
 As Ryan, I want to filter the list to see just friends or cold.
 
@@ -417,19 +442,9 @@ As Ryan, I want to filter the list to see just friends or cold.
 Mark each item [x] as you complete it. Only close when all are checked.
 EOF
 )" \
-  --priority=3
+  --priority p2
 
 cn dep add --toon feature-003 feature-002
-```
-
----
-
-## Syncing Changes
-
-After creating beads, sync to export to JSONL (for git tracking):
-
-```bash
-cn sync --toon --flush-only
 ```
 
 ---
@@ -437,6 +452,10 @@ cn sync --toon --flush-only
 ## Output Location
 
 Beads are stored in: `.chronis/` (WAL + Parquet event files — there is no separate task database)
+
+`cn sync` is not a JSONL export. It syncs to a configured remote Core; `cn sync
+--git` commits and pushes `.chronis/` only. Use neither unless repository workflow
+explicitly requires that external sync.
 
 After creation, run claude:
 ```bash
@@ -465,7 +484,10 @@ claude will:
 - [ ] Each story includes "Mark each item [x]..." instruction
 - [ ] Stories are right-sized (one agent context window)
 - [ ] Dependencies set with `cn dep add`
-- [ ] Ran `cn sync --toon --flush-only`
+- [ ] Every open/in-progress bead is actionable now
+- [ ] No acceptance criterion or dependency waits on manual/external state
+- [ ] Manual/external actions are recorded in an existing matching runbook or `docs/manual-and-external-actions.md`
+- [ ] Resulting graph re-audited after creation
 
 ---
 
@@ -473,13 +495,13 @@ claude will:
 
 | Command | Purpose |
 |---------|---------|
-| `cn create --toon` | Create a new bead (epic or story) |
-| `cn create --toon --type=epic` | Create an epic bead |
-| `cn create --toon --parent=ID` | Create a child bead under an epic |
+| `cn task create "title" --toon` | Create a new task |
+| `cn task create "title" --toon --type epic` | Create an epic |
+| `cn task create "title" --toon --parent ID` | Create a child task |
 | `cn dep add --toon <issue> <blocked-by>` | Add a dependency |
-| `cn sync --toon --flush-only` | Export to JSONL for git tracking |
-| `cn close --toon <id>` | Close a completed bead |
-| `cn edit --toon <id>` | Edit a bead's description |
+| `cn claim <id> --toon` | Claim ready work |
+| `cn done <id> --toon --reason "..."` | Complete a task |
+| `cn task edit <id> --toon` | Edit a task |
 
 ---
 
@@ -489,8 +511,7 @@ Step 0 picks one of these. Translate the `cn` commands above to the detected CLI
 
 | Command | beads (`bd`) | beads-rust (`br`) | chronis (`cn`) |
 |---------|--------------|-------------------|----------------|
-| Create | `bd create` | `br create` | `cn create --toon` |
+| Create | `bd create` | `br create` | `cn task create "title" --toon` |
 | Dependencies | `bd dep add` | `br dep add` | `cn dep add --toon` |
-| Sync | `bd sync` | `br sync --flush-only` | `cn sync --toon --flush-only` |
-| Close | `bd close` | `br close` | `cn close --toon` |
+| Close | `bd close` | `br close` | `cn done --toon` |
 | Storage | `.beads/beads.jsonl` | `.beads/*.db` + JSONL | `.chronis/` (WAL + Parquet) |
