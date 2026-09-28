@@ -66,6 +66,30 @@ jobs:
 
           echo "guard smoke OK"
 
+      # target-gc deletes directories, so its real binary is pointed at a tree
+      # holding one Cargo-tagged build directory and one directory merely NAMED
+      # target: the first must go, the second must survive.
+      - name: Smoke test target-gc against a fixture
+        run: |
+          cargo build --release -p target-gc
+          bin="$PWD/target/release/target-gc"
+
+          fx=$(mktemp -d)
+          mkdir -p "$fx/crate/target/debug/deps" "$fx/js/lib/target"
+          printf 'Signature: 8a477f597d28d172789f06886806bc55\n# This file is a cache directory tag created by cargo.\n' \
+            > "$fx/crate/target/CACHEDIR.TAG"
+          : > "$fx/crate/target/debug/.cargo-lock"
+          printf 'x\n' > "$fx/js/lib/target/es5.js"
+          find "$fx" -exec touch -d '40 days ago' {} +
+
+          printf '[target-gc]\nroots = ["%s"]\n' "$fx" > "$fx/gc.toml"
+          XDG_STATE_HOME="$fx/state" "$bin" run --config "$fx/gc.toml"
+
+          [ ! -e "$fx/crate/target" ] || { echo "tagged build dir survived"; exit 1; }
+          [ -e "$fx/js/lib/target/es5.js" ] || { echo "a directory merely named target was deleted"; exit 1; }
+          [ -s "$fx/state/target-gc/last-run.json" ] || { echo "no run record"; exit 1; }
+          echo "target-gc smoke OK"
+
       # Each gate is pointed at a tree holding exactly one known violation, and
       # must FAIL. A gate that passes here is not clean — it is not looking.
       - name: Smoke test the config-driven gates against a fixture

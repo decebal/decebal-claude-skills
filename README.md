@@ -55,7 +55,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── layer-boundaries.md     # 4-layer direction as a test; opening a god module
 │   └── …                       # 16 rules total — see rules/README.md
 ├── gates/                      # The tooling the rules reference
-│   ├── rust/                   # 21 crates, 4 deps, 307 tests — one cargo workspace
+│   ├── rust/                   # 23 crates, 4 deps, 353 tests — one cargo workspace
 │   │   ├── claude-guard/       # the guard-rail hooks: infra, bash, prompt numbers, comments
 │   │   ├── prompt-id/          # one prompt-number namespace per repo, across worktrees
 │   │   ├── staged-scope/       # which gates does this diff need? default-deny
@@ -69,7 +69,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   │   ├── fmt-check/          # whole-repo rustfmt WITHOUT invoking cargo
 │   │   ├── render-agent-docs/  # one manifest → CLAUDE.md + AGENTS.md, --check
 │   │   └── …                   # vendor-attribution, workspace-isolation, price-table,
-│   │                           # dev-preflight, rust-effective-diff, target-sweep, graph-audit
+│   │                           # dev-preflight, rust-effective-diff, target-sweep, target-gc,
+│   │                           # graph-audit
 │   ├── sh/                     # git-hook glue: run_gate, dead-branch guard, worktrees
 │   ├── ts/                     # RemoteState<T> + its backstop gate, git keepalive
 │   ├── gates.toml              # scopes, inert paths, test-hang tiers
@@ -83,6 +84,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── settings.json           # Global settings reference
 │   ├── settings.local.json     # Project permission patterns
 │   ├── prod-guard-tokens.txt   # infra-guard prod/non-prod identifier template
+│   ├── target-gc.toml          # target-gc settings: roots, free-space levels, idle windows
 │   └── plugins.md              # Plugin & LSP setup
 ├── templates/                  # CLAUDE.md templates
 │   ├── monorepo.md             # For monorepo projects
@@ -97,6 +99,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── mcp-servers.md          # MCP server integrations
 │   ├── hooks.md                # Hooks configuration
 │   ├── permissions.md          # Permission patterns & security
+│   ├── target-dir-cleanup.md   # Evicting idle Cargo build dirs; the tool survey behind it
 │   └── token-efficiency.md     # Context window optimization
 └── CLAUDE.md                   # This project's own config
 ```
