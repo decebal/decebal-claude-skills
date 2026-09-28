@@ -183,6 +183,28 @@ and only if someone runs it. See `payload_size_tests.rs`.
 Current: `comment-hygiene` ~57 tok, `bash-hygiene` block ~31 tok, `infra-guard`
 deny ~25 tok, `prompt-number` deny ~45 tok.
 
+## Session hooks from other gates
+
+Two more binaries report at `SessionStart`. Both say nothing when there is
+nothing to say, because `SessionStart` stdout is added to the model's context.
+
+| Command | Says something when |
+|---|---|
+| `orphan-sweep --quiet --min-age 600` | A known-leaky process was reparented to init and is still running |
+| `target-gc hook` | Free space is under the floor, the last scheduled cleanup failed, or none has run in three hours |
+
+```json
+{ "hooks": { "SessionStart": [
+  { "hooks": [{ "type": "command", "command": "$HOME/.cargo/bin/target-gc hook", "timeout": 10 }] }
+] } }
+```
+
+`target-gc hook` only reads the record the hourly job leaves, plus one `df`.
+The eviction itself runs under launchd or a systemd user timer
+(`target-gc install`), which owns and reaps it; a hook that started it would
+leave a child outliving its session. See
+[docs/target-dir-cleanup.md](../docs/target-dir-cleanup.md).
+
 ## Tests
 
 ```sh
