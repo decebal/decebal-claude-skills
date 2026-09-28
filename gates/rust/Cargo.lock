@@ -310,15 +310,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "target-gc"
-version = "0.1.0"
-dependencies = [
- "gates-config",
- "serde_json",
- "target-sweep",
-]
-
-[[package]]
 name = "target-sweep"
 version = "0.1.0"
 

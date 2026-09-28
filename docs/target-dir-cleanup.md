@@ -8,8 +8,10 @@ seven idle ones by hand took free space to 122 GiB.
 Doing that by hand is where the damage happens. Deleting a build directory that
 a dev server writes into, or that a launchd service runs its binary from, breaks
 someone's work silently and late. So the job is automated by
-[`gates/rust/target-gc`](../gates/rust/target-gc), which runs hourly under the
-platform scheduler and acts only when the disk needs the space.
+[`target-gc`](https://github.com/decebal/target-gc) (on crates.io), which runs
+hourly under the platform scheduler and acts only when the disk needs the space.
+It ships a Claude Code skill and plugin, so an agent frees space through it
+instead of `rm -rf target/`.
 
 ## What it does
 
@@ -25,7 +27,7 @@ platform scheduler and acts only when the disk needs the space.
 ## Install
 
 ```sh
-cargo install --path gates/rust/target-gc
+cargo install target-gc        # or: cargo binstall target-gc
 target-gc scan                 # what it sees, and why each directory is held
 target-gc run --dry-run        # what it would do today
 target-gc install              # hourly schedule (launchd / systemd user timer)
@@ -35,9 +37,19 @@ target-gc install              # hourly schedule (launchd / systemd user timer)
 directory, since it could evict itself. The schedule runs once at install
 (`RunAtLoad`), so the first expiry pass happens immediately; read
 `~/.local/state/target-gc/last-run.json` afterwards to see what it did. Settings live in
-`~/.config/target-gc/config.toml`; see [`configs/target-gc.toml`](../configs/target-gc.toml).
+`~/.config/target-gc/config.toml`; the crate's
+[`config.example.toml`](https://github.com/decebal/target-gc/blob/main/config.example.toml)
+is the defaults.
 
-Add the session hook to `~/.claude/settings.json`:
+For Claude Code, the plugin brings the skill and the session hook:
+
+```
+/plugin marketplace add decebal/target-gc
+/plugin install target-gc@target-gc
+```
+
+Without the plugin, `target-gc skill install` writes the skill to
+`~/.claude/skills/target-gc/`, and the session hook goes in `~/.claude/settings.json`:
 
 ```json
 {

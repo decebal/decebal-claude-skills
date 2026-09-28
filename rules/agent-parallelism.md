@@ -158,7 +158,8 @@ Two rules that make this safe, both learned the hard way in one session:
 
 **The build directories nobody pushes from are the rest of the pile.** On one
 machine: 38 of them, 152 GB by `du`, 9.3 GiB free until seven idle ones went.
-`gates/rust/target-gc` evicts them hourly under the platform scheduler — only
+[`target-gc`](https://github.com/decebal/target-gc) (`cargo install target-gc`)
+evicts them hourly under the platform scheduler — only
 directories Cargo tagged, never one whose profile lock is held, whose project is
 a process's cwd, or whose binary a service runs, and measured with `df`. See
 [docs/target-dir-cleanup.md](../docs/target-dir-cleanup.md).

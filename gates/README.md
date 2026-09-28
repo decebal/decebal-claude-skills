@@ -23,7 +23,7 @@ braces**. See [rules/testing-gates.md](../rules/testing-gates.md).
 | [`rust/fmt-check`](rust/fmt-check) | Rust | Whole-repo `rustfmt --check` **without invoking cargo**, so it takes no build locks |
 | [`rust/rust-effective-diff`](rust/rust-effective-diff) | Rust | Is this `.rs` change code-effective, or comments and whitespace? |
 | [`rust/target-sweep`](rust/target-sweep) | Rust | Reclaim a build directory without forcing a cold rebuild |
-| [`rust/target-gc`](rust/target-gc) | Rust | Evict idle Cargo build directories machine-wide, only under disk pressure or past an age, never one in use — see [docs/target-dir-cleanup.md](../docs/target-dir-cleanup.md) |
+| [`target-gc`](https://github.com/decebal/target-gc) (own crate) | Rust | Evict idle Cargo build directories machine-wide, only under disk pressure or past an age, never one in use. `cargo install target-gc`; ships a skill and plugin — see [docs/target-dir-cleanup.md](../docs/target-dir-cleanup.md) |
 | [`rust/graph-audit`](rust/graph-audit) | Rust | Cross-check docs and tasks against a code-graph oracle |
 | [`rust/render-agent-docs`](rust/render-agent-docs) | Rust | One manifest → `CLAUDE.md` + `AGENTS.md`, with a `--check` drift gate |
 | [`rust/layer-boundary-check`](rust/layer-boundary-check) | Rust | The dependency direction, derived from a declared order. Ceilings that ratchet |
@@ -87,10 +87,10 @@ cargo install --path gates/rust/contract-set-drift
 cargo install --path gates/rust/price-table-check
 cargo install --path gates/rust/trophy-check
 cargo install --path gates/rust/dev-preflight
-cargo install --path gates/rust/target-gc          # then: target-gc install
+cargo install target-gc                             # its own crate; then: target-gc install
 ```
 
-Twenty-three members, and still **four** external dependencies — `regex`,
+Twenty-two members, and still **four** external dependencies — `regex`,
 `serde_json`, `proc-macro2`, and `sha2` for the guard's content-trust hash.
 Several members declare no dependency at all, and several more depend only on
 the in-workspace config reader
@@ -106,7 +106,7 @@ that opens its own socket cannot run offline, cannot be tested without one, and
 would put a client stack into a workspace a git hook has to build.
 
 ```bash
-cargo test  --manifest-path gates/rust/Cargo.toml   # 353 tests
+cargo test  --manifest-path gates/rust/Cargo.toml   # 314 tests
 cargo clippy --manifest-path gates/rust/Cargo.toml --all-targets
 ```
 
