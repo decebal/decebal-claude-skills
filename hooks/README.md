@@ -199,6 +199,8 @@ nothing to say, because `SessionStart` stdout is added to the model's context.
 ] } }
 ```
 
+`target-gc` is its own crate ([decebal/target-gc](https://github.com/decebal/target-gc));
+its plugin (`/plugin install target-gc@target-gc`) registers this hook for you.
 `target-gc hook` only reads the record the hourly job leaves, plus one `df`.
 The eviction itself runs under launchd or a systemd user timer
 (`target-gc install`), which owns and reaps it; a hook that started it would

@@ -6,7 +6,7 @@
 #     cargo build --release --manifest-path gates/rust/Cargo.toml
 #     cargo install --path gates/rust/fmt-check      # or any single gate
 #
-# Kept deliberately small (rules/dependency-hygiene.md): twenty-three members
+# Kept deliberately small (rules/dependency-hygiene.md): twenty-two members
 # resolve FOUR external crates — `regex`, `serde_json`, `proc-macro2`, and `sha2`
 # for the guard's content-trust hash. Several members declare no dependency at
 # all, and several more depend only on the in-workspace config reader.
@@ -37,7 +37,6 @@ members = [
   "render-agent-docs",
   "rust-effective-diff",
   "staged-scope",
-  "target-gc",
   "target-sweep",
   "test-script-check",
   "trophy-check",
