@@ -97,7 +97,10 @@ This repo captures patterns and configurations used across 25+ projects spanning
 ├── docs/                       # Deep dives
 │   ├── mcp-servers.md          # MCP server integrations
 │   ├── hooks.md                # Hooks configuration
+│   ├── jev-with-claude-code.md # TypeSafe Jev: plugin, SDKs, a decision layer for Claude
 │   ├── permissions.md          # Permission patterns & security
+│   ├── plans/                  # Dated plans, e.g. Codex parity for rules, guards, skills
+│   ├── rules-reference/        # Incidents and measurements behind rules/, read on demand
 │   ├── target-dir-cleanup.md   # Evicting idle Cargo build dirs; the tool survey behind it
 │   └── token-efficiency.md     # Context window optimization
 └── CLAUDE.md                   # This project's own config
@@ -107,7 +110,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 
 | Topic | File | Summary |
 |-------|------|---------|
-| **Portable Rules** | [rules/README.md](rules/README.md) | 15 stack-agnostic rule fragments, each with the incident that produced it |
+| **Portable Rules** | [rules/README.md](rules/README.md) | 21 stack-agnostic rule fragments, each with the incident that produced it; file-type rules load only when a matching file is read |
 | **Gates** | [gates/README.md](gates/README.md) | The tooling the rules reference — hooks, scope classifier, drift check |
 | **Getting Started** | [configs/settings.json](configs/settings.json) | Global settings with extended thinking, LSP, status line |
 | **Skills (full source)** | [skills/](skills/) | 54 skills with SKILL.md + all reference files |
@@ -116,7 +119,9 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **MCP Servers** | [docs/mcp-servers.md](docs/mcp-servers.md) | GitHub, Linear, Slack, Supabase, Firebase, and more |
 | **Permissions** | [docs/permissions.md](docs/permissions.md) | Granular command allowlists by project type |
 | **Token Efficiency** | [docs/token-efficiency.md](docs/token-efficiency.md) | Patterns for staying within context limits |
-| **Guard-rail hooks** | [hooks/README.md](hooks/README.md) | Blast-radius guard, Bash hygiene, prompt-number guard, comment hygiene — install steps + pattern list |
+| **Guard-rail hooks** | [hooks/README.md](hooks/README.md) | One-open-PR guard, blast-radius guard, Bash hygiene, prompt-number guard, comment hygiene — install steps + pattern list |
+| **Jev with Claude Code** | [docs/jev-with-claude-code.md](docs/jev-with-claude-code.md) | TypeSafe's plugin, the SDKs, and letting Claude ask Jev at its own decision points |
+| **Codex parity** | [docs/plans/2026-09-30-codex-parity.md](docs/plans/2026-09-30-codex-parity.md) | What Codex does with instructions, hooks, execpolicy and skills, verified against its source, and how the rules, guards and skills here reach it |
 | **Prompt numbering** | [gates/rust/prompt-id/README.md](gates/rust/prompt-id/README.md) | One `.prompts/` namespace across worktrees: allocate, archive, find what already shipped |
 
 ## Executable skills & tests
@@ -133,6 +138,7 @@ Some skills bundle runnable scripts (not just instructions):
   private/local targets, revalidate redirects, pin validated DNS, and cap time/bytes.
 - **`aso-lint`** — Rust `aso-lint` CLI for Apple/Google metadata limits, starter
   templates, stable rule IDs, and two-proportion experiment snapshots.
+- **`skill-rank`** — Rust `skill-rank` CLI: rates every installed Claude and Codex skill with TypeSafe Jev, keeps the best-rated inside each host's listing budget, and searches the rest by rating.
 
 The guard-rail hooks are runnable too — four PreToolUse/PostToolUse guards in one
 binary. See [hooks/README.md](hooks/README.md). `prompt-id` is a binary as well:

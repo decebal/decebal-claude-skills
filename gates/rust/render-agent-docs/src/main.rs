@@ -18,9 +18,14 @@
 //! title = "CLAUDE.md — Acme instructions"
 //!
 //! [targets.agents]
-//! path  = "AGENTS.md"
-//! title = "AGENTS.md — Acme instructions"
+//! path   = "AGENTS.md"
+//! title  = "AGENTS.md — Acme instructions"
+//! inline = "true"    # write rule bodies: Codex does not resolve @ imports
 //! ```
+//!
+//! An `inline` target reads each rule from `rules_dir` (`~/` expands) and fails
+//! with exit 2 when one is missing. A rule with `paths:` frontmatter is named
+//! with its path rather than inlined.
 //!
 //! `--check` is the gate. Wire it into the pre-push hook: a target edited by
 //! hand, or a rule added to the manifest and never rendered, fails the push
@@ -34,7 +39,7 @@ use std::path::Path;
 use std::process::ExitCode;
 
 mod render;
-use render::{render, Manifest};
+use render::{expand_home, render, render_inline, Manifest};
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -73,9 +78,28 @@ fn main() -> ExitCode {
         None => None,
     };
 
+    let mut rule_texts: Vec<(String, String)> = Vec::new();
+    if manifest.targets.iter().any(|t| t.inline) {
+        let dir = expand_home(&manifest.rules_dir);
+        for name in &manifest.rules {
+            let path = dir.join(format!("{name}.md"));
+            match std::fs::read_to_string(&path) {
+                Ok(text) => rule_texts.push((name.clone(), text)),
+                Err(e) => {
+                    eprintln!("render-agent-docs: rule {}: {e}", path.display());
+                    return ExitCode::from(2);
+                }
+            }
+        }
+    }
+
     let mut stale: Vec<String> = Vec::new();
     for target in &manifest.targets {
-        let wanted = render(&manifest, target, overlay.as_deref());
+        let wanted = if target.inline {
+            render_inline(&manifest, target, overlay.as_deref(), &rule_texts)
+        } else {
+            render(&manifest, target, overlay.as_deref())
+        };
         let current = std::fs::read_to_string(&target.path).ok();
 
         if check {

@@ -96,3 +96,45 @@ fn a_manifest_with_no_rules_renders_no_rules_section() {
     let m = Manifest::from_config(&cfg);
     assert!(!render(&m, &m.targets[0], Some("body")).contains("## Rules"));
 }
+
+#[test]
+fn an_inline_target_carries_rule_bodies_and_no_import_lines() {
+    let cfg = Config::parse(
+        "rules = [\"git-discipline\", \"testing-authoring\"]\nrules_dir = \"~/.claude/rules\"\n\
+         [targets.agents]\npath = \"AGENTS.md\"\ninline = \"true\"\n",
+    )
+    .unwrap();
+    let m = Manifest::from_config(&cfg);
+    assert!(m.targets[0].inline);
+    let rules = vec![
+        (
+            "git-discipline".to_string(),
+            "# Git discipline\n\nCheck branch liveness.\n".to_string(),
+        ),
+        (
+            "testing-authoring".to_string(),
+            "---\npaths:\n  - \"**/*_tests.rs\"\n---\n\n# Testing\n\nOne process per test.\n"
+                .to_string(),
+        ),
+    ];
+    let out = render_inline(&m, &m.targets[0], Some("## Stack"), &rules);
+    assert!(
+        out.contains("### git-discipline\n\nCheck branch liveness."),
+        "{out}"
+    );
+    assert!(!out.contains("# Git discipline"), "{out}");
+    assert!(!out.lines().any(|l| l.starts_with('@')), "{out}");
+    assert!(!out.contains("One process per test."), "{out}");
+    assert!(
+        out.contains(
+            "Read before editing a file these cover: `~/.claude/rules/testing-authoring.md`."
+        ),
+        "{out}"
+    );
+    assert!(out.find("Check branch liveness.") < out.find("## Stack"));
+}
+
+#[test]
+fn a_target_is_import_mode_unless_marked_inline() {
+    assert!(!manifest().targets.iter().any(|t| t.inline));
+}
