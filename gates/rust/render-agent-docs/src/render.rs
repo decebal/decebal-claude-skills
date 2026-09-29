@@ -2,6 +2,7 @@
 //! shape of the output is testable without touching a filesystem.
 
 use gates_config::Config;
+use std::path::PathBuf;
 
 /// The banner every rendered file carries. Present so a human editing the file
 /// directly learns, in the file itself, that their edit will be overwritten.
@@ -13,6 +14,9 @@ pub struct Target {
     pub name: String,
     pub path: String,
     pub title: String,
+    /// Write rule bodies instead of `@` import lines, for a reader that does not
+    /// resolve imports. Codex reads `@path` as plain text.
+    pub inline: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,7 +41,13 @@ impl Manifest {
                     .string(&format!("targets.{name}.title"))
                     .unwrap_or(&path)
                     .to_string();
-                Some(Target { name, path, title })
+                let inline = cfg.string(&format!("targets.{name}.inline")) == Some("true");
+                Some(Target {
+                    name,
+                    path,
+                    title,
+                    inline,
+                })
             })
             .collect();
         Manifest {
@@ -83,6 +93,90 @@ pub fn render(manifest: &Manifest, target: &Target, overlay: Option<&str>) -> St
         }
     }
     out
+}
+
+/// The full text of an `inline` target: the same banner, rules and overlay as
+/// [`render`], with each rule's body in place of its import line.
+///
+/// `rules` pairs each manifest rule name with its file text. A rule whose
+/// frontmatter declares `paths:` is not inlined; it is named with its path so
+/// the reader opens it before editing a file it covers.
+pub fn render_inline(
+    manifest: &Manifest,
+    target: &Target,
+    overlay: Option<&str>,
+    rules: &[(String, String)],
+) -> String {
+    let mut out = String::new();
+    out.push_str(&format!("# {}\n\n", target.title));
+    out.push_str(BANNER);
+    out.push_str("\n\n");
+
+    if !rules.is_empty() {
+        out.push_str("## Rules\n\n");
+        let mut scoped: Vec<String> = Vec::new();
+        for (name, text) in rules {
+            let (front, body) = split_frontmatter(text).unwrap_or(("", text));
+            if front.lines().any(|line| line.starts_with("paths:")) {
+                scoped.push(format!("`{}/{name}.md`", manifest.rules_dir));
+                continue;
+            }
+            out.push_str(&format!("### {name}\n\n{}\n\n", without_title(body)));
+        }
+        if !scoped.is_empty() {
+            out.push_str(&format!(
+                "Read before editing a file these cover: {}.\n\n",
+                scoped.join(", ")
+            ));
+        }
+    }
+
+    if let Some(body) = overlay {
+        let body = body.trim_start_matches('\u{feff}').trim();
+        if !body.is_empty() {
+            out.push_str(body);
+            out.push('\n');
+        }
+    }
+    out
+}
+
+/// The frontmatter and the body of a text that opens with a `---` fence.
+fn split_frontmatter(text: &str) -> Option<(&str, &str)> {
+    let text = text.trim_start_matches('\u{feff}');
+    let rest = text.strip_prefix("---")?;
+    let rest = rest
+        .strip_prefix("\r\n")
+        .or_else(|| rest.strip_prefix('\n'))?;
+    let mut offset = 0;
+    for line in rest.split_inclusive('\n') {
+        if line.trim_end() == "---" {
+            return Some((&rest[..offset], &rest[offset + line.len()..]));
+        }
+        offset += line.len();
+    }
+    None
+}
+
+/// A rule body without its leading `# Title` line.
+fn without_title(body: &str) -> &str {
+    let body = body.trim();
+    if !body.starts_with("# ") {
+        return body;
+    }
+    body.split_once('\n')
+        .map_or("", |(_, rest)| rest.trim_start())
+}
+
+/// `path` with a leading `~/` replaced by `$HOME/`.
+pub fn expand_home(path: &str) -> PathBuf {
+    match path.strip_prefix("~/") {
+        Some(rest) => std::env::var_os("HOME")
+            .map(PathBuf::from)
+            .unwrap_or_default()
+            .join(rest),
+        None => PathBuf::from(path),
+    }
 }
 
 #[cfg(test)]

@@ -1,10 +1,11 @@
 # Guard-rail hooks
 
-Four hooks that make an agent safer and cheaper to run, shipped as **one
+Five hooks that make an agent safer and cheaper to run, shipped as **one
 binary** — [`gates/rust/claude-guard`](../gates/rust/claude-guard).
 
 | Subcommand | Event | Effect |
 |---|---|---|
+| `claude-guard pr-guard` | PreToolUse, Bash | Denies `gh pr create` / `gh pr new` and branch creation while a PR this session created is open in that repo. Fails open |
 | `claude-guard infra-guard` | PreToolUse, Bash | Denies or prompts on high-blast-radius commands, by blast radius rather than apparent simplicity |
 | `claude-guard bash-hygiene` | PreToolUse, Bash | Blocks compound commands, substitution and combined redirects. Rewrites a repairable `2>&1` instead of blocking it |
 | `claude-guard prompt-number` | PreToolUse, Write/Edit | Denies creating `.prompts/NNN-*.md` when the number was never allocated |
@@ -45,6 +46,8 @@ Register them in `~/.claude/settings.json`:
         "hooks": [{ "type": "command", "command": "claude-guard infra-guard", "timeout": 10 }] },
       { "matcher": "Bash",
         "hooks": [{ "type": "command", "command": "claude-guard bash-hygiene", "timeout": 5 }] },
+      { "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "claude-guard pr-guard", "timeout": 10 }] },
       { "matcher": "Write|Edit",
         "hooks": [{ "type": "command", "command": "claude-guard prompt-number", "timeout": 5 }] }
     ],
@@ -58,6 +61,62 @@ Register them in `~/.claude/settings.json`:
 
 Use the absolute path (`$HOME/.cargo/bin/claude-guard …`) if `~/.cargo/bin` is not
 on the hook's `PATH`.
+
+Check the installed binary, not the source: feed a subcommand a payload on stdin
+and read its decision. For `pr-guard`, a transcript that records an open PR of
+yours plus a branch-creation command must print a `deny`:
+
+```sh
+claude-guard pr-guard < payload.json   # {"tool_name":"Bash","tool_input":{"command":"git switch -c x"},"transcript_path":"…","cwd":"…"}
+```
+
+**Who edits `settings.json`.** In auto mode an agent can build, `cargo install`
+and register a hook, but the classifier refuses an agent's edit that grants the
+agent a permission (`permissions.allow`) as Self-Modification, and it refused
+some earlier settings edits the same way. Add permission rules yourself.
+
+## pr-guard
+
+One agent session keeps at most **one open PR per repo**. While a PR the
+session created is still open, `gh pr create` / `gh pr new` and branch creation
+in that repo are denied, and the deny tells the agent to commit on the open
+PR's branch. The rule it enforces is
+[`git-discipline.md` § One open PR per session](../rules/git-discipline.md#one-open-pr-per-session).
+
+**Why a hook.** One session created 29 PRs in a single repo; one UI component
+took four in a day, the last a 4-line fix for the red check on the PR still open
+beside it. The rule against it was loaded, and had been broken twice before.
+Prose did not hold, so the tool call is checked instead.
+
+| Blocked while a session PR is open | Allowed |
+|---|---|
+| `gh pr create`, `gh pr new` (with `-R`/`--repo` in `OWNER/REPO`, `github.com/…` or URL form, `GH_REPO=`, `rtk`/`env`/`command` wrappers, in any segment of a chained command) | `gh pr create --help`, `gh pr list`, `gh pr view`; text inside a heredoc body |
+| `git switch -c`/`--create`, `git checkout -b`, `git worktree add -b`, `git branch <name>` (with `git -C <dir>`); `switch -C`, `checkout -B`, `worktree add -B` and `branch -f` only for a branch that does not exist yet | `git branch` listing, `-d`, `-m`, `--show-current`, `-u`, combined flags such as `-dr`; moving an existing branch (`git branch -f main origin/main`); `git switch main`; `git worktree add --detach` |
+| | A quoted mention (`git commit -m "gh pr create later"`) |
+| | Any command once the PR merged or closed |
+
+**How it finds the session's PRs.** It reads the transcript at the payload's
+`transcript_path`. A PR the session created is recorded on the tool result as
+`toolUseResult.gitOperation.pr` with `action: "created"`; a result without that
+record is matched by joining the PR-creation `tool_use` to its `tool_result`
+and reading `github.com/<owner>/<repo>/pull/<n>` from the text. `toolUseResult`
+is sometimes a plain string, so the reader type-checks before indexing. Then
+one `gh pr list --state open --author @me` shows which are still open.
+
+**The way out.** A second PR is the user's call. The deny says so: the user runs
+`! gh pr create …` (or `! git switch -c …`) in the session, which runs outside
+the agent's tool calls.
+
+**Fails open** on: no transcript path, an unreadable or garbled transcript, no
+GitHub `origin` remote, `gh` missing or failing, and the 8 s deadline shared by
+every child. `git` and `gh` run as children the hook owns; on the deadline they
+are killed, then reaped. Measured on a real transcript with live `gh`: allow
+1.13 s, deny 0.85 s. Every other command returns before the transcript is
+opened.
+
+**Known limits.** It sees only its own session: several sessions can each hold
+an open PR. A PR opened by hand, before the session, or through `gh api … -X
+POST` does not count.
 
 ## infra-guard
 

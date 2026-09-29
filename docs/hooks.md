@@ -31,6 +31,7 @@ full pattern list in [`hooks/README.md`](../hooks/README.md):
 
 | Hook | Event | Effect |
 |------|-------|--------|
+| `claude-guard pr-guard` | PreToolUse, Bash | Denies `gh pr create` / `gh pr new` and branch creation while the session has an open PR in that repo. Reads session's own PRs from transcript. Fails open when `gh` unavailable |
 | `claude-guard infra-guard` | PreToolUse, Bash | Denies live-service mutation, `terraform apply`/state surgery, storage deletion, package publishes, protected-branch force-pushes. Follows `make`/`bash`/`npm run` wrapper chains and classifies what they actually run |
 | `claude-guard bash-hygiene` | PreToolUse, Bash | Blocks compound commands and substitution; rewrites a repairable `2>&1` rather than blocking it |
 | `claude-guard prompt-number` | PreToolUse, Write/Edit | Denies creating `.prompts/NNN-*.md` when `.prompts/.numbers/NNN` does not exist, naming `prompt-id alloc <slug>` in the reason |
