@@ -1,0 +1,94 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diagram title</title>
+<style>
+  :root {
+    --ink: #1f1f1f;
+    --muted: #6b6b6b;
+    --ground: #ffffff;
+    --panel: #f5f4f2;
+    --line: #e3e1dd;
+    --accent: #2f6df6;
+    color-scheme: light dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #ededec;
+      --muted: #9b9a97;
+      --ground: #191919;
+      --panel: #252525;
+      --line: #373737;
+      --accent: #6e9bff;
+    }
+  }
+
+  * { box-sizing: border-box }
+
+  body {
+    margin: 0;
+    padding: 16px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  figure { margin: 0 }
+
+  figcaption {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  svg { display: block; width: 100%; height: auto }
+
+  .node { cursor: pointer }
+  .node rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: fill .18s, stroke .18s }
+  .node text { fill: var(--ink); font: 600 12px -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none }
+  .node:hover rect { stroke: var(--accent) }
+  .node[aria-pressed="true"] rect { fill: var(--accent); stroke: var(--accent) }
+  .node[aria-pressed="true"] text { fill: #fff }
+
+  .edge { stroke: var(--line); stroke-width: 2; fill: none; marker-end: url(#tip) }
+</style>
+
+<figure>
+  <svg viewBox="0 0 520 120" role="img" aria-label="Replace with a sentence describing what the diagram shows">
+    <defs>
+      <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+      </marker>
+    </defs>
+
+    <path class="edge" d="M150,60 L196,60"/>
+
+    <g class="node" role="button" tabindex="0" aria-pressed="false" aria-label="First stage">
+      <rect x="20" y="36" width="130" height="48" rx="7"/>
+      <text x="85" y="65" text-anchor="middle">First</text>
+    </g>
+
+    <g class="node" role="button" tabindex="0" aria-pressed="false" aria-label="Second stage">
+      <rect x="196" y="36" width="130" height="48" rx="7"/>
+      <text x="261" y="65" text-anchor="middle">Second</text>
+    </g>
+  </svg>
+
+  <figcaption>State what the figure describes, and as of when if it was built from data.</figcaption>
+</figure>
+
+<script>
+  const toggle = node => node.setAttribute("aria-pressed", node.getAttribute("aria-pressed") === "true" ? "false" : "true")
+
+  for (const node of document.querySelectorAll(".node")) {
+    node.addEventListener("click", () => toggle(node))
+
+    node.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return
+
+      event.preventDefault()
+      toggle(node)
+    })
+  }
+</script>

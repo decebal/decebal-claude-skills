@@ -1,0 +1,336 @@
+<title>Request Rate Limiting</title>
+<link rel="stylesheet" href="../assets/notion.css">
+
+<div class="n-bar">
+  <span class="n-bar-label">Notion preview</span>
+  <div class="n-switch" role="group" aria-label="View">
+    <button data-set-view="previous" aria-pressed="false">Previous</button>
+    <button data-set-view="proposed" aria-pressed="false">Proposed</button>
+    <button data-set-view="diff" aria-pressed="true">Diff</button>
+  </div>
+  <div class="n-tally">
+    <span class="add"><b id="tally-add">0</b> added</span>
+    <span class="del"><b id="tally-del">0</b> removed</span>
+    <span class="mod"><b id="tally-mod">0</b> changed</span>
+  </div>
+</div>
+
+<div class="n-page">
+  <div class="n-icon">🚦</div>
+  <h1 class="n-title">Request Rate Limiting</h1>
+
+  <div class="n-props">
+    <div class="n-prop-key">⊙ Status</div>
+    <div class="n-prop-val"><span class="n-chip blue">Under Review</span></div>
+    <div class="n-prop-key">◎ Owner</div>
+    <div class="n-prop-val">Platform team</div>
+    <div class="n-prop-key">⊞ Surface(s)</div>
+    <div class="n-prop-val"><span class="n-chip green">Public API</span></div>
+    <div class="n-prop-key">≡ Released in</div>
+    <div class="n-prop-val">API 3.0.0</div>
+  </div>
+
+  <p>A client sending more requests than the service can absorb degrades every other client sharing it.
+  This page covers how the gateway recognises that state, what it tells the client to do, and which bounds
+  decide it.</p>
+
+  <hr>
+
+  <ul class="n-toc">
+    <li><a href="#background">Background</a></li>
+    <li class="lvl2"><a href="#what-the-limiter-counts">What the limiter counts</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li class="lvl2"><a href="#variables">Variables</a></li>
+    <li><a href="#behaviour">Behaviour by version and product</a></li>
+    <li><a href="#open-decisions">Open decisions</a></li>
+  </ul>
+
+  <hr>
+
+  <h1 id="background">Background</h1>
+  <p class="n-tagline">What the feature is, and which situations reach it.</p>
+
+  <details class="n-toggle">
+    <summary>What belongs in this section</summary>
+    <p>What the feature is in plain words, which situations reach it, when it first shipped, and what
+    changed since.</p>
+  </details>
+
+  <hr>
+
+  <h2 id="what-the-limiter-counts">What the limiter counts</h2>
+
+  <p>The limiter is a token bucket per API key. Each request spends one token; the bucket refills at a
+  fixed rate up to a burst ceiling. A request that finds the bucket empty is rejected with
+  <code>429 Too Many Requests</code> and a <code>Retry-After</code> header.</p>
+
+  <div class="n-callout red">
+    <div class="n-callout-icon">🔑</div>
+    <div class="n-callout-body">
+      <p><strong>Keyed requests only.</strong> Unauthenticated requests are limited per source address at
+      the edge, before they reach this limiter, and are not covered here.</p>
+    </div>
+  </div>
+
+  <p>Where one key holds many concurrent connections, the bucket drains faster than any single connection
+  suggests. That is the state this page names <code>key-saturated</code>.</p>
+
+  <p data-state="added">Requests are counted at the gateway rather than per service instance, because the
+  load balancer spreads one client across every instance. A per-instance count lets a client exceed the
+  limit by a factor of the instance count; only a shared count holds the bound.
+  <span class="n-note">Added after the load test showed per-instance counting admitting 3.8× the
+  configured rate.</span></p>
+
+  <h1 id="architecture">Architecture</h1>
+  <p class="n-tagline">How the parts fit together.</p>
+
+  <hr>
+
+  <p>The check runs once per request, before routing, against the shared counter store. The
+  <code>key-saturated</code> branch sits last in <code>admitRequest</code>, so every narrower rejection —
+  a revoked key, a suspended account — is offered the request first.</p>
+
+  <div class="n-diagram"><pre class="mermaid">
+sequenceDiagram
+  participant Client
+  participant Gateway
+  participant Counter
+  participant Service
+  Client->>Gateway: request + API key
+  Gateway->>Counter: take one token
+  Counter-->>Gateway: remaining, retryAfter
+  Gateway->>Service: forward (tokens left)
+  Gateway-->>Client: 429 + Retry-After (bucket empty)
+</pre></div>
+
+  <h2 id="variables">Variables</h2>
+
+  <p>Each row is a bound read once per request. Direction says who supplies the value; a bound with no
+  configuration source is compiled in.</p>
+
+  <div class="n-db-title">🗄 Variables <span class="n-db-count">4 rows</span></div>
+  <div class="n-table-wrap">
+    <table class="n-table">
+      <thead>
+        <tr>
+          <th><span class="n-prop-type">≡</span>Full Name</th>
+          <th><span class="n-prop-type">≡</span>Variable</th>
+          <th><span class="n-prop-type">#</span>Value</th>
+          <th><span class="n-prop-type">⊙</span>Direction</th>
+          <th><span class="n-prop-type">⊙</span>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-state="changed">
+          <td><a class="n-mention" href="#">Refill Rate Per Second</a></td>
+          <td><code>refillRatePerSecond</code></td>
+          <td><del>20</del><ins>25</ins></td>
+          <td><span class="n-chip purple">Config → Gateway</span></td>
+          <td><span class="n-chip green">Active</span></td>
+        </tr>
+        <tr>
+          <td><a class="n-mention" href="#">Burst Ceiling</a></td>
+          <td><code>burstCeiling</code></td>
+          <td>100</td>
+          <td><span class="n-chip purple">Config → Gateway</span></td>
+          <td><span class="n-chip green">Active</span></td>
+        </tr>
+        <tr>
+          <td><a class="n-mention" href="#">Counter Sync Interval</a></td>
+          <td><code>counterSyncIntervalMs</code></td>
+          <td>50</td>
+          <td><span class="n-chip purple">Config → Gateway</span></td>
+          <td><span class="n-chip orange">Proposed</span></td>
+        </tr>
+        <tr data-state="added">
+          <td><a class="n-mention" href="#">Retry After Floor</a></td>
+          <td><code>retryAfterFloorSeconds</code></td>
+          <td>1</td>
+          <td><span class="n-chip purple">Config → Gateway</span></td>
+          <td><span class="n-chip green">Active</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p data-state="changed"><code>refillRatePerSecond</code> is the bound that decides the branch.
+  <del>At 20 it rejected 6% of requests from the busiest integration partners.</del><ins>Raising it from
+  20 to 25 cut rejections for the busiest integration partners to 1%, with p99 latency unchanged.</ins>
+  <span class="n-note">Two-week load replay. Latency was the gate on raising it, and it did not
+  move.</span></p>
+
+  <div class="n-callout yellow">
+    <div class="n-callout-icon">⚠️</div>
+    <div class="n-callout-body">
+      <p><code>counterSyncIntervalMs</code> at 50 decides nothing in current traffic — no replay has
+      produced a burst short enough for it to matter. It stays <span class="n-chip orange">Proposed</span>
+      until one does.</p>
+    </div>
+  </div>
+
+  <h1 id="behaviour">Behaviour by version and product</h1>
+  <p class="n-tagline">What differs between live API generations.</p>
+
+  <hr>
+
+  <div class="n-table-wrap">
+    <table class="n-table">
+      <thead>
+        <tr><th>Version</th><th>Behaviour</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>API 2.x and earlier</td><td>No per-key limit. An overloaded service returns a generic
+        <code>503</code> and no retry advice.</td></tr>
+        <tr data-state="changed"><td>API 3.0.0</td><td>Per-key limit with <code>Retry-After</code>.
+        <code>burstCeiling</code> is <del>60</del><ins>100</ins>.
+        <span class="n-note">Raised with the batch-endpoint change; the bounds above were fitted against
+        the new ceiling.</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h1 id="open-decisions">Open decisions</h1>
+  <p class="n-tagline">Unresolved items, each with what would settle it.</p>
+
+  <hr>
+
+  <ul>
+    <li data-state="changed">Request cost is not weighted, so one batch call spends the same single token
+    as a health check, and is <del>still under investigation</del><ins>under-limited — a client can
+    submit a thousand-item batch for one token</ins>. Settled by charging a batch per item rather than by
+    any further measurement work.
+    <span class="n-note">Reworded after the cost audit closed: the cause is known, so "under
+    investigation" overstated the uncertainty.</span></li>
+    <li><code>retryAfterFloorSeconds</code> at 1 is knowingly unfitted against the new refill rate. It
+    spaces retries correctly for every client library tested, which is the only condition it is trusted
+    in.</li>
+    <li data-state="removed">Whether a sliding-window counter can replace the token bucket.
+    <span class="n-note">Removed — tested and withdrawn. The window's memory cost per key did not fit the
+    counter store.</span></li>
+  </ul>
+</div>
+
+<section class="n-handoff">
+  <h2>Handoff</h2>
+
+  <h3>1 — Paste the body</h3>
+  <button class="n-copy" data-copy="#src">Copy Notion markdown</button>
+  <pre class="n-source" id="src"># Background
+
+## What the limiter counts
+
+The limiter is a token bucket per API key. Each request spends one token; the bucket refills at a fixed rate up to a burst ceiling. A request that finds the bucket empty is rejected with `429 Too Many Requests` and a `Retry-After` header.
+
+Where one key holds many concurrent connections, the bucket drains faster than any single connection suggests. That is the state this page names `key-saturated`.
+
+Requests are counted at the gateway rather than per service instance, because the load balancer spreads one client across every instance. A per-instance count lets a client exceed the limit by a factor of the instance count; only a shared count holds the bound.
+
+# Architecture
+
+The check runs once per request, before routing, against the shared counter store. The `key-saturated` branch sits last in `admitRequest`, so every narrower rejection — a revoked key, a suspended account — is offered the request first.
+
+## Variables
+
+Each row is a bound read once per request. Direction says who supplies the value; a bound with no configuration source is compiled in.
+
+| Full Name | Variable | Value | Direction | Status |
+| --- | --- | --- | --- | --- |
+| Refill Rate Per Second | `refillRatePerSecond` | 25 | Config → Gateway | Active |
+| Burst Ceiling | `burstCeiling` | 100 | Config → Gateway | Active |
+| Counter Sync Interval | `counterSyncIntervalMs` | 50 | Config → Gateway | Proposed |
+| Retry After Floor | `retryAfterFloorSeconds` | 1 | Config → Gateway | Active |
+
+`refillRatePerSecond` is the bound that decides the branch. Raising it from 20 to 25 cut rejections for the busiest integration partners to 1%, with p99 latency unchanged.
+
+# Behaviour by version and product
+
+| Version | Behaviour |
+| --- | --- |
+| API 2.x and earlier | No per-key limit. An overloaded service returns a generic `503` and no retry advice. |
+| API 3.0.0 | Per-key limit with `Retry-After`. `burstCeiling` is 100. |
+
+# Open decisions
+
+- Request cost is not weighted, so one batch call spends the same single token as a health check, and is under-limited — a client can submit a thousand-item batch for one token. Settled by charging a batch per item rather than by any further measurement work.
+- `retryAfterFloorSeconds` at 1 is knowingly unfitted against the new refill rate. It spaces retries correctly for every client library tested, which is the only condition it is trusted in.</pre>
+
+  <h3>2 — Rebuild by hand</h3>
+  <ol>
+    <li>Page icon → 🚦.</li>
+    <li>Background, under "What the limiter counts" → wrap the unauthenticated-requests paragraph in a 🔑
+    red callout opening <strong>Keyed requests only.</strong></li>
+    <li>Background → add the <code>&lt;details&gt;</code> section prompt back as a toggle; markdown has no
+    spelling for one.</li>
+    <li>Architecture → recreate the Mermaid sequence diagram as a code block with language
+    <code>mermaid</code>.</li>
+    <li>Variables → the pasted table is a plain table. Convert to an inline database view of
+    <strong>Variables</strong>, then re-link each Full Name cell as an <code>@</code> mention.</li>
+    <li>Variables → add the ⚠️ yellow callout under the table.</li>
+    <li>Each section → re-add the italic tagline under its heading; markdown carries the italics but not
+    the placement.</li>
+  </ol>
+
+  <h3>3 — Disposal</h3>
+  <div class="n-table-wrap">
+    <table class="n-table">
+      <thead><tr><th>Page</th><th>Why</th><th>Inbound mentions</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Rate Limit Notes (draft)</td>
+          <td>Superseded by this page in full.</td>
+          <td>0</td>
+          <td>Move to Archive</td>
+        </tr>
+        <tr>
+          <td>Sliding Window Investigation</td>
+          <td>Approach tested and withdrawn.</td>
+          <td>2 — Gateway Specification, Load Replay Results</td>
+          <td>Retarget both mentions at this page first</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+  const root = document.documentElement
+
+  function setView(view) {
+    root.dataset.view = view
+
+    for (const button of document.querySelectorAll("[data-set-view]")) {
+      button.setAttribute("aria-pressed", String(button.dataset.setView === view))
+    }
+  }
+
+  for (const button of document.querySelectorAll("[data-set-view]")) {
+    button.addEventListener("click", () => setView(button.dataset.setView))
+  }
+
+  setView("diff")
+
+  const count = (state) => document.querySelectorAll(`[data-state="${state}"]`).length
+
+  document.getElementById("tally-add").textContent = count("added")
+  document.getElementById("tally-del").textContent = count("removed")
+  document.getElementById("tally-mod").textContent = count("changed")
+
+  for (const button of document.querySelectorAll(".n-copy")) {
+    button.addEventListener("click", async () => {
+      const source = document.querySelector(button.dataset.copy)
+      const selection = window.getSelection()
+      const range = document.createRange()
+
+      range.selectNodeContents(source)
+      selection.removeAllRanges()
+      selection.addRange(range)
+
+      try {
+        await navigator.clipboard.writeText(source.textContent)
+        button.textContent = "Copied"
+      } catch {
+        button.textContent = "Selected — press ⌘C"
+      }
+    })
+  }
+</script>

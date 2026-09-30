@@ -25,6 +25,21 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 | **claude-seo** | Evidence-led technical/content/GEO audits with safe Rust static analysis | "SEO audit", "technical SEO", "schema", "sitemap", "traffic drop", "GEO" |
 | **aso-lint** | Apple App Store + Google Play metadata, research, visuals, and experiments with Rust linting | "ASO audit", "app keywords", "store listing", "listing experiment" |
 
+### Notion documentation
+
+Five skills that compose: `notion-specification` owns what a page says, `notion-editing` how any page is
+changed, `notion-database` schemas and views, `notion-preview` the review gate before a write, and
+`notion-diagram` figures. Fill the workspace coordinates in a project-local copy of
+`notion-specification`, never in this repo.
+
+| Skill | Purpose | Trigger Phrases |
+|-------|---------|-----------------|
+| **notion-specification** | Write or maintain a spec in a Notion docs space | "write a spec for X", "document X in Notion" |
+| **notion-editing** | Change any page via the connector without silent failures | "update the Notion page", "no matches found" |
+| **notion-database** | Rows, schema changes, views, relations | "add a column", "the row isn't showing in the view" |
+| **notion-preview** | HTML preview with Previous / Proposed / Diff before writing | "preview this in Notion", "show me the diff before I write it" |
+| **notion-diagram** | Inline-SVG diagram as a Notion HTML block | "the Mermaid diagram won't line up", "make this an HTML block" |
+
 ### Planning & Design
 
 | Skill | Purpose | Trigger Phrases |
@@ -102,7 +117,8 @@ Skills extend Claude Code with domain-specific knowledge and workflows. They liv
 ├── wasm-development -> ~/.agents/skills/wasm-development
 ├── protobuf-grpc -> ~/.agents/skills/protobuf-grpc
 ├── claude-seo -> ~/.agents/skills/claude-seo
-└── aso-lint -> ~/.agents/skills/aso-lint
+├── aso-lint -> ~/.agents/skills/aso-lint
+└── notion-{specification,editing,database,preview,diagram}/  # Direct install
 ```
 
 ## Installing Skills
