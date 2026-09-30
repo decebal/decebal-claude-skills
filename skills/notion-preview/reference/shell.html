@@ -1,0 +1,83 @@
+<title>Page name</title>
+<link rel="stylesheet" href="notion.css">
+
+<div class="n-bar">
+  <span class="n-bar-label">Notion preview</span>
+  <div class="n-switch" role="group" aria-label="View">
+    <button data-set-view="previous" aria-pressed="false">Previous</button>
+    <button data-set-view="proposed" aria-pressed="false">Proposed</button>
+    <button data-set-view="diff" aria-pressed="true">Diff</button>
+  </div>
+  <div class="n-tally">
+    <span class="add"><b id="tally-add">0</b> added</span>
+    <span class="del"><b id="tally-del">0</b> removed</span>
+    <span class="mod"><b id="tally-mod">0</b> changed</span>
+  </div>
+</div>
+
+<div class="n-page">
+  <div class="n-icon">📄</div>
+  <h1 class="n-title">Page name</h1>
+
+  <div class="n-props">
+    <div class="n-prop-key">⊙ Status</div>
+    <div class="n-prop-val"><span class="n-chip">Draft</span></div>
+  </div>
+</div>
+
+<section class="n-handoff">
+  <h2>Handoff</h2>
+
+  <h3>1 — Paste the body</h3>
+  <button class="n-copy" data-copy="#src">Copy Notion markdown</button>
+  <pre class="n-source" id="src"></pre>
+
+  <h3>2 — Rebuild by hand</h3>
+  <ol></ol>
+
+  <h3>3 — Disposal</h3>
+  <p>None.</p>
+</section>
+
+<script>
+  const root = document.documentElement
+
+  function setView(view) {
+    root.dataset.view = view
+
+    for (const button of document.querySelectorAll("[data-set-view]")) {
+      button.setAttribute("aria-pressed", String(button.dataset.setView === view))
+    }
+  }
+
+  for (const button of document.querySelectorAll("[data-set-view]")) {
+    button.addEventListener("click", () => setView(button.dataset.setView))
+  }
+
+  setView("diff")
+
+  const count = (state) => document.querySelectorAll(`[data-state="${state}"]`).length
+
+  document.getElementById("tally-add").textContent = count("added")
+  document.getElementById("tally-del").textContent = count("removed")
+  document.getElementById("tally-mod").textContent = count("changed")
+
+  for (const button of document.querySelectorAll(".n-copy")) {
+    button.addEventListener("click", async () => {
+      const source = document.querySelector(button.dataset.copy)
+      const selection = window.getSelection()
+      const range = document.createRange()
+
+      range.selectNodeContents(source)
+      selection.removeAllRanges()
+      selection.addRange(range)
+
+      try {
+        await navigator.clipboard.writeText(source.textContent)
+        button.textContent = "Copied"
+      } catch {
+        button.textContent = "Selected — press ⌘C"
+      }
+    })
+  }
+</script>
