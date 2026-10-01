@@ -48,6 +48,7 @@ changed, `notion-database` schemas and views, `notion-preview` the review gate b
 | **feature-spec** | PRDs, requirements, scope management | "write prd", "define requirements" |
 | **create-plans** | Hierarchical Claude-executable project plans; ships `/create-prompt` + `/run-prompt` | "plan this project", "create-prompt", "phase plan" |
 | **claude-prd** | PRDs optimized for agent execution | "create a prd", "plan this feature" |
+| **semantic-isa** | Design an agent's Semantic ISA + deterministic kernel, or write it up accurately | "semantic ISA", "Arbiter-K", "deterministic kernel for an agent" |
 
 ### Task Orchestration
 
@@ -118,7 +119,8 @@ changed, `notion-database` schemas and views, `notion-preview` the review gate b
 ├── protobuf-grpc -> ~/.agents/skills/protobuf-grpc
 ├── claude-seo -> ~/.agents/skills/claude-seo
 ├── aso-lint -> ~/.agents/skills/aso-lint
-└── notion-{specification,editing,database,preview,diagram}/  # Direct install
+├── notion-{specification,editing,database,preview,diagram}/  # Direct install
+└── semantic-isa/                  # Direct install
 ```
 
 ## Installing Skills
