@@ -42,6 +42,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── protobuf-grpc/          # protobuf-es/buf, envelope encryption, compat (+ 5 refs)
 │   ├── claude-seo/             # Evidence-led SEO + safe Rust audit/sitemap/drift CLI
 │   ├── aso-lint/               # App Store/Google Play optimization + Rust linter
+│   ├── semantic-isa/           # Agent ISA + deterministic kernel: cores, bindings, taint→sinks (+ Arbiter-K ref, spec template)
 │   ├── notion-specification/   # Specs in a Notion docs space: coordinates, skeleton, style guide
 │   ├── notion-editing/         # Connector edits: access check, literal-match traps, no delete
 │   ├── notion-database/        # Rows as pages, irreversible schema ops, filters views discard

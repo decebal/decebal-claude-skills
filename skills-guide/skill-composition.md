@@ -66,6 +66,8 @@ end to end), that's the point to reconsider B — not before.
 | `integration-test` + `bun-testing` | JS/TS projects: bun:test patterns apply during test authoring |
 | `monorepo-expert` + `bun-testing` | turbo test caching wraps the bun:test runner |
 | `rust-clean-architecture` + `rust-quality` | Rust quality pair — layering + lints together |
+| `brainstorming` → `semantic-isa` | `semantic-isa` **depends_on** `brainstorming` (side-effect inventory first) |
+| `semantic-isa` + `arch` / `security-review` / `rust-clean-architecture` / `integration-test` | `semantic-isa` **enhances** all four (diagrams, sink attack, kernel layering, refusal tests) |
 
 Only annotate a real relationship. A speculative `enhances` that never fires is
 noise; leave it off until the chain is actually used.
