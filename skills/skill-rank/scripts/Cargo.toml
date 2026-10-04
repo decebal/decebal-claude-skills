@@ -32,7 +32,7 @@ description = "Rate installed Claude Code and Codex skills with TypeSafe Jev, fi
 [dependencies]
 regex = "1"
 serde_json = { version = "1", features = ["preserve_order"] }
-sha2 = "0.10"
+sha2 = "0.11"
 # Parses ~/.codex/config.toml before and after an edit: a file Codex cannot
 # load breaks every Codex session.
 toml = "0.8"
