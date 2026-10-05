@@ -28,8 +28,9 @@ Drop either and what remains is a linter with worse recall.
 |---|---|---|
 | 0 — Frame: range, liveness, claims, hunk coverage | mechanical + one echo | 0 |
 | 1 — Ledger + owned probes | fully mechanical | 0 |
-| 2 — Refuters, gated by diff surface | judged | 1 per triggered lens |
-| 3 — Counter-refutation, scaled by finding count | judged, evidence-bound | 0–2 |
+| 1.5 — Size the run, a decision router advising | mechanical + one router call | 0 |
+| 2 — Lenses, gated by diff surface | judged | 0 inline; 1 per triggered lens when sized `fan-out` |
+| 3 — Counter-refutation | judged, evidence-bound | 0 inline; 0–2 when sized `fan-out` |
 | 4 — Manual routing | mechanical table join | 0 |
 | 5 — Emit | mechanical | 0 |
 | 5.5 — Self-audit of the assembled emission | fully mechanical | 0 |
@@ -38,7 +39,34 @@ Drop either and what remains is a linter with worse recall.
 delta.** No counts are stored anywhere in the emitted skill. A stale inventory is the defect this
 whole approach exists to catch, and shipping one would be that defect wearing a review badge.
 
-**Phase 3 scales with findings**: zero findings spawns zero counter-refuters; one or two spawns
+**Phase 1.5 sizes the run to the change's risk, never to the lens table.** One refuter agent
+per lens on a small PR re-reads the same diff six times to settle what four greps settle; a user
+stopped exactly that run. Two sizes, portable:
+
+| Size | What runs | When |
+|---|---|---|
+| `inline` (default) | The main thread attacks the 3–5 highest-risk hops the selected lenses name (removed-symbol callers, the runtime source of a config value, a gate's enforcement point, a new state's lifecycle triggers) with grep and file reads, and kills its own suspicions with evidence. No agents. | every run, unless the row below applies |
+| `fan-out` | one refuter agent per selected lens, then counter-refuters | `--deep`, or the router allows a subagent **and** the inline pass left a claim unsettled |
+
+`{{router}}` — filled by G0. When a decision router is installed (the `jev-decision-layer` skill
+and its `route` command), the emitted skill asks it before any agent is spawned, with a `goal`
+that names no repository, customer, path or diff line, and maps its action:
+
+| Router action | The emitted skill does |
+|---|---|
+| `reuse_cache` | a review already exists at this head; print it and stop |
+| `allow_subagent` | `fan-out` allowed, for the unsettled claims' lenses only |
+| `stop_retry` | do not re-run the failed lens set; route its claims to the hand-checks |
+| `ask_human` | ask before posting |
+| anything else | stay `inline` |
+
+The router is advisory: a size that differs from its action is stated in one header line, and a
+router error or timeout means `inline` with `router: unavailable`. When G0 finds no router,
+emit the size table without the router rows: `inline` unless `--deep`. The header carries
+`size: inline|fan-out · router: <action|none|unavailable>`.
+
+**Phase 3 scales with findings**: in `inline`, the main thread tries to kill each finding itself,
+with the same evidence bar. In `fan-out`, zero findings spawns zero counter-refuters; one or two spawns
 one; three or more spawns two. Join the verdicts to the findings **in code** and hand the report
 step only the joined result — re-sending both raw payloads so a model can do a deterministic
 match is the most expensive no-op in the pipeline.
@@ -93,8 +121,9 @@ while costing a full context; a lens stubbed out with a reason is honest and fre
 | **L5 wiring** | the missing hop, in **both** directions | a multi-step registration chain exists | G2 + G4 |
 | **L6 second item** | the 2nd iteration, the failing element, the concurrent run, the abort | **always**, unless the repo has no loop, queue or state machine anywhere | portable + G4 |
 
-**The spawn gate errs toward spawning.** A skipped lens costs nothing and finds nothing; a lens
-that should have run costs a defect.
+**Lens selection errs toward including a lens.** A skipped lens costs nothing and finds nothing; a lens
+that should have run costs a defect. Selecting a lens decides what is attacked; Phase 1.5
+decides whether an agent does it.
 
 **L6's trigger is deliberately the widest.** Not just loops, queues and batches — *any state
 decision*: a function returning one of several states, a status enum, an early-return guard, an
