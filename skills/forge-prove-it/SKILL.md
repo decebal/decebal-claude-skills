@@ -75,7 +75,19 @@ unwired gates must not become one, so it also ships no gate script of its own.
 | G6 | Emit | mechanical | 0 |
 | G7 | **Self-audit of the emitted skill** | mechanical | 0 |
 
-Parallelise G1–G4; they share no state. G5 needs all four.
+G1–G4 share no state. **Run them inline in the main thread by default**; the agent counts above
+are ceilings, not quotas. Spawn an agent for G2 or G4 only when the inline pass cannot settle a
+slot without reading more than the main context can hold, and ask the decision router first
+when one is installed (G0):
+
+```
+~/Projects/muse-jev-playbook/route '{"goal":"census a repository to generate a feature reviewer","kind":"coding","cached_artifact":<true when --update finds a current skill>,"constraints":["agents only for slots the inline pass could not settle"]}'
+```
+
+`allow_subagent` permits the agent; `reuse_cache` on `--update` means re-census only the facts
+whose observing command now answers differently; any other action keeps the phase inline. The
+router is advisory: say in one line when you decide otherwise, and continue inline on an error or
+timeout. The `goal` names no repository, customer or path. G5 needs all four.
 
 ### G0 · Frame
 
@@ -85,6 +97,10 @@ Establish, and print:
   `CLAUDE.md` exist
 - the stacks, from manifests actually present, never from file extensions alone
 - whether a generated skill is already here (`--update` path)
+- whether a decision router is installed: `test -x ~/Projects/muse-jev-playbook/route` and the
+  `jev-decision-layer` skill. It fills the emitted skill's `{{router}}` slot (Phase 1.5 in
+  `references/emitted-skill-template.md`); absent means the emitted sizing is `inline` unless
+  `--deep`
 - the trunk's name — read it, do not assume `main`. Every delta probe in the emitted skill is
   measured against a base ref, so an unresolvable trunk poisons the whole run; make it mark itself
   instead. In order, stopping at the first that answers:
