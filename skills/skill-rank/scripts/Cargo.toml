@@ -36,7 +36,7 @@ sha2 = "0.11"
 # Parses ~/.codex/config.toml before and after an edit: a file Codex cannot
 # load breaks every Codex session.
 toml = "1.0"
-ureq = { version = "2", default-features = false, features = ["json", "tls"] }
+ureq = { version = "3", default-features = false, features = ["json", "tls"] }
 
 [lib]
 path = "src/lib.rs"
