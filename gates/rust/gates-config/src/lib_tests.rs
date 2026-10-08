@@ -80,9 +80,23 @@ fn an_unterminated_array_is_an_error() {
 }
 
 #[test]
-fn arrays_of_tables_are_rejected_rather_than_misread() {
-    let err = Config::parse("[[thing]]\nname = \"x\"\n").unwrap_err();
-    assert!(err.message.contains("arrays of tables"), "{}", err.message);
+fn arrays_of_tables_are_supported() {
+    let cfg = Config::parse("[[check]]\nname = \"test1\"\n[[check]]\nname = \"test2\"\n").unwrap();
+    let elements = cfg.array_elements("check");
+    assert_eq!(elements, vec!["check.0", "check.1"]);
+    assert_eq!(cfg.string("check.0.name"), Some("test1"));
+    assert_eq!(cfg.string("check.1.name"), Some("test2"));
+}
+
+#[test]
+fn array_of_tables_with_lists() {
+    let cfg = Config::parse("[[service]]\nname = \"core\"\nrun = [\"cmd\", \"arg\"]\n[[service]]\nname = \"db\"\nrun = [\"db\", \"start\"]\n").unwrap();
+    let elements = cfg.array_elements("service");
+    assert_eq!(elements, vec!["service.0", "service.1"]);
+    assert_eq!(cfg.string("service.0.name"), Some("core"));
+    assert_eq!(cfg.list("service.0.run"), Some(vec!["cmd".into(), "arg".into()]));
+    assert_eq!(cfg.string("service.1.name"), Some("db"));
+    assert_eq!(cfg.list("service.1.run"), Some(vec!["db".into(), "start".into()]));
 }
 
 #[test]

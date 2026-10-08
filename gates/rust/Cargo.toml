@@ -38,6 +38,7 @@ members = [
   "rust-effective-diff",
   "staged-scope",
   "target-sweep",
+  "task-gates",
   "test-script-check",
   "trophy-check",
   "vendor-attribution-check",
