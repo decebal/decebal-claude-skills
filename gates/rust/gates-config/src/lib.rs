@@ -81,6 +81,7 @@ impl Config {
     pub fn parse(text: &str) -> Result<Config, ParseError> {
         let mut values = BTreeMap::new();
         let mut table = String::new();
+        let mut array_counts: BTreeMap<String, usize> = BTreeMap::new();
         let mut lines = text.lines().enumerate();
 
         while let Some((idx, raw)) = lines.next() {
@@ -91,17 +92,31 @@ impl Config {
             }
 
             if let Some(rest) = line.strip_prefix('[') {
-                let name = rest.strip_suffix(']').ok_or_else(|| ParseError {
-                    line: lineno,
-                    message: format!("unterminated table header: {line}"),
-                })?;
-                if name.starts_with('[') {
-                    return Err(ParseError {
+                let (is_array, name_str) = if rest.starts_with('[') {
+                    // Array of tables: [[name]]
+                    let name = rest.strip_prefix('[').unwrap()
+                        .strip_suffix("]]").ok_or_else(|| ParseError {
                         line: lineno,
-                        message: "arrays of tables are not supported".into(),
-                    });
+                        message: format!("unterminated array of tables header: {line}"),
+                    })?;
+                    (true, name.trim().to_string())
+                } else {
+                    // Regular table: [name]
+                    let name = rest.strip_suffix(']').ok_or_else(|| ParseError {
+                        line: lineno,
+                        message: format!("unterminated table header: {line}"),
+                    })?;
+                    (false, name.trim().to_string())
+                };
+
+                if is_array {
+                    // For arrays, track the count and use it as part of the path
+                    let count = array_counts.entry(name_str.clone()).or_insert(0);
+                    table = format!("{}.{}", name_str, count);
+                    *count += 1;
+                } else {
+                    table = name_str;
                 }
-                table = name.trim().to_string();
                 continue;
             }
 
@@ -197,6 +212,26 @@ impl Config {
 
     pub fn is_empty(&self) -> bool {
         self.values.is_empty()
+    }
+
+    /// Enumerate array-of-tables elements by name, in order. Each element is
+    /// identified by an index (0, 1, 2, ...). Returns the base prefix for each
+    /// element, e.g., for `[[check]]` entries returns `["check.0", "check.1", ...]`.
+    pub fn array_elements(&self, array_name: &str) -> Vec<String> {
+        let prefix = format!("{array_name}.");
+        let mut indices: Vec<usize> = self
+            .values
+            .keys()
+            .filter_map(|k| k.strip_prefix(&prefix))
+            .filter_map(|rest| rest.split_once('.').map(|(idx, _)| idx))
+            .filter_map(|idx| idx.parse::<usize>().ok())
+            .collect();
+        indices.sort();
+        indices.dedup();
+        indices
+            .into_iter()
+            .map(|idx| format!("{array_name}.{idx}"))
+            .collect()
     }
 }
 
