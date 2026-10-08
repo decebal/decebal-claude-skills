@@ -39,6 +39,7 @@ braces**. See [rules/testing-gates.md](../rules/testing-gates.md).
 | [`ts/check-remote-recovery.ts`](ts/check-remote-recovery.ts) | TypeScript | A failure branch that offers the reader nothing fails the push |
 | [`ts/remote-state.ts`](ts/remote-state.ts) | TypeScript | The `RemoteState<T>` type the gate above backs up — the primary mechanism |
 | [`ts/setup-git-keepalive.ts`](ts/setup-git-keepalive.ts) | TypeScript | SSH keepalive so a long hook does not lose the push transport |
+| [`rust/task-gates`](rust/task-gates) | Rust | Orchestrates and runs configured checks; manages services; posts status to GitHub. Checks run on the author's machine, never in CI |
 
 ## Why some are shell, some Rust, one TypeScript
 
@@ -87,10 +88,11 @@ cargo install --path gates/rust/contract-set-drift
 cargo install --path gates/rust/price-table-check
 cargo install --path gates/rust/trophy-check
 cargo install --path gates/rust/dev-preflight
+cargo install --path gates/rust/task-gates
 cargo install target-gc                             # its own crate; then: target-gc install
 ```
 
-Twenty-two members, and still **four** external dependencies — `regex`,
+Twenty-three members, and still **four** external dependencies — `regex`,
 `serde_json`, `proc-macro2`, and `sha2` for the guard's content-trust hash.
 Several members declare no dependency at all, and several more depend only on
 the in-workspace config reader
@@ -121,6 +123,47 @@ way. The doubled form yields the literal characters `\` `\`, the regex compiles
 without complaint, and it matches nothing — so the gate reports every file clean
 while checking for something that cannot occur. It was caught here only by
 running the real binary against a fixture; every in-process test still passed.
+
+## task gates
+
+The `task-gates` binary orchestrates and runs configured checks, managing their dependencies, enforcing timeouts, and posting results to GitHub.
+
+**Checks run on the author's machine, never in CI.** This implements ADR-093 from the Longhand repository: pull requests are checked locally by `task gates`, and only essential workflows run on GitHub Actions. The binary reads `.gates.toml` at the git root, scopes checks to changed files, runs them in parallel where possible, and posts the result as a commit status so the pull request shows which checks passed.
+
+### Config format
+
+```toml
+context = "wolven/gates"            # commit status context; default "wolven/gates"
+
+[[check]]
+name = "cargo fmt"
+run = ["cargo", "fmt", "--check"]
+paths = ["crates/**", "Cargo.lock"]   # optional; absent means always run
+needs = ["db"]                         # optional; service names to start first
+env = ["KEY=value"]                    # optional; environment variables
+
+[[service]]
+name = "db"
+run = ["postgres", "--port", "5433"]
+ready_tcp = "127.0.0.1:5433"          # wait for TCP before running checks that need this
+```
+
+**Arrays of tables** (`[[check]]`, `[[service]]`) enumerate repeating sections. Each check and service becomes an array element and is indexed internally (e.g., `check.0.name`, `check.1.name`).
+
+### Behavior
+
+- Scopes to changed files: `git diff --name-only origin/main HEAD` plus untracked files. `GATES_ALL=1` runs all checks.
+- Each check runs in its own process group with a 300s timeout. Output is captured; on failure, the last 40 lines are printed.
+- Before running a check that invokes `cargo`, `dx`, `rustc`, or `bun`, waits up to 240s for any existing compile lock to clear.
+- Services are started on demand and reaped after the checks that need them complete.
+- Posts a commit status (`success` or `failure`) to GitHub only when the tree is clean and HEAD exists on the remote.
+- Exits with status 1 if any check failed.
+
+### Flags
+
+- `--version`: print version and exit
+- `--plan`: print which checks would run and why, without running them
+- `run` (default): run all selected checks
 
 ## Wire it up
 

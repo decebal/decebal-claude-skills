@@ -312,6 +312,13 @@ name = "target-sweep"
 version = "0.1.0"
 
 [[package]]
+name = "task-gates"
+version = "0.1.0"
+dependencies = [
+ "gates-config",
+]
+
+[[package]]
 name = "test-script-check"
 version = "0.1.0"
 dependencies = [
