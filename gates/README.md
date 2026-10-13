@@ -153,7 +153,7 @@ ready_tcp = "127.0.0.1:5433"          # wait for TCP before running checks that 
 ### Behavior
 
 - Scopes to changed files: `git diff --name-only origin/main HEAD` plus untracked files. `GATES_ALL=1` runs all checks.
-- Each check runs in its own process group with a 300s timeout. Output is captured; on failure, the last 40 lines are printed.
+- Each check runs with a 300s timeout; on timeout the check and every process it spawned are killed. Output is read while the check runs, so a check that writes more than a pipe buffer cannot stall; on failure or timeout, the last 40 lines are printed under the check's name.
 - Before running a check that invokes `cargo`, `dx`, `rustc`, or `bun`, waits up to 240s for any existing compile lock to clear.
 - Services are started on demand and reaped after the checks that need them complete.
 - Posts a commit status (`success` or `failure`) to GitHub only when the tree is clean and HEAD exists on the remote.

@@ -94,9 +94,15 @@ fn array_of_tables_with_lists() {
     let elements = cfg.array_elements("service");
     assert_eq!(elements, vec!["service.0", "service.1"]);
     assert_eq!(cfg.string("service.0.name"), Some("core"));
-    assert_eq!(cfg.list("service.0.run"), Some(vec!["cmd".into(), "arg".into()]));
+    assert_eq!(
+        cfg.list("service.0.run"),
+        Some(vec!["cmd".into(), "arg".into()])
+    );
     assert_eq!(cfg.string("service.1.name"), Some("db"));
-    assert_eq!(cfg.list("service.1.run"), Some(vec!["db".into(), "start".into()]));
+    assert_eq!(
+        cfg.list("service.1.run"),
+        Some(vec!["db".into(), "start".into()])
+    );
 }
 
 #[test]
