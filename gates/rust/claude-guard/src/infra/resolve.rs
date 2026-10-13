@@ -104,7 +104,7 @@ impl Limits {
 pub fn sha256_hex(text: &str) -> String {
     let mut h = Sha256::new();
     h.update(text.as_bytes());
-    format!("{:x}", h.finalize())
+    h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 
 /// Every wrapper reference in a block of text, deduped and ordered.
