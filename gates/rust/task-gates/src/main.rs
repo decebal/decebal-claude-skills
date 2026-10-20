@@ -1,3 +1,5 @@
+mod capture;
+
 use gates_config::Config;
 use std::collections::HashMap;
 use std::env;
@@ -10,25 +12,24 @@ const VERSION: &str = "0.1.0";
 const DEFAULT_CONTEXT: &str = "wolven/gates";
 const MAX_COMPILE_WAIT: u64 = 240;
 const CHECK_TIMEOUT: u64 = 300;
+const FAIL_TAIL_LINES: usize = 40;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     match args.get(1).map(|s| s.as_str()) {
         Some("--version") => {
-            println!("task-gates {}", VERSION);
-            return;
+            println!("task-gates {VERSION}");
         }
         Some("--plan") => {
             if let Err(e) = plan(&args[2..]) {
-                eprintln!("error: {}", e);
+                eprintln!("error: {e}");
                 std::process::exit(2);
             }
-            return;
         }
         None | Some("run") => {
             if let Err(e) = run(&args[1..]) {
-                eprintln!("error: {}", e);
+                eprintln!("error: {e}");
                 std::process::exit(1);
             }
         }
@@ -44,7 +45,7 @@ fn plan(_args: &[String]) -> Result<(), String> {
     let config_path = repo_root.join(".gates.toml");
 
     let config = Config::read(&config_path)
-        .map_err(|e| format!("config parse error: {}", e))?
+        .map_err(|e| format!("config parse error: {e}"))?
         .unwrap_or_default();
 
     if config.is_empty() {
@@ -56,7 +57,7 @@ fn plan(_args: &[String]) -> Result<(), String> {
     let is_all = env::var("GATES_ALL").is_ok() || changed.is_none();
 
     let context = config.string("context").unwrap_or(DEFAULT_CONTEXT);
-    println!("context: {}", context);
+    println!("context: {context}");
 
     let check_elements = config.array_elements("check");
     if check_elements.is_empty() {
@@ -66,25 +67,25 @@ fn plan(_args: &[String]) -> Result<(), String> {
 
     for element in check_elements {
         let name = config
-            .string(&format!("{}.name", element))
+            .string(&format!("{element}.name"))
             .ok_or_else(|| "check missing name".to_string())?;
 
         if is_all {
-            println!("  run {}", name);
+            println!("  run {name}");
             continue;
         }
 
-        let paths = config.list(&format!("{}.paths", element));
+        let paths = config.list(&format!("{element}.paths"));
         if let Some(patterns) = paths {
             if let Some(ref changed_files) = changed {
                 if matches_any(&patterns, changed_files) {
-                    println!("  run {} (matches changed files)", name);
+                    println!("  run {name} (matches changed files)");
                 } else {
-                    println!("  skip {} (no changed files match)", name);
+                    println!("  skip {name} (no changed files match)");
                 }
             }
         } else {
-            println!("  run {} (no path filter)", name);
+            println!("  run {name} (no path filter)");
         }
     }
 
@@ -96,7 +97,7 @@ fn run(_args: &[String]) -> Result<(), String> {
     let config_path = repo_root.join(".gates.toml");
 
     let config = Config::read(&config_path)
-        .map_err(|e| format!("config parse error: {}", e))?
+        .map_err(|e| format!("config parse error: {e}"))?
         .unwrap_or_default();
 
     if config.is_empty() {
@@ -119,13 +120,13 @@ fn run(_args: &[String]) -> Result<(), String> {
 
     for element in check_elements {
         let name = config
-            .string(&format!("{}.name", element))
+            .string(&format!("{element}.name"))
             .ok_or_else(|| "check missing name".to_string())?
             .to_string();
 
         // Check if this check should run
         if !is_all {
-            let paths = config.list(&format!("{}.paths", element));
+            let paths = config.list(&format!("{element}.paths"));
             if let Some(patterns) = paths {
                 if let Some(ref changed_files) = changed {
                     if !matches_any(&patterns, changed_files) {
@@ -136,18 +137,16 @@ fn run(_args: &[String]) -> Result<(), String> {
         }
 
         // Start any needed services
-        let needed_services = config
-            .list(&format!("{}.needs", element))
-            .unwrap_or_default();
+        let needed_services = config.list(&format!("{element}.needs")).unwrap_or_default();
         for svc_name in &needed_services {
             if !services.contains_key(svc_name) {
                 for svc_elem in &service_elements {
-                    if let Some(s_name) = config.string(&format!("{}.name", svc_elem)) {
+                    if let Some(s_name) = config.string(&format!("{svc_elem}.name")) {
                         if s_name == svc_name {
                             let run_cmd = config
-                                .list(&format!("{}.run", svc_elem))
+                                .list(&format!("{svc_elem}.run"))
                                 .ok_or_else(|| "service missing run".to_string())?;
-                            let ready_tcp = config.string(&format!("{}.ready_tcp", svc_elem));
+                            let ready_tcp = config.string(&format!("{svc_elem}.ready_tcp"));
                             let mut mgr = ServiceManager::new(
                                 svc_name.clone(),
                                 run_cmd,
@@ -164,9 +163,9 @@ fn run(_args: &[String]) -> Result<(), String> {
 
         // Run the check
         let run_cmd = config
-            .list(&format!("{}.run", element))
+            .list(&format!("{element}.run"))
             .ok_or_else(|| "check missing run".to_string())?;
-        let env_vars = config.list(&format!("{}.env", element)).unwrap_or_default();
+        let env_vars = config.list(&format!("{element}.env")).unwrap_or_default();
 
         wait_for_compile_lock(&run_cmd)?;
 
@@ -176,7 +175,7 @@ fn run(_args: &[String]) -> Result<(), String> {
                 passed += 1;
             }
             Err(e) => {
-                eprintln!("{}", e);
+                eprintln!("{e}");
                 failed += 1;
             }
         }
@@ -200,7 +199,7 @@ fn find_git_root() -> Result<PathBuf, String> {
         .arg("rev-parse")
         .arg("--show-toplevel")
         .output()
-        .map_err(|e| format!("git not found: {}", e))?;
+        .map_err(|e| format!("git not found: {e}"))?;
 
     if !output.status.success() {
         return Err("not in a git repository".to_string());
@@ -226,7 +225,7 @@ fn get_changed_files(repo_root: &Path) -> Result<Option<Vec<String>>, String> {
         .arg("origin/main")
         .arg("HEAD")
         .output()
-        .map_err(|e| format!("git merge-base failed: {}", e))?;
+        .map_err(|e| format!("git merge-base failed: {e}"))?;
 
     if !base.status.success() {
         return Ok(None);
@@ -239,7 +238,7 @@ fn get_changed_files(repo_root: &Path) -> Result<Option<Vec<String>>, String> {
         .arg("--name-only")
         .arg(&base_sha)
         .output()
-        .map_err(|e| format!("git diff failed: {}", e))?;
+        .map_err(|e| format!("git diff failed: {e}"))?;
 
     let mut files = String::from_utf8_lossy(&diff_output.stdout)
         .lines()
@@ -252,7 +251,7 @@ fn get_changed_files(repo_root: &Path) -> Result<Option<Vec<String>>, String> {
         .arg("--others")
         .arg("--exclude-standard")
         .output()
-        .map_err(|e| format!("git ls-files failed: {}", e))?;
+        .map_err(|e| format!("git ls-files failed: {e}"))?;
 
     if untracked.status.success() {
         for line in String::from_utf8_lossy(&untracked.stdout).lines() {
@@ -279,8 +278,7 @@ fn glob_match(pattern: &str, path: &str) -> bool {
         return true;
     }
 
-    if pattern.ends_with("/**") {
-        let dir = &pattern[..pattern.len() - 3];
+    if let Some(dir) = pattern.strip_suffix("/**") {
         return path.starts_with(dir)
             && (path.len() == dir.len() || path.as_bytes()[dir.len()] == b'/');
     }
@@ -372,7 +370,7 @@ fn wait_for_compile_lock(run_cmd: &[String]) -> Result<(), String> {
             .arg("-x")
             .arg("rustc")
             .output()
-            .map_err(|e| format!("pgrep failed: {}", e))?;
+            .map_err(|e| format!("pgrep failed: {e}"))?;
 
         if !output.status.success() {
             return Ok(());
@@ -407,41 +405,19 @@ fn run_check(
         }
     }
 
-    cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
-
     let start = Instant::now();
-    let mut child = cmd
-        .spawn()
-        .map_err(|e| format!("failed to spawn check: {}", e))?;
+    let outcome = capture::run(&mut cmd, Duration::from_secs(CHECK_TIMEOUT))?;
 
-    let status = wait_with_timeout(&mut child, Duration::from_secs(CHECK_TIMEOUT))?;
-
-    if status.success() {
-        Ok(start.elapsed())
+    let verdict = match outcome.status {
+        Some(status) if status.success() => return Ok(start.elapsed()),
+        Some(_) => format!("FAIL {name} ({}s)", start.elapsed().as_secs()),
+        None => format!("TIMEOUT {name} (>{CHECK_TIMEOUT}s)"),
+    };
+    let shown = capture::tail(&outcome.output, FAIL_TAIL_LINES);
+    if shown.is_empty() {
+        Err(verdict)
     } else {
-        Err(format!("FAIL {} ({}s)", name, start.elapsed().as_secs()))
-    }
-}
-
-fn wait_with_timeout(
-    child: &mut Child,
-    timeout: Duration,
-) -> Result<std::process::ExitStatus, String> {
-    let start = Instant::now();
-
-    loop {
-        match child.try_wait() {
-            Ok(Some(status)) => return Ok(status),
-            Ok(None) => {
-                if start.elapsed() > timeout {
-                    let _ = child.kill();
-                    let _ = child.wait();
-                    return Err(format!("TIMEOUT (>{}s)", timeout.as_secs()));
-                }
-                thread::sleep(Duration::from_millis(100));
-            }
-            Err(e) => return Err(format!("wait failed: {}", e)),
-        }
+        Err(format!("{verdict}\n{shown}"))
     }
 }
 
@@ -523,7 +499,7 @@ fn post_status(
         .arg("status")
         .arg("--porcelain")
         .output()
-        .map_err(|e| format!("git status failed: {}", e))?;
+        .map_err(|e| format!("git status failed: {e}"))?;
 
     if !status_output.stdout.is_empty() {
         return Ok(());
@@ -534,7 +510,7 @@ fn post_status(
         .arg("rev-parse")
         .arg("HEAD")
         .output()
-        .map_err(|e| format!("git rev-parse failed: {}", e))?;
+        .map_err(|e| format!("git rev-parse failed: {e}"))?;
 
     let sha = String::from_utf8_lossy(&sha_output.stdout)
         .trim()
@@ -549,7 +525,7 @@ fn post_status(
         .arg("--jq")
         .arg(".nameWithOwner")
         .output()
-        .map_err(|e| format!("gh repo view failed: {}", e))?;
+        .map_err(|e| format!("gh repo view failed: {e}"))?;
 
     if !repo_output.status.success() {
         return Ok(());
@@ -562,7 +538,7 @@ fn post_status(
     let context = config.string("context").unwrap_or(DEFAULT_CONTEXT);
     let state = if failed == 0 { "success" } else { "failure" };
     let description = if failed == 0 {
-        format!("task gates: {} checks passed", passed)
+        format!("task gates: {passed} checks passed")
     } else {
         format!(
             "task gates: {} of {} checks failed",
@@ -576,13 +552,13 @@ fn post_status(
         .arg("api")
         .arg("-X")
         .arg("POST")
-        .arg(&format!("repos/{}/statuses/{}", repo, sha))
+        .arg(format!("repos/{repo}/statuses/{sha}"))
         .arg("-f")
-        .arg(&format!("state={}", state))
+        .arg(format!("state={state}"))
         .arg("-f")
-        .arg(&format!("context={}", context))
+        .arg(format!("context={context}"))
         .arg("-f")
-        .arg(&format!("description={}", description))
+        .arg(format!("description={description}"))
         .output();
 
     Ok(())

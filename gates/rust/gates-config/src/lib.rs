@@ -94,11 +94,14 @@ impl Config {
             if let Some(rest) = line.strip_prefix('[') {
                 let (is_array, name_str) = if rest.starts_with('[') {
                     // Array of tables: [[name]]
-                    let name = rest.strip_prefix('[').unwrap()
-                        .strip_suffix("]]").ok_or_else(|| ParseError {
-                        line: lineno,
-                        message: format!("unterminated array of tables header: {line}"),
-                    })?;
+                    let name = rest
+                        .strip_prefix('[')
+                        .unwrap()
+                        .strip_suffix("]]")
+                        .ok_or_else(|| ParseError {
+                            line: lineno,
+                            message: format!("unterminated array of tables header: {line}"),
+                        })?;
                     (true, name.trim().to_string())
                 } else {
                     // Regular table: [name]
@@ -112,7 +115,7 @@ impl Config {
                 if is_array {
                     // For arrays, track the count and use it as part of the path
                     let count = array_counts.entry(name_str.clone()).or_insert(0);
-                    table = format!("{}.{}", name_str, count);
+                    table = format!("{name_str}.{count}");
                     *count += 1;
                 } else {
                     table = name_str;
