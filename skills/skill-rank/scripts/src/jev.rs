@@ -184,30 +184,32 @@ pub struct HttpTransport {
 
 impl HttpTransport {
     pub fn new(key: String) -> HttpTransport {
-        let agent = ureq::AgentBuilder::new()
-            .timeout_connect(Duration::from_secs(10))
-            .timeout(REQUEST_TIMEOUT)
-            .build();
+        let agent = ureq::Agent::config_builder()
+            .timeout_connect(Some(Duration::from_secs(10)))
+            .timeout_global(Some(REQUEST_TIMEOUT))
+            .http_status_as_error(false)
+            .build()
+            .into();
         HttpTransport { agent, key }
     }
 }
 
 impl Transport for HttpTransport {
     fn post(&self, body: &Value) -> Result<Value, TransportError> {
-        let result = self
+        let mut resp = self
             .agent
             .post(URL)
-            .set("Authorization", &format!("Bearer {}", self.key))
-            .send_json(body.clone());
-        match result {
-            Ok(resp) => resp
-                .into_json()
-                .map_err(|e| TransportError::Network(format!("response did not parse: {e}"))),
-            Err(ureq::Error::Status(code, resp)) => {
-                let text = resp.into_string().unwrap_or_default();
-                Err(TransportError::Status(code, truncate_chars(&text, 2000)))
-            }
-            Err(ureq::Error::Transport(t)) => Err(TransportError::Network(t.to_string())),
+            .header("Authorization", &format!("Bearer {}", self.key))
+            .send_json(body)
+            .map_err(|e| TransportError::Network(e.to_string()))?;
+        let code = resp.status().as_u16();
+        if resp.status().is_success() {
+            resp.body_mut()
+                .read_json()
+                .map_err(|e| TransportError::Network(format!("response did not parse: {e}")))
+        } else {
+            let text = resp.body_mut().read_to_string().unwrap_or_default();
+            Err(TransportError::Status(code, truncate_chars(&text, 2000)))
         }
     }
 }
