@@ -259,7 +259,12 @@ tests". `ATTACKS TRIED` and `CONSIDERED AND DROPPED` print even when empty, beca
 under-reporting panel must be **visible** rather than indistinguishable from a clean diff.
 
 Per claim: `HOLDS` · `REFUTED` · `UNVERIFIABLE HERE` · `NOT A CLAIM`.
-Header: `CLAIMS HOLD` · `CLAIM REFUTED` · `UNPROVEN — n outstanding`.
+Header: `CLAIMS HOLD` · `CLAIM REFUTED — fix on this PR` · `UNPROVEN — n outstanding`.
+
+`CLAIM REFUTED` always carries `— fix on this PR`, in the terminal and in the posted review. It
+means one claim's own path fails at the reviewed head; it is never a close or reject verdict, and
+the fix lands on the same PR. On 2026-10-20 the bare `CLAIM REFUTED` was read as "close this PR"
+on a review where two of three claims held.
 
 **Hand-checks carry two counts, and only one gates the verdict:**
 
