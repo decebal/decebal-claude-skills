@@ -34,10 +34,21 @@ things to know if you adopt one:
   is the one you meant; keep an escape hatch, and never disable the proxy globally
   to work around one command.
 
-## Compressed assistant output (optional)
+## Caveman output — always on
 
-Prose compression (dropping articles, filler and hedging while keeping technical
-substance, code and error text verbatim) pairs with output filtering: one shrinks
-tool output, the other shrinks the response. Never compress commits, PR bodies, or
-user-facing copy. Suspend it for security warnings, irreversible-action
-confirmations, and multi-step sequences where fragment order risks a misread.
+Every assistant message is caveman (`full`): no articles, filler, pleasantries
+or hedging; fragments fine; technical terms, code, paths and error text verbatim.
+Status lines, progress updates, findings, final reports and questions included.
+No session, task size or "this one is mostly code" turns it off; only the user
+saying "stop caveman" or "normal mode" does.
+
+- **Subagents and workflow agents too.** Their final text lands in the parent's
+  context. Every delegation prompt ends with: `Return caveman: terse fragments,
+  file:line, no prose.` Prefer the `cavecrew-*` agents where one fits.
+- **Enforced for subagents by a `SubagentStart` hook**, because `SessionStart`
+  never fires for them. It prints
+  `{"hookSpecificOutput":{"hookEventName":"SubagentStart","additionalContext":"CAVEMAN MODE ACTIVE (full). …"}}`.
+- **Write normal only for artifacts a third party reads**: commit messages, PR
+  bodies, files under `docs/`, code comments, user-facing product copy.
+- **Suspend for one message, then resume**: security warnings, confirming an
+  irreversible action, ordered steps where a dropped word changes the meaning.
