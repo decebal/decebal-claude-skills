@@ -43,13 +43,17 @@ type TransformObject<T> = {
   [K in keyof T]: TransformProperty<T[K]>
 }
 
+// Date before object: Date extends object, so checking object first would map
+// a Date field into an object instead of the string the original produces.
 type TransformProperty<T> = T extends Function
   ? T
-  : T extends Array<infer U>
-    ? TransformArray<U>
-    : T extends object
-      ? TransformObject<T>
-      : TransformValue<T>
+  : T extends Date
+    ? string
+    : T extends Array<infer U>
+      ? TransformArray<U>
+      : T extends object
+        ? TransformObject<T>
+        : TransformValue<T>
 
 type TransformArray<T> = T extends object
   ? TransformObject<T>[]

@@ -24,8 +24,9 @@ With `strictFunctionTypes` enabled, TypeScript uses fast variance-based checking
 type Handler<T> = (event: T) => void
 
 // Without strictFunctionTypes, TypeScript uses bidirectional
-// (bivariant) checking - comparing structures both ways
-const handler: Handler<MouseEvent> = (e: Event) => { }  // Allowed but unsafe
+// (bivariant) checking - comparing structures both ways.
+// A mouse-only handler is accepted where any Event may arrive:
+const handler: Handler<Event> = (e: MouseEvent) => { }  // Allowed but unsafe
 ```
 
 **Correct (fast variance checking):**
@@ -43,7 +44,8 @@ type Handler<T> = (event: T) => void
 
 // With strictFunctionTypes, TypeScript uses contravariant
 // checking for parameters - faster and type-safe
-const handler: Handler<MouseEvent> = (e: Event) => { }  // Error: Event is not MouseEvent
+const handler: Handler<Event> = (e: MouseEvent) => { }  // Error: Event is not MouseEvent
+const safe: Handler<MouseEvent> = (e: Event) => { }     // OK: handles any Event
 ```
 
 **Note:** The `strict` flag enables `strictFunctionTypes` along with other strict options. Enable `strict` for all new projects.

@@ -62,7 +62,10 @@ TypeScript walks through all included directories to discover files. Overly broa
 // tsconfig.test.json
 {
   "extends": "./tsconfig.json",
-  "include": ["src/**/*", "tests/**/*"]
+  "include": ["src/**/*", "tests/**/*"],
+  // exclude is inherited unless overridden: without this line, the base's
+  // "**/*.test.ts" keeps src/user.test.ts out of the test typecheck.
+  "exclude": ["node_modules", "dist"]
 }
 ```
 

@@ -47,13 +47,15 @@ function chunk<T>(array: T[], size: number): T[][] {
 }
 
 // _.groupBy
+// Null-prototype accumulator, as Object.groupBy uses. With `{}`, a group
+// named "toString" or "__proto__" finds an inherited value and .push throws.
 function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
   return array.reduce((groups, item) => {
     const group = String(item[key])
     groups[group] = groups[group] ?? []
     groups[group].push(item)
     return groups
-  }, {} as Record<string, T[]>)
+  }, Object.create(null) as Record<string, T[]>)
 }
 
 // Object.groupBy (ES2024)
