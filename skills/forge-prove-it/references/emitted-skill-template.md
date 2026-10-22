@@ -259,20 +259,40 @@ tests". `ATTACKS TRIED` and `CONSIDERED AND DROPPED` print even when empty, beca
 under-reporting panel must be **visible** rather than indistinguishable from a clean diff.
 
 Per claim: `HOLDS` · `REFUTED` · `UNVERIFIABLE HERE` · `NOT A CLAIM`.
-Header: `CLAIMS HOLD` · `CLAIM REFUTED — fix on this PR` · `UNPROVEN — n outstanding`.
+**Verdict** — the first line of every review, terminal and posted alike. It answers one
+question, *can this merge?*, and is exactly one of:
 
-`CLAIM REFUTED` always carries `— fix on this PR`, in the terminal and in the posted review. It
-means one claim's own path fails at the reviewed head; it is never a close or reject verdict, and
-the fix lands on the same PR. On 2026-10-20 the bare `CLAIM REFUTED` was read as "close this PR"
-on a review where two of three claims held.
+```
+🔴 DON'T MERGE — <n> thing(s) broken, fix on this PR
+  1. <what breaks, for whom, in plain words>
+🟡 MERGE AFTER CHECK — <n> thing(s) nobody tested
+  1. <what to check, in plain words>
+🟢 MERGE — does what it says
+```
+
+- 🔴 when any defect finding stands (`BLOCKS-CLAIM` or `SILENT-RISK`).
+- 🟡 when none does, but an **outstanding** hand-check or a `WRONG-PLANE` finding remains.
+- 🟢 otherwise.
+
+Each numbered line names the consequence ("consumers lose the types for `capture/`"), never the
+method: no lens names, no consequence tags, no confidence tier, no file paths. Those belong in
+`FINDINGS`. A reader who stops after the verdict must know what to do.
+
+The method words were the verdict until 2026-10-22, and neither reading survived contact with
+readers. A bare `CLAIM REFUTED` was taken as "close this PR" on a review where two of three claims
+held (2026-10-20); with `— fix on this PR` appended, the person the review was for still could not
+say what the status meant.
+
+Write the whole summary terse: fragments fine, no articles or filler, technical terms, paths and
+error text exact. One idea per line; an empty section is one line ("none").
 
 **Hand-checks carry two counts, and only one gates the verdict:**
 
 - **outstanding** — the panel could not settle a claim. This is the signal, and it is what
-  `UNPROVEN` counts.
+  🟡 counts.
 - **routine** — owed because no check watches this path. Never gates the verdict.
 
-Collapse them and `CLAIMS HOLD` becomes unreachable for any diff on an unwatched path, block two
+Collapse them and 🟢 becomes unreachable for any diff on an unwatched path, block two
 prints forever, and the reader learns to skip the one block that matters.
 
 Every finding carries a **consequence**, judged against *what breaks, and when*:
