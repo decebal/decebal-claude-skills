@@ -14,8 +14,11 @@ Three distinct states that look alike and behave differently:
 - **Set but not exported** — visible to the shell, invisible to a child process. `FOO=bar`
   without `export` means your program never sees it.
 - **Exported and non-empty** — the good case.
-- **Exported but empty** — present, so a `if [ -z "$FOO" ]` guard may pass or a "default
-  if unset" (`${FOO:-default}`) may NOT trigger (empty is set). An empty string is the
+- **Exported but empty** — present, so a presence check passes while the value is useless.
+  The two default forms split here: `${FOO:-default}` substitutes when FOO is unset *or*
+  empty, `${FOO-default}` only when unset, so empty survives it. `[ -z "$FOO" ]` is true for
+  both unset and empty, and cannot tell them apart; `[ -z "${FOO+x}" ]` is true only when
+  FOO is unset. An empty string is the
   sneakiest of the three.
 
 ```bash

@@ -47,24 +47,25 @@ async function processOrder(orderId: string): Promise<OrderResult> {
 
 ```typescript
 async function loadUserContent(userId: string): Promise<Content> {
-  // Start user fetch (needed for dependent calls)
-  const userPromise = fetchUser(userId)
+  // The user-dependent calls chain off the user fetch...
+  const userChain = fetchUser(userId).then(async (user) => {
+    const [orders, prefs] = await Promise.all([
+      fetchOrders(user.id),
+      fetchPreferences(user.id),
+    ])
+    return { user, orders, prefs }
+  })
 
-  // Start independent operations immediately
-  const settingsPromise = fetchGlobalSettings()
-  const featuresPromise = fetchFeatureFlags()
-
-  // Await user for dependent operations
-  const user = await userPromise
-  const ordersPromise = fetchOrders(user.id)
-  const prefsPromise = fetchPreferences(user.id)
-
-  // Await all remaining
-  const [settings, features, orders, prefs] = await Promise.all([
-    settingsPromise,
-    featuresPromise,
-    ordersPromise,
-    prefsPromise,
+  // ...and every operation sits in ONE Promise.all, so each has a rejection
+  // handler from the moment it starts. Starting settings/features, then
+  // awaiting the user, then Promise.all-ing the rest leaves them unobserved:
+  // a rejection while the user is pending is an unhandled rejection (a crash
+  // by default since Node 15), and a failed user fetch never reaches the
+  // Promise.all at all.
+  const [{ user, orders, prefs }, settings, features] = await Promise.all([
+    userChain,
+    fetchGlobalSettings(),
+    fetchFeatureFlags(),
   ])
 
   return { user, settings, features, orders, prefs }

@@ -58,11 +58,14 @@ const routes: Route[] = [
 ]
 // routes[0].path is just 'string'
 
-// With satisfies - preserves literal paths
+// satisfies alone does NOT keep the literals: under the contextual type
+// `path: string` they widen, so routes[0].path is still 'string'.
+// as const keeps them; satisfies then checks the shape. The target must be
+// readonly, because as const makes the array readonly.
 const routes = [
   { path: '/', component: Home },
   { path: '/users', component: Users },
-] satisfies Route[]
+] as const satisfies readonly Route[]
 // routes[0].path is '/'
 
 type RoutePath = typeof routes[number]['path']  // '/' | '/users'
