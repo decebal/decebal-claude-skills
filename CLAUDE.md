@@ -22,4 +22,7 @@ cargo test --manifest-path skills/claude-seo/scripts/Cargo.toml --all-targets --
 cargo fmt --check --manifest-path skills/aso-lint/scripts/Cargo.toml
 cargo clippy --manifest-path skills/aso-lint/scripts/Cargo.toml --all-targets --all-features -- -D warnings
 cargo test --manifest-path skills/aso-lint/scripts/Cargo.toml --all-targets --all-features
+cargo fmt --check --manifest-path skills/report-press/scripts/Cargo.toml
+cargo clippy --manifest-path skills/report-press/scripts/Cargo.toml --all-targets --all-features -- -D warnings
+cargo test --manifest-path skills/report-press/scripts/Cargo.toml --all-targets --all-features
 ```

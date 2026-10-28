@@ -44,3 +44,10 @@ jobs:
           cargo fmt --check --manifest-path skills/aso-lint/scripts/Cargo.toml
           cargo clippy --locked --manifest-path skills/aso-lint/scripts/Cargo.toml --all-targets --all-features -- -D warnings
           cargo test --locked --manifest-path skills/aso-lint/scripts/Cargo.toml --all-targets --all-features
+
+      - name: Check report-press Rust runtime
+        run: |
+          cargo fmt --check --manifest-path skills/report-press/scripts/Cargo.toml
+          cargo clippy --locked --manifest-path skills/report-press/scripts/Cargo.toml --all-targets --all-features -- -D warnings
+          cargo test --locked --manifest-path skills/report-press/scripts/Cargo.toml --all-targets --all-features
+          cargo run --locked --manifest-path skills/report-press/scripts/Cargo.toml -- check skills/report-press/examples/explainer.md

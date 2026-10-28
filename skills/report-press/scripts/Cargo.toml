@@ -1,0 +1,30 @@
+# report-press: newspaper-style HTML reports from Markdown stories.
+# The Markdy bundle, CSS and renderer are compiled in, so the binary needs no
+# files at runtime and every page it prints looks the same.
+[workspace]
+members = ["."]
+resolver = "2"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+uninlined_format_args = "warn"
+
+[package]
+name = "report-press"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+description = "Newspaper-style, self-contained HTML reports with animated Markdy figures, from Markdown stories"
+
+[dependencies]
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
+
+[[bin]]
+name = "report-press"
+path = "src/main.rs"
+
+[lints]
+workspace = true

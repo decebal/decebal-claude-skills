@@ -49,6 +49,7 @@ changed, `notion-database` schemas and views, `notion-preview` the review gate b
 | **create-plans** | Hierarchical Claude-executable project plans; ships `/create-prompt` + `/run-prompt` | "plan this project", "create-prompt", "phase plan" |
 | **claude-prd** | PRDs optimized for agent execution | "create a prd", "plan this feature" |
 | **semantic-isa** | Design an agent's Semantic ISA + deterministic kernel, or write it up accurately | "semantic ISA", "Arbiter-K", "deterministic kernel for an agent" |
+| **report-press** | One-page newspaper-style HTML report, an animated Markdy state or C4 diagram per section, printed by a Rust binary from a Markdown story | "write a report", "one-pager for the team", "HTML report with diagrams" |
 
 ### Task Orchestration
 
