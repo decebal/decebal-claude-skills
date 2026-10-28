@@ -42,6 +42,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── protobuf-grpc/          # protobuf-es/buf, envelope encryption, compat (+ 5 refs)
 │   ├── claude-seo/             # Evidence-led SEO + safe Rust audit/sitemap/drift CLI
 │   ├── aso-lint/               # App Store/Google Play optimization + Rust linter
+│   ├── report-press/           # Newspaper-style HTML reports, Markdy figure per section + Rust press
 │   ├── semantic-isa/           # Agent ISA + deterministic kernel: cores, bindings, taint→sinks (+ Arbiter-K ref, spec template)
 │   ├── notion-specification/   # Specs in a Notion docs space: coordinates, skeleton, style guide
 │   ├── notion-editing/         # Connector edits: access check, literal-match traps, no delete
@@ -144,6 +145,10 @@ Some skills bundle runnable scripts (not just instructions):
   private/local targets, revalidate redirects, pin validated DNS, and cap time/bytes.
 - **`aso-lint`** — Rust `aso-lint` CLI for Apple/Google metadata limits, starter
   templates, stable rule IDs, and two-proportion experiment snapshots.
+- **`report-press`** — Rust `report-press` CLI: `check` lints a Markdown story,
+  `build` prints it as one self-contained, newspaper-style HTML page with an
+  animated Markdy diagram per section (CSS, renderer and Markdy 1.5.7 inlined).
+  See [`skills/report-press/examples/explainer.html`](skills/report-press/examples/explainer.html).
 - **`skill-rank`** — Rust `skill-rank` CLI: rates every installed Claude and Codex skill with TypeSafe Jev, keeps the best-rated inside each host's listing budget, and searches the rest by rating.
 
 The guard-rail hooks are runnable too — four PreToolUse/PostToolUse guards in one
@@ -167,6 +172,7 @@ cargo test --manifest-path gates/rust/Cargo.toml -p prompt-id      # 25 tests
 cargo test --manifest-path gates/rust/Cargo.toml                   # 307, every gate
 cargo test --manifest-path skills/claude-seo/scripts/Cargo.toml   # unit + CLI fixtures
 cargo test --manifest-path skills/aso-lint/scripts/Cargo.toml     # unit + CLI fixtures
+cargo test --manifest-path skills/report-press/scripts/Cargo.toml # story, lint, markup, page
 ```
 
 CI runs them on every push to `skills/**` or `tests/**` via
@@ -180,6 +186,8 @@ cp -R skills/blog-image ~/.claude/skills/blog-image
 cp -R skills/web-video  ~/.claude/skills/web-video
 cp -R skills/claude-seo ~/.claude/skills/claude-seo
 cp -R skills/aso-lint   ~/.claude/skills/aso-lint
+cp -R skills/report-press ~/.claude/skills/report-press
+cargo install --locked --path skills/report-press/scripts
 ```
 
 For Claude Desktop: upload the skill folder (SKILL.md + scripts) via Settings → Skills.

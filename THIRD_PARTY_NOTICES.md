@@ -17,3 +17,11 @@ revision `94148561f173a917b45f8fd125e3025fa25cba85`, copyright (c) 2025
 Alireza Rezvani, under MIT license. See
 [`skills/aso-lint/LICENSE.txt`](skills/aso-lint/LICENSE.txt) and
 [`skills/aso-lint/NOTICE.md`](skills/aso-lint/NOTICE.md).
+
+## report-press
+
+`skills/report-press/scripts/vendor/markdy/markdy-1.5.7.iife.min.js` bundles
+[Markdy](https://markdy.com) `@markdy/core@1.5.7` and
+`@markdy/renderer-dom@1.5.7`, copyright (c) 2026 Hoang Yell, under MIT license,
+and is inlined into every page `report-press build` writes. See
+[`skills/report-press/scripts/vendor/markdy/LICENSE`](skills/report-press/scripts/vendor/markdy/LICENSE).
