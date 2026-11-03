@@ -68,8 +68,31 @@ the credentials for it.
 
 | Condition | Emitted behaviour |
 |---|---|
-| `gh` is on `PATH` **and** `origin` is GitHub | emit the posting section: one review, inline comments anchored on lines the diff actually adds on the RIGHT side, body carrying the claims verdict and the whole `VERIFY BY HAND` block. Check for an existing review at this `commit_id` first — a tool that duplicates itself on every re-run is a tool people mute. |
+| `gh` is on `PATH` **and** `origin` is GitHub | emit the posting section: one review, inline comments anchored on lines the diff actually adds on the RIGHT side, and the body shape below. Check for an existing review at this `commit_id` first — a tool that duplicates itself on every re-run is a tool people mute. |
 | any other forge, or no CLI | emit terminal-only, and say so in one line. Do not emit a posting section that cannot run. |
+
+**The posted body, exactly.** The emitted skill must state this shape, in this order, and nothing
+else in the body:
+
+1. the verdict and its numbered lines;
+2. `VERIFY BY HAND`, whole;
+3. `FINDINGS OUTSIDE THE DIFF`, only for findings with no line to anchor on (heading omitted when
+   there are none);
+4. one collapsed record, last: `<details><summary>Panel record: <n> claims · <n> attacks ·
+   <n> dropped</summary>` holding `CLAIMS`, `ATTACKS TRIED`, `CONSIDERED AND DROPPED`, `LEDGER`
+   and the `SELF-AUDIT` line.
+
+**An anchored finding lives in its inline comment and nowhere else**: no `FINDINGS` entry, teaser
+line or restatement in the body. The verdict already says what breaks; the inline comment carries
+what fails, the proof and the fix. A finding written twice is read twice and drifts once, when the
+author answers one copy. Emit a pre-post step that checks the assembled body against this shape.
+
+**Say which blocks are terminal-only.** The output table's "always print" rule is about the
+terminal report. A skill that does not say so pastes the whole report into the review: one
+generated reviewer posted 18 reviews whose bodies ran 2,532–8,200 characters for 0–3 inline
+comments, up to 4,887 characters of them panel blocks, and one review repeated its single inline
+finding twice in the body. Its spec already said "body = verdict + hand-checks + unanchored
+findings"; the unscoped "always print" beat it on every run.
 
 Two rules that hold wherever posting is emitted, and both were learned by posting:
 
