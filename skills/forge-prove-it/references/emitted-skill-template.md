@@ -258,6 +258,10 @@ their meanings: a classifier emitting `SCOPE-api` while the hook tests for
 tests". `ATTACKS TRIED` and `CONSIDERED AND DROPPED` print even when empty, because an
 under-reporting panel must be **visible** rather than indistinguishable from a clean diff.
 
+These blocks are the **terminal report**. A posted review is built from the same content in a
+different shape (`host-differences.md` § 3): "always print" is met there by one collapsed panel
+record, not by pasting every block into the review body.
+
 Per claim: `HOLDS` · `REFUTED` · `UNVERIFIABLE HERE` · `NOT A CLAIM`.
 **Verdict** — the first line of every review, terminal and posted alike. It answers one
 question, *can this merge?*, and is exactly one of:
