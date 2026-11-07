@@ -1,0 +1,22 @@
+# skillsync — keep a home directory's skills and guard hooks in step with the repo.
+#
+# `preserve_order` keeps the key order of ~/.claude/settings.json and
+# ~/.codex/hooks.json through a read-merge-write, so an install diff shows only
+# the guard entries that were added.
+[package]
+name = "skillsync"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "skillsync"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = { workspace = true, features = ["preserve_order"] }
+sha2 = { workspace = true }
+
+[lints]
+workspace = true

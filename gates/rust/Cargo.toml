@@ -36,6 +36,7 @@ members = [
   "prompt-id",
   "render-agent-docs",
   "rust-effective-diff",
+  "skillsync",
   "staged-scope",
   "target-sweep",
   "task-gates",

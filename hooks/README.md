@@ -36,7 +36,8 @@ cargo install --path gates/rust/claude-guard
 cp configs/prod-guard-tokens.txt ~/.claude/prod-guard-tokens.txt   # then edit it
 ```
 
-Register them in `~/.claude/settings.json`:
+Register them in `~/.claude/settings.json`. `configs/settings.json` carries the
+same block; `skillsync hooks install` merges it in without touching other keys.
 
 ```json
 {
@@ -48,7 +49,7 @@ Register them in `~/.claude/settings.json`:
         "hooks": [{ "type": "command", "command": "claude-guard bash-hygiene", "timeout": 5 }] },
       { "matcher": "Bash",
         "hooks": [{ "type": "command", "command": "claude-guard pr-guard", "timeout": 10 }] },
-      { "matcher": "Write|Edit",
+      { "matcher": "Write|Edit|MultiEdit",
         "hooks": [{ "type": "command", "command": "claude-guard prompt-number", "timeout": 5 }] }
     ],
     "PostToolUse": [
@@ -61,6 +62,29 @@ Register them in `~/.claude/settings.json`:
 
 Use the absolute path (`$HOME/.cargo/bin/claude-guard …`) if `~/.cargo/bin` is not
 on the hook's `PATH`.
+
+Codex uses the same guards under `codex-guard` with `^Bash$` and `^apply_patch$`
+matchers: [`configs/codex-hooks.json`](../configs/codex-hooks.json). Place it at
+`~/.codex/hooks.json`, or let `skillsync hooks install` merge the guard entries
+in; other hooks in that file are left alone. `codex-guard` is not a member of
+`gates/rust` yet; install it from the branch that carries it.
+
+## Decisions at a glance
+
+What each guard does to a tool call. `allow` is silence. "Fails open" means any
+error, unreadable payload or missing dependency allows the call.
+
+| Guard | Deny (blocked) | Ask (user prompted) | Rewrite | Fails open |
+|---|---|---|---|---|
+| `infra-guard` | Live-service mutation, IAM, `terraform apply`/`destroy`, storage and artefact deletion, namespace or PVC delete, publish, force-push to a protected branch, a wrapper chain that runs one of these | Other `kubectl`/`helm` writes, `pkill`, `sudo`, `rm -rf` on root/home/`..`, any mutation touching a prod token, `--all`/`-A` mutations, a chain touching infra with no clean match | none | Deep wrapper layer only; literal layer always runs. `INFRA_GUARD_OFF=1` turns a deny into an ask |
+| `bash-hygiene` | Compound commands (`&&`, `\|\|`, `;`, newlines), `$()`, backticks, `\| tee`, `&>`, piped or file-redirected `2>&1` | none | A trailing `2>&1` that is the sole redirect is removed | Unparseable payload allows |
+| `pr-guard` | `gh pr create` / `gh pr new`, and branch creation, while a PR this session created is still open in that repo | none | none | No transcript, unreadable transcript, no GitHub remote, `gh` failing, 8 s deadline |
+| `prompt-number` | `Write`/`Edit`/`MultiEdit` that would create `.prompts/NNN-*.md` with no `.prompts/.numbers/NNN` claim | none | none | File exists, no `.numbers/` store, archive moves, nested stage files, paths outside `.prompts/` |
+| `comment-hygiene` | never (PostToolUse) | never | none | Always allows; feedback is `additionalContext` only |
+
+Every guard fails open; none fails closed. The table is a summary of the sources
+in `gates/rust/claude-guard/src`. Check the binary when in doubt:
+`claude-guard <sub> < payload.json`.
 
 Check the installed binary, not the source: feed a subcommand a payload on stdin
 and read its decision. For `pr-guard`, a transcript that records an open PR of

@@ -1,6 +1,6 @@
 ---
 name: claude-beads
-description: "Convert a PRD to beads (epic + child tasks) for claude execution. Auto-detects the installed tracker CLI — chronis (cn), beads-rust (br), or beads (bd) — and creates an epic with a child bead per user story. Pairs with the claude-prd skill. Triggers on: create beads, convert prd to beads, cn beads, br beads, cn create."
+description: "Convert a PRD to beads (epic + child tasks) for claude execution. Auto-detects the installed tracker CLI — chronis (cn), beads-rust (br), or beads (bd) — and creates an epic with a child bead per user story. Pairs with the claude-prd skill. Triggers on: create beads, convert prd to beads, cn beads, br beads, cn task create."
 ---
 
 # Claude Code — Create Beads
@@ -18,6 +18,7 @@ it's `br` or `bd` rather than `cn`, substitute its syntax using the
 ## The Job
 
 Take a PRD (markdown file or text) and create beads using `cn` commands:
+0. **Check the design gate** when the PRD derives from a design (see *Design gate* below). Bug fixes with no design skip this step
 1. **Audit existing open beads** for actionability before adding more
 2. **Detect project tooling** (build runner, package manager)
 3. **Classify Quality Gates** into story-specific vs. epic-level
@@ -25,6 +26,22 @@ Take a PRD (markdown file or text) and create beads using `cn` commands:
 5. Create **child beads** for each user story (with story-specific acceptance criteria only)
 6. Set up **dependencies** between beads (schema → backend → UI)
 7. Re-audit the resulting graph and output the ready execution loop
+
+## Design gate
+
+Before creating any bead from a PRD that derives from a design document, run:
+
+```bash
+allstack spec check <design-path>
+```
+
+If it exits non-zero, stop. Create no epic and no beads, and report the exit
+status and output verbatim. A design that has not been approved, or whose
+approval no longer matches its current content, must go back to the Spec stage.
+
+If the subcommand is not available in the installed allstack (exit 2,
+`unrecognized subcommand`), stop the same way and report that the design gate
+is unavailable. An unavailable gate is not a pass.
 
 ## Actionability invariant
 
@@ -513,5 +530,5 @@ Step 0 picks one of these. Translate the `cn` commands above to the detected CLI
 |---------|--------------|-------------------|----------------|
 | Create | `bd create` | `br create` | `cn task create "title" --toon` |
 | Dependencies | `bd dep add` | `br dep add` | `cn dep add --toon` |
-| Close | `bd close` | `br close` | `cn done --toon` |
+| Close | `bd close <id>` | `br close <id>` | `cn done <id> --toon` |
 | Storage | `.beads/beads.jsonl` | `.beads/*.db` + JSONL | `.chronis/` (WAL + Parquet) |
