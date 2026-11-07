@@ -13,7 +13,7 @@ Invoke this whenever you fan **one feature** into multiple units of work — chr
 
 - A **feature** is the epic / the whole task. Every slice — each child bead, each generated prompt, each sub-agent's output — lands on ONE branch and merges as ONE PR **when the feature works end-to-end**.
 - **Slices are commits on that branch, never their own PRs.** "Done" for a slice = committed + pushed to the feature branch — not a merged PR of its own.
-- **Those slice commits are work-in-progress, and the branch is collapsed to ONE commit before the PR is marked ready.** Reset to the merge-base, confirm `git diff <old-head> HEAD` is empty, `--force-with-lease`, re-run the gates on the new SHA. The feature merges by rebase as a single commit. See `~/.claude/rules/git-discipline.md` → "One PR = one commit, merged by rebase".
+- **Those slice commits are work-in-progress, and each author's commits are collapsed to ONE before the PR is marked ready.** Reset to the merge-base (or, on a PR someone else started, to the last commit that is not yours), confirm `git diff <old-head> HEAD` is empty, push with `--force-with-lease` pinned to the old head, re-run the gates on the new SHA. The feature merges by rebase as one commit per author. See `~/.claude/rules/git-discipline.md` → "One PR = one commit per author, merged by rebase".
 - **Size is never a reason to split.** A feature merges when COMPLETE, however large. Do NOT slice one feature into multiple PRs for size or "reviewability."
 - **Separate PRs only for genuinely independent features** (no shared end-to-end). If two slices must both land for the feature to actually work, they are ONE PR.
 

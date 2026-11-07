@@ -46,38 +46,45 @@ it. The rule was written down and loaded, and did not hold.
   open in that repo. It reads the session's PRs from its transcript, checks them
   with one `gh pr list`, and allows on any error or at an 8 s deadline.
 
-## One PR = one commit, merged by rebase
+## One PR = one commit per author, merged by rebase
 
-**A PR reaches the trunk as exactly ONE commit, and the forge rebase-merges.**
-The commit that lands is then the commit that was reviewed and tested; a squash
-merge invents a new commit nobody ran anything against, which is what makes
-ancestry checks lie.
+**A PR reaches the trunk as at most ONE commit per author, and the forge
+rebase-merges.** Each commit that lands is then a commit that was reviewed and
+tested; a squash merge invents a new commit nobody ran anything against, which
+is what makes ancestry checks lie. One commit per author, not one per PR, so
+fixing someone else's PR never means rewriting their commit: yours goes on top.
 
-- **Keep the branch at one commit.** Amend as you go, or collapse before review:
+- **Keep your own work at one commit.** Amend as you go, or collapse before
+  review. Reset to the last commit that is not yours: the **merge-base** when
+  the branch is yours alone, otherwise the other author's head. Never a commit
+  count: `HEAD~11` swallows whatever the trunk or a co-author put there.
   ```bash
-  git reset --soft "$(git merge-base origin/<trunk> HEAD)"
+  git reset --soft <merge-base-or-other-author-head>
   git commit -F <message-file>
   ```
-  Reset to the **merge-base**, never a commit count: `HEAD~11` swallows whatever
-  the trunk merged in.
+- **Your commits sit on top of theirs.** Fetch, fast-forward onto their head,
+  commit, push. Never reorder, rebase or squash across an author boundary.
 - **Prove the collapse lost nothing:** `git diff <old-head> HEAD` must be empty.
-- **Push with `--force-with-lease`**, never bare `--force`.
-- **Set the forge to rebase-merge only**, so the merge button enforces this.
-- **Re-run the gates afterwards.** The collapsed commit is a new SHA with no
-  status.
+- **Push a collapse with a pinned lease**, `--force-with-lease=<ref>:<old-head>`,
+  never bare `--force`. Adding a commit on top needs no force at all.
+- **Set the forge to rebase-merge only.** It forbids squash and merge commits;
+  it does not count commits, so the per-author count is checked by hand.
+- **Re-run the gates afterwards.** A new or collapsed commit is a new SHA with
+  no status.
 
 ### The carve-out, stated exactly
 
 | Rewriting | Allowed? |
 |---|---|
-| Your own feature branch, unmerged, no one else's commits on it | **Yes**: amend and collapse freely, `--force-with-lease` |
-| A branch carrying commits by another person or session | **No.** Ask them: their reflog is the only copy |
+| Your own commits on an unmerged branch | **Yes**: amend and collapse them, `--force-with-lease` pinned to the old head |
+| Another person's or session's commits | **No.** Add yours on top; ask them to collapse theirs. Their reflog is the only copy |
 | The trunk | **No** |
 | A branch whose PR already merged | **No**: it is dead; branch fresh |
 
-A second author name here means stop:
+Check the shape before marking ready: each author appears once, in one
+contiguous run.
 ```bash
-git log --format='%an' "$(git merge-base origin/<trunk> HEAD)"..HEAD | sort -u
+git log --reverse --format='%an' "$(git merge-base origin/<trunk> HEAD)"..HEAD | uniq -c
 ```
 
 ## Squash and rebase merges break ancestry checks
@@ -135,9 +142,10 @@ Both land the work under a new SHA, so anything that reasons about ancestry lies
 - **Never a task-tracker id (`t-…`, `bd-…`, `PROJ-123`) in source**, comments
   included. Commit messages and `docs/` are exempt. `gates/rust/check-no-id-refs`
   enforces it.
-- **One PR, one commit.** Discovered work, blocking fixes included, goes on the
-  open PR. The collapsed commit's message lists what the PR carries.
-- **The build must pass at the commit that merges.**
+- **One PR, one commit per author.** Discovered work, blocking fixes included,
+  goes on the open PR. Your collapsed commit's message lists what you added.
+- **The build must pass at every commit that merges.** Rebase-merge lands each
+  author's commit on the trunk, so each one is a state someone can check out.
 - **Don't commit others' work, and don't commit unless asked.**
 - **Commit in the foreground, check `git log --oneline -1` shows YOUR commit,
   then push.** A commit chained to a push can fail its hook and ship the branch
@@ -149,8 +157,8 @@ Both land the work under a new SHA, so anything that reasons about ancestry lies
   bullets, test-plan checklist, link to the design doc.
 - **Open the PR with the first pushed commit.** A branch with commits and no PR
   is invisible; at ~5 commits with no PR, stop and open one.
-- **Not ready while the branch has more than one commit.** Collapse, re-run the
-  gates on the new SHA, then mark it ready.
+- **Not ready while any author has more than one commit.** Each author
+  collapses their own; re-run the gates on the new head, then mark it ready.
 - **One feature = one PR.** Never stack a PR on an open PR's branch.
 - **Size is never a reason to split or pause** ([definition-of-done.md](definition-of-done.md)).
 - **A branch reused after its PR merged needs a NEW branch**, not a new PR on it.
