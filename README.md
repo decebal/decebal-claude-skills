@@ -65,6 +65,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── rust/                   # 22 crates, 4 deps, 314 tests — one cargo workspace
 │   │   ├── claude-guard/       # the guard-rail hooks: infra, bash, prompt numbers, comments
 │   │   ├── prompt-id/          # one prompt-number namespace per repo, across worktrees
+│   │   ├── skillsync/          # skill and guard-hook drift check, idempotent install into a home
 │   │   ├── staged-scope/       # which gates does this diff need? default-deny
 │   │   ├── layer-boundary-check/    # the dependency direction, with ratcheting ceilings
 │   │   ├── authority-check/         # one file owns a verdict; the rest render it
@@ -130,6 +131,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **Jev with Claude Code** | [docs/jev-with-claude-code.md](docs/jev-with-claude-code.md) | TypeSafe's plugin, the SDKs, and letting Claude ask Jev at its own decision points |
 | **Codex parity** | [docs/plans/2026-09-30-codex-parity.md](docs/plans/2026-09-30-codex-parity.md) | What Codex does with instructions, hooks, execpolicy and skills, verified against its source, and how the rules, guards and skills here reach it |
 | **Prompt numbering** | [gates/rust/prompt-id/README.md](gates/rust/prompt-id/README.md) | One `.prompts/` namespace across worktrees: allocate, archive, find what already shipped |
+| **Skill and hook sync** | [docs/skillsync.md](docs/skillsync.md), [gates/rust/skillsync/README.md](gates/rust/skillsync/README.md) | `skillsync check` compares repo skills and guard hooks with a home directory; `hooks install` and `skills install` apply them idempotently |
 
 ## Executable skills & tests
 
@@ -169,6 +171,7 @@ external dependency, nothing to skip:
 ```sh
 cargo test --manifest-path gates/rust/Cargo.toml -p claude-guard   # 72 tests
 cargo test --manifest-path gates/rust/Cargo.toml -p prompt-id      # 25 tests
+cargo test --manifest-path gates/rust/Cargo.toml -p skillsync      # integration tests, temp HOME
 cargo test --manifest-path gates/rust/Cargo.toml                   # 307, every gate
 cargo test --manifest-path skills/claude-seo/scripts/Cargo.toml   # unit + CLI fixtures
 cargo test --manifest-path skills/aso-lint/scripts/Cargo.toml     # unit + CLI fixtures
