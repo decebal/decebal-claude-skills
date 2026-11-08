@@ -11,13 +11,13 @@ skillsync skills install         # symlink skills/ into ~/.claude/skills and ~/.
 
 Flags: `--home <dir>` (default `$HOME`), `--repo <dir>` (default: nearest
 ancestor holding `skills/` and `configs/`), `--cn <bin>` (default `cn`),
-`--dry-run`, `--json`.
+`--dry-run`, `--json`, `--strict`.
 
 ## What `check` compares
 
 | Finding | Meaning |
 |---|---|
-| `missing` | a repo skill is not in a skill root |
+| `missing` | a repo skill is not in a skill root (`--strict` only; otherwise one notice per root) |
 | `dangling` | a symlink whose target does not exist |
 | `elsewhere` | a symlink to a directory other than this repo's skill |
 | `copy` | a real directory where a symlink belongs |

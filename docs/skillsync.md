@@ -27,7 +27,7 @@ nothing.
 
 | Kind | Meaning |
 |---|---|
-| `missing` | A repo skill is not installed in a skill root |
+| `missing` | A repo skill is not installed in a skill root. Reported per skill only with `--strict`; otherwise one notice per root, since most homes hold a curated subset |
 | `copy` | An installed skill is a directory, not a symlink into the repo |
 | `dangling` | A symlink whose target no longer exists |
 | `drift` | Installed `SKILL.md` differs from the repo's |

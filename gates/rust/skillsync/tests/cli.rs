@@ -140,12 +140,46 @@ fn check_reports_drift_copy_dangling_and_missing() {
     link(&fx.path("nowhere"), &fx.home().join(".agents/skills/alpha"));
     fs::create_dir_all(fx.home().join(".agents/skills")).expect("mkdir");
 
-    let out = skillsync(&fx, &["check", "--json"]);
+    let out = skillsync(&fx, &["check", "--json", "--strict"]);
     assert_eq!(out.code, 1, "stdout: {}", out.stdout);
     let found = kinds(&out);
     for want in ["copy", "drift", "dangling", "missing", "hooks-file"] {
         assert!(found.iter().any(|k| k == want), "no {want} in {found:?}");
     }
+}
+
+#[test]
+fn check_without_strict_summarises_uninstalled_skills_as_a_notice() {
+    let fx = Fixture::new("subset");
+    link(
+        &fx.repo().join("skills/alpha"),
+        &fx.home().join(".claude/skills/alpha"),
+    );
+    link(
+        &fx.repo().join("skills/alpha"),
+        &fx.home().join(".agents/skills/alpha"),
+    );
+    fx.write("home/.claude/settings.json", SETTINGS_TEMPLATE);
+
+    let out = skillsync(&fx, &["check", "--json"]);
+    let found = kinds(&out);
+    assert!(!found.iter().any(|k| k == "missing"), "{found:?}");
+    assert_eq!(out.code, 0, "stdout: {}", out.stdout);
+    let v: Value = serde_json::from_str(out.stdout.trim()).expect("json output");
+    let notices: Vec<&str> = v["notices"]
+        .as_array()
+        .expect("notices array")
+        .iter()
+        .filter_map(Value::as_str)
+        .collect();
+    assert_eq!(
+        notices
+            .iter()
+            .filter(|n| n.starts_with("1 of 2 repo skills"))
+            .count(),
+        2,
+        "{notices:?}"
+    );
 }
 
 #[test]

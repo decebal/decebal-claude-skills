@@ -16,41 +16,60 @@ const SKILL_ROOTS: [(&str, bool); 3] = [
     (".codex/skills", false),
 ];
 
-pub fn run(home: &Path, repo: &Repo, cn_bin: &str, report: &mut Report) -> Result<(), String> {
-    skills(home, repo, report)?;
+/// `strict` reports each uninstalled repo skill as a finding. Without it, a home
+/// that holds a curated subset gets one notice per root, and only copies, drift,
+/// dangling links and links elsewhere count as findings.
+pub fn run(
+    home: &Path,
+    repo: &Repo,
+    cn_bin: &str,
+    strict: bool,
+    report: &mut Report,
+) -> Result<(), String> {
+    skills(home, repo, strict, report)?;
     guard_hooks(home, repo, report)?;
     prod_tokens(home, repo, report);
     cn::lint(cn_bin, repo, report)
 }
 
-fn skills(home: &Path, repo: &Repo, report: &mut Report) -> Result<(), String> {
+fn skills(home: &Path, repo: &Repo, strict: bool, report: &mut Report) -> Result<(), String> {
     let skills = repo.skills()?;
     for (rel, required) in SKILL_ROOTS {
         let root = home.join(rel);
-        if !root.is_dir() {
-            if required {
-                for skill in &skills {
-                    report.finding("missing", root.join(&skill.name).display(), "not installed");
-                }
-            } else {
-                report.notice(format!("skip {rel}: not present"));
-            }
+        if !root.is_dir() && !required {
+            report.notice(format!("skip {rel}: not present"));
             continue;
         }
+        let mut missing = 0;
         for skill in &skills {
-            check_skill(&root.join(&skill.name), skill, report);
+            let link = root.join(&skill.name);
+            if !installed(&link) {
+                missing += 1;
+                if strict {
+                    report.finding("missing", link.display(), "not installed");
+                }
+                continue;
+            }
+            check_skill(&link, skill, report);
+        }
+        if missing > 0 && !strict {
+            report.notice(format!(
+                "{missing} of {} repo skills not in {}; `skillsync skills install` adds them, --strict reports each",
+                skills.len(),
+                root.display()
+            ));
         }
     }
     Ok(())
 }
 
+fn installed(link: &Path) -> bool {
+    !matches!(fs::symlink_metadata(link), Err(e) if e.kind() == ErrorKind::NotFound)
+}
+
 fn check_skill(link: &Path, skill: &Skill, report: &mut Report) {
     let meta = match fs::symlink_metadata(link) {
         Ok(meta) => meta,
-        Err(e) if e.kind() == ErrorKind::NotFound => {
-            report.finding("missing", link.display(), "not installed");
-            return;
-        }
         Err(e) => {
             report.finding("unreadable", link.display(), e);
             return;
