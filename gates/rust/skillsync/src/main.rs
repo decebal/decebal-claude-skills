@@ -8,7 +8,8 @@
 //!
 //! Flags: `--home <dir>` (default `$HOME`), `--repo <dir>` (default: nearest
 //! ancestor of the working directory holding `skills/` and `configs/`),
-//! `--cn <bin>` (default `cn`), `--dry-run`, `--json`.
+//! `--cn <bin>` (default `cn`), `--dry-run`, `--json`, `--strict` (check: every
+//! uninstalled repo skill is a finding).
 //!
 //! Exit 0 when clean, 1 on findings or conflicts, 2 on usage or I/O errors.
 
@@ -23,7 +24,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 const USAGE: &str = "usage: skillsync <check | hooks install | skills install> \
-[--home <dir>] [--repo <dir>] [--cn <bin>] [--dry-run] [--json]";
+[--home <dir>] [--repo <dir>] [--cn <bin>] [--dry-run] [--json] [--strict]";
 
 struct Opts {
     home: Option<PathBuf>,
@@ -31,6 +32,7 @@ struct Opts {
     cn: String,
     json: bool,
     dry_run: bool,
+    strict: bool,
     help: bool,
 }
 
@@ -68,7 +70,7 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
     let mut report = report::Report::default();
 
     match command {
-        "check" => check::run(&home, &repo, &opts.cn, &mut report)?,
+        "check" => check::run(&home, &repo, &opts.cn, opts.strict, &mut report)?,
         "hooks install" => hooks::install(&home, &repo, opts.dry_run, &mut report)?,
         _ => skills::install(&home, &repo, opts.dry_run, &mut report)?,
     }
@@ -83,6 +85,7 @@ fn parse(args: &[String]) -> Result<(Vec<String>, Opts), String> {
         cn: "cn".into(),
         json: false,
         dry_run: false,
+        strict: false,
         help: false,
     };
     let mut iter = args.iter();
@@ -97,6 +100,7 @@ fn parse(args: &[String]) -> Result<(Vec<String>, Opts), String> {
             "--cn" => opts.cn = value(flag, inline, &mut iter)?,
             "--json" => opts.json = true,
             "--dry-run" => opts.dry_run = true,
+            "--strict" => opts.strict = true,
             "-h" | "--help" => opts.help = true,
             other if other.starts_with('-') => return Err(format!("unknown flag {other}")),
             _ => words.push(arg.clone()),
