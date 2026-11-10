@@ -82,7 +82,7 @@ error, unreadable payload or missing dependency allows the call.
 | `infra-guard` | Live-service mutation, IAM, `terraform apply`/`destroy`, storage and artefact deletion, namespace or PVC delete, publish, force-push to a protected branch, a wrapper chain that runs one of these | Other `kubectl`/`helm` writes, `pkill`, `sudo`, `rm -rf` on root/home/`..`, any mutation touching a prod token, `--all`/`-A` mutations, a chain touching infra with no clean match | none | Deep wrapper layer only; literal layer always runs. `INFRA_GUARD_OFF=1` turns a deny into an ask |
 | `bash-hygiene` | Compound commands (`&&`, `\|\|`, `;`, newlines), `$()`, backticks, `\| tee`, `&>`, piped or file-redirected `2>&1` | none | A trailing `2>&1` that is the sole redirect is removed | Unparseable payload allows |
 | `pr-guard` | `gh pr create` / `gh pr new`, and branch creation, while a PR this session created is still open in that repo | none | none | No transcript, unreadable transcript, no GitHub remote, `gh` failing, 8 s deadline |
-| `stack-guard` | Stacked `gh pr create` without `--draft`, without an open parent, or not containing the parent's head; `gh pr ready`/`gh pr merge` on a PR not based on the default branch; with a gate context set, `gh pr merge` without `--match-head-commit <head>` or with that status not `success`; `git push` carrying commits already on the default branch, a merged parent's old head, or missing a moved parent's head; a second own commit on a stacked layer | none | none | No GitHub remote, `gh` failing, an object not in the local store, 8 s deadline |
+| `stack-guard` | Stacked `gh pr create` without `--draft`, without an open parent, or not containing the parent's head; `gh pr ready`/`gh pr merge` on a PR not based on the default branch, or on a stack root with more than one commit by an author; with a gate context set, `gh pr merge` without `--match-head-commit <head>` or with that status not `success`; `git push` carrying commits already on the default branch, a merged parent's old head, or missing a moved parent's head; a second own commit on a stacked layer | none | none | No GitHub remote, `gh` failing, an object not in the local store, 8 s deadline |
 | `prompt-number` | `Write`/`Edit`/`MultiEdit` that would create `.prompts/NNN-*.md` with no `.prompts/.numbers/NNN` claim | none | none | File exists, no `.numbers/` store, archive moves, nested stage files, paths outside `.prompts/` |
 | `comment-hygiene` | never (PostToolUse) | never | none | Always allows; feedback is `additionalContext` only |
 
@@ -162,8 +162,8 @@ stack gets wrong.
 | Command | Denied when |
 |---|---|
 | `gh pr create --base <b>` | `b` is not the default branch and: it has no open PR; `--draft` is missing; or the head does not contain that PR's head commit |
-| `gh pr ready [<pr>]` | the PR's base is not the default branch |
-| `gh pr merge [<pr>]` | the PR's base is not the default branch. With `git config stack-guard.gate-context <status>` set: `--match-head-commit <head>` is missing, or `<status>` on that head is not `success` |
+| `gh pr ready [<pr>]` | the PR's base is not the default branch; or it roots a stack (an open PR is based on it) and an author has more than one commit on it |
+| `gh pr merge [<pr>]` | the PR's base is not the default branch; or it roots a stack and an author has more than one commit on it. With `git config stack-guard.gate-context <status>` set: `--match-head-commit <head>` is missing, or `<status>` on that head is not `success` |
 | `git push` | the pushed commits include patches already on `origin/<default>` under other SHAs (a parent landed); or the branch's open PR is stacked and still contains its **merged** parent's old head, or no longer contains its **open** parent's head |
 | `git commit` (not `--amend`/`--fixup`) | the branch's open PR is stacked and you already have a commit on it since the parent's head |
 
