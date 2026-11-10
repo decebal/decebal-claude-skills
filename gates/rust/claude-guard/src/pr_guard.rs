@@ -237,7 +237,7 @@ fn classify_segment(tokens: &[String]) -> Option<Trigger> {
 
 /// Leading `VAR=value` assignments and the `env`, `command`, `rtk` and
 /// `rtk proxy` wrappers come off; the assignments are kept for `GH_REPO`.
-fn strip_wrappers(tokens: &[String]) -> (Vec<(String, String)>, Vec<String>) {
+pub(crate) fn strip_wrappers(tokens: &[String]) -> (Vec<(String, String)>, Vec<String>) {
     let mut env = Vec::new();
     let mut rest = tokens;
     loop {

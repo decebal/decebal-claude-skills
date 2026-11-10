@@ -6,7 +6,8 @@
         "hooks": [
           { "type": "command", "command": "codex-guard infra-guard", "timeout": 10 },
           { "type": "command", "command": "codex-guard bash-hygiene", "timeout": 5 },
-          { "type": "command", "command": "codex-guard pr-guard", "timeout": 10 }
+          { "type": "command", "command": "codex-guard pr-guard", "timeout": 10 },
+          { "type": "command", "command": "codex-guard stack-guard", "timeout": 10 }
         ]
       },
       {

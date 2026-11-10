@@ -6,6 +6,7 @@
 //! claude-guard prompt-number      # PreToolUse, Write|Edit
 //! claude-guard comment-hygiene    # PostToolUse, Edit|Write|MultiEdit
 //! claude-guard pr-guard           # PreToolUse, Bash
+//! claude-guard stack-guard        # PreToolUse, Bash
 //! claude-guard trust '<command>'  # vet a wrapper chain, record the judgement
 //! ```
 //!
@@ -22,6 +23,7 @@ mod hook;
 mod infra;
 mod pr_guard;
 mod prompt_number;
+mod stack_guard;
 mod trust;
 
 #[cfg(test)]
@@ -40,11 +42,16 @@ fn main() -> ExitCode {
 
     let hookish = matches!(
         sub,
-        "infra-guard" | "bash-hygiene" | "prompt-number" | "comment-hygiene" | "pr-guard"
+        "infra-guard"
+            | "bash-hygiene"
+            | "prompt-number"
+            | "comment-hygiene"
+            | "pr-guard"
+            | "stack-guard"
     );
     if !hookish {
         eprintln!(
-            "usage: claude-guard <infra-guard|bash-hygiene|prompt-number|comment-hygiene|pr-guard|trust>"
+            "usage: claude-guard <infra-guard|bash-hygiene|prompt-number|comment-hygiene|pr-guard|stack-guard|trust>"
         );
         return ExitCode::from(2);
     }
@@ -59,6 +66,7 @@ fn main() -> ExitCode {
         "prompt-number" => prompt_number::run(&payload),
         "comment-hygiene" => comment_hygiene::run(&payload),
         "pr-guard" => pr_guard::run(&payload),
+        "stack-guard" => stack_guard::run(&payload),
         _ => unreachable!("checked above"),
     }
 }
