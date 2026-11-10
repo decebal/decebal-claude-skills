@@ -1,11 +1,12 @@
 # Guard-rail hooks
 
-Five hooks that make an agent safer and cheaper to run, shipped as **one
+Six hooks that make an agent safer and cheaper to run, shipped as **one
 binary** — [`gates/rust/claude-guard`](../gates/rust/claude-guard).
 
 | Subcommand | Event | Effect |
 |---|---|---|
 | `claude-guard pr-guard` | PreToolUse, Bash | Denies `gh pr create` / `gh pr new` and branch creation while a PR this session created is open in that repo. Fails open |
+| `claude-guard stack-guard` | PreToolUse, Bash | Stacked PRs open as drafts, land bottom-up, keep one commit per author per layer, and are never pushed carrying a parent's stale commits. Fails open |
 | `claude-guard infra-guard` | PreToolUse, Bash | Denies or prompts on high-blast-radius commands, by blast radius rather than apparent simplicity |
 | `claude-guard bash-hygiene` | PreToolUse, Bash | Blocks compound commands, substitution and combined redirects. Rewrites a repairable `2>&1` instead of blocking it |
 | `claude-guard prompt-number` | PreToolUse, Write/Edit | Denies creating `.prompts/NNN-*.md` when the number was never allocated |
@@ -49,6 +50,8 @@ same block; `skillsync hooks install` merges it in without touching other keys.
         "hooks": [{ "type": "command", "command": "claude-guard bash-hygiene", "timeout": 5 }] },
       { "matcher": "Bash",
         "hooks": [{ "type": "command", "command": "claude-guard pr-guard", "timeout": 10 }] },
+      { "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "claude-guard stack-guard", "timeout": 10 }] },
       { "matcher": "Write|Edit|MultiEdit",
         "hooks": [{ "type": "command", "command": "claude-guard prompt-number", "timeout": 5 }] }
     ],
@@ -79,6 +82,7 @@ error, unreadable payload or missing dependency allows the call.
 | `infra-guard` | Live-service mutation, IAM, `terraform apply`/`destroy`, storage and artefact deletion, namespace or PVC delete, publish, force-push to a protected branch, a wrapper chain that runs one of these | Other `kubectl`/`helm` writes, `pkill`, `sudo`, `rm -rf` on root/home/`..`, any mutation touching a prod token, `--all`/`-A` mutations, a chain touching infra with no clean match | none | Deep wrapper layer only; literal layer always runs. `INFRA_GUARD_OFF=1` turns a deny into an ask |
 | `bash-hygiene` | Compound commands (`&&`, `\|\|`, `;`, newlines), `$()`, backticks, `\| tee`, `&>`, piped or file-redirected `2>&1` | none | A trailing `2>&1` that is the sole redirect is removed | Unparseable payload allows |
 | `pr-guard` | `gh pr create` / `gh pr new`, and branch creation, while a PR this session created is still open in that repo | none | none | No transcript, unreadable transcript, no GitHub remote, `gh` failing, 8 s deadline |
+| `stack-guard` | Stacked `gh pr create` without `--draft`, without an open parent, or not containing the parent's head; `gh pr ready`/`gh pr merge` on a PR not based on the default branch; with a gate context set, `gh pr merge` without `--match-head-commit <head>` or with that status not `success`; `git push` carrying commits already on the default branch, a merged parent's old head, or missing a moved parent's head; a second own commit on a stacked layer | none | none | No GitHub remote, `gh` failing, an object not in the local store, 8 s deadline |
 | `prompt-number` | `Write`/`Edit`/`MultiEdit` that would create `.prompts/NNN-*.md` with no `.prompts/.numbers/NNN` claim | none | none | File exists, no `.numbers/` store, archive moves, nested stage files, paths outside `.prompts/` |
 | `comment-hygiene` | never (PostToolUse) | never | none | Always allows; feedback is `additionalContext` only |
 
@@ -141,6 +145,46 @@ opened.
 **Known limits.** It sees only its own session: several sessions can each hold
 an open PR. A PR opened by hand, before the session, or through `gh api … -X
 POST` does not count.
+
+## stack-guard
+
+A PR is **stacked** when its base is another PR's head branch rather than the
+repo's default branch. The guard reads the live PR graph with `gh` and the local
+branch with `git` before the command runs, and holds stacks to the rule in
+[`git-discipline.md` § Stacked PRs](../rules/git-discipline.md#stacked-prs).
+
+**Why a hook.** The rule was "never stack", and on 2026-11-10 one contributor
+had five hand-built chains open in one repo: none gated, several layers with
+more than one commit by one author, one carrying a stale copy of its parent's
+commit. Stacks are allowed now, so the guard checks the mechanics a hand-built
+stack gets wrong.
+
+| Command | Denied when |
+|---|---|
+| `gh pr create --base <b>` | `b` is not the default branch and: it has no open PR; `--draft` is missing; or the head does not contain that PR's head commit |
+| `gh pr ready [<pr>]` | the PR's base is not the default branch |
+| `gh pr merge [<pr>]` | the PR's base is not the default branch. With `git config stack-guard.gate-context <status>` set: `--match-head-commit <head>` is missing, or `<status>` on that head is not `success` |
+| `git push` | the pushed commits include patches already on `origin/<default>` under other SHAs (a parent landed); or the branch's open PR is stacked and still contains its **merged** parent's old head, or no longer contains its **open** parent's head |
+| `git commit` (not `--amend`/`--fixup`) | the branch's open PR is stacked and you already have a commit on it since the parent's head |
+
+Each deny names the restack command: `git rebase origin/<default>` for commits
+already upstream, `git rebase --onto origin/<default> <old-parent-head> <branch>`
+after a parent merged.
+
+**The gate context.** `stack-guard` never runs a gate. A repo that posts a
+commit status from its own gate (Longhand's `task gates` posts
+`longhand/gates`) names it once, and merges then require it:
+
+```sh
+git config stack-guard.gate-context longhand/gates
+```
+
+**Cost.** A push or commit on a branch with no stacked PR costs one `gh pr list`;
+measured against a live repo, a push check took 0.74 s.
+
+**Limits.** It sees commands run through the agent. A merge from the GitHub UI or
+a plain terminal is not checked; the `git push` check also covers contributors who
+run neither agent only if their repo's own pre-push hook does the same.
 
 ## infra-guard
 
