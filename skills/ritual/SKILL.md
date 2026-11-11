@@ -44,7 +44,7 @@ Report the step in one line before acting: `ritual: <repo> <epic> is at <step> b
 | Step | Writes | Names it on the epic as |
 |---|---|---|
 | Think | `docs/plans/YYYY-MM-DD-<slug>-brief.md` | `ritual-brief: <path>` |
-| Spec | the flow's branch; `…-design.md` and `…-design-review.md` committed on it | `ritual-branch: <branch>`, `ritual-design: <path>`, then `ritual-approved: …` (written by the user's `cos ritual approve`) |
+| Spec | the flow's branch; `…-design.md` and `…-design-review.md` committed on it | `ritual-branch: <branch>`, `ritual-design: <path>`, then `ritual-approved: …` (written by `cos ritual approve`, on the user's decision) |
 | Plan | `…-plan.md` (PRD, gates, testing trophy) on the branch; beads under the epic | `ritual-plan: <path>` |
 | Build | commits on the branch | the beads, closed with a reason |
 | Review | `…-code-review.md`, or a review on the PR | `ritual-review: <path or PR> clean` or `… findings` |
@@ -60,7 +60,9 @@ line in the repo's docs index in the same commit.
 
 - **Spec → Plan:** `cos ritual check <epic>` exits 0. Without `cos`, the epic shows `approved`
   in `cn show` and the design is unchanged since its `ritual-approved:` digest. Never cut beads
-  for an unapproved design, and never approve one yourself: the user runs `cos ritual approve`.
+  for an unapproved design. The approval is the user's decision: run `cos ritual approve` (or
+  `cn approve` without `cos`) only when the user explicitly tells you to approve in this
+  conversation, quote that instruction in your report, and never approve on your own initiative.
 - **Build → Review:** every bead done, and the repo's tests ran. A compile, a lint or a
   `--no-run` build is not a test run.
 - **Review → Ship:** a reviewer with fresh context returned clean, newer than the last change.

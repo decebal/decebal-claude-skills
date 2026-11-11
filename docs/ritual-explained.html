@@ -124,6 +124,9 @@ footer{margin-top:2rem;border-top:4px double var(--ink);padding-top:.6rem;font:.
 <p>The agent can write every file in the flow. It cannot approve the design, and two separate guards refused when it was asked to.</p>
 </blockquote>
 <div class="limit">
+<p><strong>Since this run.</strong> The approval rule changed after it (<a href="https://github.com/decebal/decebal-claude-skills/pull/97">#97</a>, <a href="https://github.com/decebal/chief-of-staff-v2/pull/23">chief-of-staff-v2#23</a>): the approval is still the person's decision, but an agent the person explicitly tells to approve runs <code>cos ritual approve … --yes</code>. claude-guard no longer denies it. The refusals below are what this run observed under the earlier rule.</p>
+</div>
+<div class="limit">
 <p><strong>Limit.</strong> One run, one machine (macOS), one toy feature, the lean <code>ritual</code> skill. Nothing was pushed: Ship was a local squash and fast-forward. EGM commands and <code>cos</code> hires were not run; <code>ritual-full</code> appears here as its preflight and the commands it would run.</p>
 </div>
 </div>
@@ -439,6 +442,9 @@ beat taint "Taint to sink":
 <h2 id="h-s-gates">Two separate guards refused agent approval; only a person at a terminal got through</h2>
 <p class="deck">claude-guard denies the command in an agent's shell; cos refuses any approval without a terminal.</p>
 </header>
+<div class="limit">
+<p><strong>Since this run.</strong> Neither refusal happens now for an agent the person told to approve: claude-guard's deny is removed (<a href="https://github.com/decebal/decebal-claude-skills/pull/97">#97</a>) and <code>cos ritual approve --yes</code> skips the terminal prompt (<a href="https://github.com/decebal/chief-of-staff-v2/pull/23">chief-of-staff-v2#23</a>). Without that instruction the agent still stops at the design.</p>
+</div>
 <div class="cols">
 <p>The first guard is claude-guard's <code>infra-guard</code> hook. Fed a payload, it denies both approval commands <span class="src">observed: <code>log.jsonl</code>, <code>preflight</code> lines</span>:</p>
 <pre><code class="language-text">{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"cn approve marks a design approved — ask the user to run it in their own terminal (infra-guard)"}}

@@ -23,17 +23,8 @@ Run each check, print one table, then stop if any row is `missing`:
 | semantic-isa | `~/.claude/skills/semantic-isa/SKILL.md` exists | `cp -R skills/semantic-isa ~/.claude/skills/semantic-isa` from this repo |
 | cos | `cos ritual check --help` exits 0 | clone `decebal/chief-of-staff-v2`, run `task setup` in it |
 | graphify | `graphify --help` exits 0; `graphify-out/` in the repo, else build it | `uv tool install graphifyy` then `graphify install`; the same reinstall fixes `graphify --help` exiting 126 with `bad interpreter` (its old pipx venv is gone) |
-| claude-guard | infra-guard denies `cn approve` (payload test below) | `cargo install --path gates/rust/claude-guard`, then `skillsync hooks install` |
+| claude-guard | `command -v claude-guard` finds it (it has no `--help`; with no subcommand it prints usage and exits 2); `~/.claude/settings.json` registers `claude-guard infra-guard` and `claude-guard bash-hygiene` | `cargo install --path gates/rust/claude-guard`, then `skillsync hooks install` |
 | skills | `pr-proof`, `systematic-debugging` under `~/.claude/skills/` | `cp -R skills/<name> ~/.claude/skills/<name>` |
-
-The claude-guard check feeds the hook a payload and reads its decision; it runs nothing:
-
-```bash
-printf '%s' '{"tool_name":"Bash","tool_input":{"command":"cn approve t-0"}}' | claude-guard infra-guard
-```
-
-Anything other than `"permissionDecision":"deny"` means agent approval is not blocked: report the
-row as `missing`.
 
 Report: `preflight: cn ok · egm ok · semantic-isa ok · cos ok · graphify ok · claude-guard ok · skills ok`,
 with `missing (<install command>)` in place of `ok` where it applies. EGM skills set
@@ -77,9 +68,10 @@ like any other; an inventory that misses a side effect visible in the code is a 
 The two reviews run in separate fresh contexts and never see each other's output. Write each as
 its own review file (format in [spec.md](../ritual/references/spec.md)). Approval needs both clean
 against the same design digest; point `cos ritual approve --review` at the later one and name the
-other in the design's review history. Resolve findings, then re-run both. The user approves with
-`cos ritual approve`; agents never approve, and claude-guard's infra-guard denies `cn approve` and
-`cos ritual approve` in agent Bash calls.
+other in the design's review history. Resolve findings, then re-run both. The approval is the
+user's: `cos ritual approve` in their terminal, or, when they tell you to approve in the
+conversation, the same command with `--yes` and their instruction quoted in your report
+([spec.md](../ritual/references/spec.md#approve)). Agents never approve on their own initiative.
 
 ## Review: sink-to-VERIFY check
 

@@ -19,6 +19,9 @@ Three fresh-context design reviews ran before the design was clean. The first tw
 > The agent can write every file in the flow. It cannot approve the design, and two separate guards refused when it was asked to.
 
 > [!NOTE]
+> **Since this run.** The approval rule changed after it ([#97](https://github.com/decebal/decebal-claude-skills/pull/97), [chief-of-staff-v2#23](https://github.com/decebal/chief-of-staff-v2/pull/23)): the approval is still the person's decision, but an agent the person explicitly tells to approve runs `cos ritual approve … --yes`. claude-guard no longer denies it. The refusals below are what this run observed under the earlier rule.
+
+> [!NOTE]
 > **Limit.** One run, one machine (macOS), one toy feature, the lean `ritual` skill. Nothing was pushed: Ship was a local squash and fast-forward. EGM commands and `cos` hires were not run; `ritual-full` appears here as its preflight and the commands it would run.
 
 ```markdy State diagram of the ritual: seven steps, three gates, one person, and the loops back
@@ -284,6 +287,9 @@ beat taint "Taint to sink":
 @kicker Gates
 @deck claude-guard denies the command in an agent's shell; cos refuses any approval without a terminal.
 @short Why agents cannot approve
+
+> [!NOTE]
+> **Since this run.** Neither refusal happens now for an agent the person told to approve: claude-guard's deny is removed ([#97](https://github.com/decebal/decebal-claude-skills/pull/97)) and `cos ritual approve --yes` skips the terminal prompt ([chief-of-staff-v2#23](https://github.com/decebal/chief-of-staff-v2/pull/23)). Without that instruction the agent still stops at the design.
 
 The first guard is claude-guard's `infra-guard` hook. Fed a payload, it denies both approval commands {{observed: `log.jsonl`, `preflight` lines}}:
 
