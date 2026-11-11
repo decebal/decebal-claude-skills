@@ -12,6 +12,8 @@ the machine and shows which step it is in (`cos flows`); every step also works w
 
 This skill routes. It names the step, loads that step's reference, and stops at each gate.
 
+For page-by-page interface refinement, use `ui-refinement` alongside this router when installed. It contributes page decisions, captures and checks to the same flow; this skill retains stage and approval gates.
+
 **Requires** Chronis (`cn`, `cargo install chronis`). **Optional:** EGM, `cos`, graphify,
 claude-guard; [ritual-full](../ritual-full/SKILL.md) turns them all on. Install and a worked
 example: [docs/ritual-zero-to-hero.md](../../docs/ritual-zero-to-hero.md).

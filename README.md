@@ -45,6 +45,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── report-press/           # Newspaper-style HTML reports, Markdy figure per section + Rust press
 │   ├── ritual/                 # One flow idea → ship: Think, Spec, Plan, Build, Review, Ship, Reflect on a Chronis epic (+ 11 refs)
 │   ├── ritual-full/            # ritual with every tool on: EGM, Semantic ISA in every design, two reviewers, cos hires, tool preflight
+│   ├── ui-refinement/          # Page-by-page UI review, decisions, screenshots, and contribution gates
 │   ├── semantic-isa/           # Agent ISA + deterministic kernel: cores, bindings, taint→sinks (+ Arbiter-K ref, spec template)
 │   ├── notion-specification/   # Specs in a Notion docs space: coordinates, skeleton, style guide
 │   ├── notion-editing/         # Connector edits: access check, literal-match traps, no delete
@@ -200,6 +201,7 @@ cp -R skills/report-press ~/.claude/skills/report-press
 cargo install --locked --path skills/report-press/scripts
 cp -R skills/ritual     ~/.claude/skills/ritual
 cp -R skills/ritual-full ~/.claude/skills/ritual-full
+cp -R skills/ui-refinement ~/.claude/skills/ui-refinement
 ```
 
 For Claude Desktop: upload the skill folder (SKILL.md + scripts) via Settings → Skills.

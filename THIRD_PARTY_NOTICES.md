@@ -1,5 +1,9 @@
 # Third-party notices
 
+## ui-refinement
+
+`skills/ui-refinement/` adapts the Allstack UI review methods under Apache License 2.0. See its [origin notice](skills/ui-refinement/NOTICE.md) and [license](skills/ui-refinement/LICENSE.txt).
+
 ## claude-seo
 
 `skills/claude-seo` adapts
