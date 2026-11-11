@@ -103,17 +103,18 @@ fn an_ordinary_command_matches_nothing() {
 }
 
 #[test]
-fn an_agent_never_approves_a_ritual_design() {
+fn ritual_approval_is_not_denied_so_an_agent_told_to_approve_can_run_it() {
     for cmd in [
-        "cos ritual approve t-1 docs/plans/x.md --by ann",
-        "cos --home ~/cos ritual approve t-1 docs/plans/x.md --by ann",
+        "cos ritual approve t-1 docs/plans/x.md --by ann --yes",
+        "cos --home ~/cos ritual approve t-1 docs/plans/x.md --by ann --yes",
         "~/.cargo/bin/cos ritual approve t-1 x.md",
         "cn approve t-1",
         "cn approve t-1 --toon",
         "chronis approve t-1",
         "cd repo && cn approve t-1",
     ] {
-        assert!(is_deny(cmd), "{cmd} should be denied");
+        assert!(!is_deny(cmd), "{cmd} should not be denied");
+        assert_eq!(verdict(cmd), None, "{cmd} should pass");
     }
     for cmd in [
         "cos ritual check t-1",

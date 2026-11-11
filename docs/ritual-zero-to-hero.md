@@ -175,14 +175,16 @@ skillsync hooks install --dry-run
 skillsync hooks install
 ```
 
-Check that agent approval is blocked. This feeds the hook a payload and runs nothing:
+Check that the hooks are registered (claude-guard does not gate approval: an agent may run
+`cn approve` or `cos ritual approve` when you tell it to):
 
 ```sh
-printf '%s' '{"tool_name":"Bash","tool_input":{"command":"cn approve t-0"}}' | claude-guard infra-guard
+command -v claude-guard
+grep -cE 'claude-guard (infra-guard|bash-hygiene)' ~/.claude/settings.json
 ```
 
-Expect `"permissionDecision":"deny"` and a reason naming `cn approve`. Any other output means
-your build does not carry that rule, and agent approval rests on the skill's instruction alone.
+Expect the binary's path and a count of `2` or more. (`claude-guard` has no `--help`: with no
+subcommand it prints its usage and exits 2.)
 
 ### 3.8 graphify
 
@@ -228,16 +230,24 @@ cn task edit t-561aed --append-description "ritual-branch: feat/share-flag" --to
 cn task edit t-561aed --append-description "ritual-design: docs/plans/2026-11-11-share-flag-design.md" --toon
 ```
 
-Each edit prints `ok:edited:t-561aed`. Then it shows you the design and the review and stops. You
-approve in your own terminal:
+Each edit prints `ok:edited:t-561aed`. Then it shows you the design and the review and stops.
+Approval is your decision, and there are two ways to give it:
 
-```sh
-cos ritual approve t-561aed docs/plans/2026-11-11-share-flag-design.md --by "Your Name" --review docs/plans/2026-11-11-share-flag-design-review.md
-```
+- You type the command in your own terminal:
 
-It asks for `yes`, appends `ritual-approved: <path> sha256:<hex> by Your Name` and runs
-`cn approve`. Without `cos`: `shasum -a 256 <design>`, append the same line yourself, then
-`cn approve t-561aed`.
+  ```sh
+  cos ritual approve t-561aed docs/plans/2026-11-11-share-flag-design.md --by "Your Name" --review docs/plans/2026-11-11-share-flag-design-review.md
+  ```
+
+  It asks for `yes`, appends `ritual-approved: <path> sha256:<hex> by Your Name` and runs
+  `cn approve`.
+- You tell Claude to approve in the conversation, for example "approve the share-flag design".
+  Claude checks that `cos ritual approve --help` lists `--yes`, runs the same command with `--yes` in
+  place of the prompt, and quotes your instruction in its report. If `--yes` is missing, Claude stops
+  and asks you to update chief-of-staff-v2 to main.
+
+Without `cos`: `shasum -a 256 <design>`, append the same line yourself, then `cn approve t-561aed`
+(or tell Claude to run `cn approve t-561aed`).
 
 **Plan.** The gate first; before approval it prints `unapproved` and exits 1:
 
@@ -310,7 +320,7 @@ Ask: "ritual full: hello --share posts the greeting to the configured webhook". 
    `cos agents spawn --role ritual-goldfish --repo ../hello-share-flag --prompt "Review docs/plans/2026-11-11-share-flag-design.md"`.
    (The role exists in cos's `templates/context/agents.json`; this hire was not run for this
    guide.) Findings go through `/egm:egm-resolve`; both reviews are re-run until clean on the same digest;
-   then `cos ritual check` and your `cos ritual approve`.
+   then `cos ritual check` and your approval, as in section 4.
 4. **Plan.** Each sink gets a bead whose done-when is its VERIFY test.
 5. **Build and Review.** `cos agents spawn --role builder` per ready bead and
    `cos agents spawn --role reviewer` for the review; the reviewer confirms each sink's VERIFY in
@@ -373,15 +383,20 @@ diff touches only src/format.rs (pure string formatting).`
 | Review → Ship | the PR | a fresh-context review, newer than the last change, says `clean` |
 | Ship | merge | one PR, one commit, test plan ticked |
 
-Agents cannot approve because the approval is what makes the design a decision rather than the
-author's opinion of its own work. Three layers hold that line:
+The approval is what makes the design a decision rather than the author's opinion of its own
+work, so it is the user's. The model:
 
-- the skills tell agents never to run `cn approve` or `cos ritual approve`;
-- `cos ritual approve` asks for `yes` on a terminal and refuses when stdin is not one;
-- claude-guard's infra-guard denies both commands in agent Bash calls (check it, section 3.7).
+- an agent runs `cn approve` or `cos ritual approve` only when the user explicitly tells it to
+  approve in the conversation, and quotes that instruction in its report;
+- the skills forbid approval on the agent's own initiative, including to unblock itself, and
+  forbid inferring it from silence or a clean review;
+- `cos ritual approve` asks for `yes` on a terminal and refuses when stdin is not one; with
+  `--yes` it skips that prompt, which is why an agent can run it;
+- claude-guard does not deny either command. Nothing in the hook authenticates the instruction.
 
-The cos docs state the limit: `--by` is a name, not an identity, and a call hidden behind a
-variable, `eval` or a script gets past the hook ([cos ritual docs](https://github.com/decebal/chief-of-staff-v2/blob/main/docs/ritual.md#what-approval-does-and-does-not-stop)).
+The limits: an explicit instruction in the conversation is the only check, and `--by` is a name
+the caller types, not an identity. A call hidden behind a variable, `eval` or a script is not
+seen by any hook ([cos ritual docs](https://github.com/decebal/chief-of-staff-v2/blob/main/docs/ritual.md#what-approval-does-and-does-not-stop)).
 
 ## 7. Per-organisation notes
 
@@ -411,6 +426,8 @@ Build and Ship. The repo's own `CLAUDE.md` wins over it. A fictional example:
 | `cn show <epic>` says not found in a worktree; `cn list` is empty | each linked worktree has its own untracked `.chronis/` | run `cn` from the main checkout; check `git rev-parse --git-common-dir` and `--git-dir` print the same directory |
 | `cos ritual check` prints `changed since approval` | the design's bytes changed after approval (drift) | back to Spec: new review on the new digest, new `cos ritual approve`. Keep the plan in its own file so planning never edits the design |
 | `cos ritual check` prints `missing design` | no `ritual-design:` line, or the file is not on the flow's branch | commit the design on the branch and append the line |
+| agent reports `cos ritual approve: unknown flag --yes` | cos predates the `--yes` change | update chief-of-staff-v2 to main, `task setup`, then ask the agent to re-run; without `--yes` the user answers the prompt in their terminal |
+| agent did not approve when asked | the instruction was not explicit in the conversation, or the design is not clean | say "approve <design>" in the conversation; the agent checks the review verdict and the digest before running it |
 | Claude says it cannot run `/egm:egm-review` | EGM skills set `disable-model-invocation: true` | type the command yourself; Claude waits for the output file |
 | `/egm:` commands not found | plugin missing, or session started before install | `claude plugin list`; install per 3.5; start a new session |
 | ritual-full preflight stops on a tool | default-on means missing blocks | install with the printed command, or say "continue without <tool>" |
