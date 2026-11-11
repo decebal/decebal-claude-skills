@@ -82,6 +82,16 @@ pub fn classify(text: &str) -> Option<Verdict> {
     let ask = |r: &str| Some(Verdict::Ask(r.to_string()));
 
     // --- deny ---------------------------------------------------------------
+    // A ritual approval is a person's sign-off on a design. Neither command
+    // authenticates who runs it, so this hook is what stops an agent signing.
+    if m(r"(?m)(^|[ /])cos +([^ ]+ +)*ritual +approve( |$)") {
+        return deny("cos ritual approve is a person's sign-off on a design — ask the user to run it in their own terminal");
+    }
+    if m(r"(?m)(^|[ /])(cn|chronis) +approve( |$)") {
+        return deny(
+            "cn approve marks a design approved — ask the user to run it in their own terminal",
+        );
+    }
     if m(r"gcloud +run +(services|jobs) +(update|delete|replace)") {
         return deny("Cloud Run live-service mutation — never run direct; propose it for manual/CI execution");
     }

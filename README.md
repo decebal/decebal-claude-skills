@@ -43,6 +43,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── claude-seo/             # Evidence-led SEO + safe Rust audit/sitemap/drift CLI
 │   ├── aso-lint/               # App Store/Google Play optimization + Rust linter
 │   ├── report-press/           # Newspaper-style HTML reports, Markdy figure per section + Rust press
+│   ├── ritual/                 # One flow idea → ship: Think, Spec, Plan, Build, Review, Ship, Reflect on a Chronis epic (+ 11 refs)
+│   ├── ritual-full/            # ritual with every tool on: EGM, Semantic ISA in every design, two reviewers, cos hires, tool preflight
 │   ├── semantic-isa/           # Agent ISA + deterministic kernel: cores, bindings, taint→sinks (+ Arbiter-K ref, spec template)
 │   ├── notion-specification/   # Specs in a Notion docs space: coordinates, skeleton, style guide
 │   ├── notion-editing/         # Connector edits: access check, literal-match traps, no delete
@@ -107,6 +109,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── hooks.md                # Hooks configuration
 │   ├── jev-with-claude-code.md # TypeSafe Jev: plugin, SDKs, a decision layer for Claude
 │   ├── permissions.md          # Permission patterns & security
+│   ├── ritual-zero-to-hero.md  # ritual and ritual-full from a fresh machine to a shipped flow
 │   ├── plans/                  # Dated plans, e.g. Codex parity for rules, guards, skills
 │   ├── rules-reference/        # Incidents and measurements behind rules/, read on demand
 │   ├── target-dir-cleanup.md   # Evicting idle Cargo build dirs; the tool survey behind it
@@ -126,6 +129,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **Skills Guide** | [skills-guide/overview.md](skills-guide/overview.md) | Skills inventory, authoring guide, PRD → beads pipeline |
 | **MCP Servers** | [docs/mcp-servers.md](docs/mcp-servers.md) | GitHub, Linear, Slack, Supabase, Firebase, and more |
 | **Permissions** | [docs/permissions.md](docs/permissions.md) | Granular command allowlists by project type |
+| **Ritual, zero to hero** | [docs/ritual-zero-to-hero.md](docs/ritual-zero-to-hero.md) | Install every tool from a fresh machine, then run one flow from idea to shipped change, lean (`ritual`) and with every tool on (`ritual-full`) |
 | **Token Efficiency** | [docs/token-efficiency.md](docs/token-efficiency.md) | Patterns for staying within context limits |
 | **Guard-rail hooks** | [hooks/README.md](hooks/README.md) | One-open-PR guard, blast-radius guard, Bash hygiene, prompt-number guard, comment hygiene — install steps + pattern list |
 | **Jev with Claude Code** | [docs/jev-with-claude-code.md](docs/jev-with-claude-code.md) | TypeSafe's plugin, the SDKs, and letting Claude ask Jev at its own decision points |
@@ -191,6 +195,8 @@ cp -R skills/claude-seo ~/.claude/skills/claude-seo
 cp -R skills/aso-lint   ~/.claude/skills/aso-lint
 cp -R skills/report-press ~/.claude/skills/report-press
 cargo install --locked --path skills/report-press/scripts
+cp -R skills/ritual     ~/.claude/skills/ritual
+cp -R skills/ritual-full ~/.claude/skills/ritual-full
 ```
 
 For Claude Desktop: upload the skill folder (SKILL.md + scripts) via Settings → Skills.

@@ -23,7 +23,11 @@ jobs:
 
       # web-video skill needs ffmpeg/ffprobe.
       - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        timeout-minutes: 5
+        run: |
+          apt=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
+          sudo apt-get "${apt[@]}" update
+          sudo apt-get "${apt[@]}" install -y --no-install-recommends ffmpeg
 
       # uv provisions a Python + Pillow on the fly for the blog-image tests
       # (the test harness uses `uv run --with pillow`).

@@ -103,6 +103,30 @@ fn an_ordinary_command_matches_nothing() {
 }
 
 #[test]
+fn an_agent_never_approves_a_ritual_design() {
+    for cmd in [
+        "cos ritual approve t-1 docs/plans/x.md --by ann",
+        "cos --home ~/cos ritual approve t-1 docs/plans/x.md --by ann",
+        "~/.cargo/bin/cos ritual approve t-1 x.md",
+        "cn approve t-1",
+        "cn approve t-1 --toon",
+        "chronis approve t-1",
+        "cd repo && cn approve t-1",
+    ] {
+        assert!(is_deny(cmd), "{cmd} should be denied");
+    }
+    for cmd in [
+        "cos ritual check t-1",
+        "cos flows --projects ~/projects",
+        "cn list --toon",
+        "cn show t-1 --toon",
+        "grep -rn 'cn approve' skills/",
+    ] {
+        assert_eq!(verdict(cmd), None, "{cmd} should pass");
+    }
+}
+
+#[test]
 fn deny_beats_ask_when_both_could_match() {
     // `kubectl delete namespace` matches the ask-tier `kubectl delete` too;
     // ordering is what makes the destructive reading win.
