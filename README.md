@@ -80,7 +80,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   │   ├── fmt-check/          # whole-repo rustfmt WITHOUT invoking cargo
 │   │   ├── render-agent-docs/  # one manifest → CLAUDE.md + AGENTS.md, --check
 │   │   └── …                   # vendor-attribution, workspace-isolation, price-table,
-│   │                           # dev-preflight, rust-effective-diff, target-sweep, graph-audit
+│   │                           # dev-preflight, rust-effective-diff, target-sweep, graph-audit,
+│   │                           # skill-audit
 │   │                           # (target-gc is its own crate: github.com/decebal/target-gc)
 │   ├── sh/                     # git-hook glue: run_gate, dead-branch guard, worktrees
 │   ├── ts/                     # RemoteState<T> + its backstop gate, git keepalive

@@ -1,0 +1,21 @@
+# skill-audit — what the session-start listing of skills, agents and MCP
+# instructions costs, and which entries any transcript ever used.
+#
+# Read-only: it prints names, byte counts, use counts and dates, never
+# transcript text.
+[package]
+name = "skill-audit"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "skill-audit"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = { workspace = true }
+
+[lints]
+workspace = true
