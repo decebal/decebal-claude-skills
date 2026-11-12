@@ -25,6 +25,7 @@ braces**. See [rules/testing-gates.md](../rules/testing-gates.md).
 | [`rust/target-sweep`](rust/target-sweep) | Rust | Reclaim a build directory without forcing a cold rebuild |
 | [`target-gc`](https://github.com/decebal/target-gc) (own crate) | Rust | Evict idle Cargo build directories machine-wide, only under disk pressure or past an age, never one in use. `cargo install target-gc`; ships a skill and plugin — see [docs/target-dir-cleanup.md](../docs/target-dir-cleanup.md) |
 | [`rust/graph-audit`](rust/graph-audit) | Rust | Cross-check docs and tasks against a code-graph oracle |
+| [`rust/skill-audit`](rust/skill-audit) | Rust | What the session-start listing of skills, agents and MCP instructions costs, and which entries any transcript ever used |
 | [`rust/render-agent-docs`](rust/render-agent-docs) | Rust | One manifest → `CLAUDE.md` + `AGENTS.md`, with a `--check` drift gate |
 | [`rust/layer-boundary-check`](rust/layer-boundary-check) | Rust | The dependency direction, derived from a declared order. Ceilings that ratchet |
 | [`rust/forbidden-pattern-check`](rust/forbidden-pattern-check) | Rust | Named patterns must not appear under named paths, with an allowlist |
@@ -89,6 +90,7 @@ cargo install --path gates/rust/price-table-check
 cargo install --path gates/rust/trophy-check
 cargo install --path gates/rust/dev-preflight
 cargo install --path gates/rust/task-gates
+cargo install --path gates/rust/skill-audit
 cargo install target-gc                             # its own crate; then: target-gc install
 ```
 
