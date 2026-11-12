@@ -15,11 +15,13 @@ the Codex skills live in [decebal-codex-skills](https://github.com/decebal/deceb
 | cos | clone [chief-of-staff-v2](https://github.com/decebal/chief-of-staff-v2), then `task setup` in it (needs [Task](https://taskfile.dev/installation/)) | `cos ritual check --help` exits 0; `cos ritual approve --help` lists `--yes` |
 | uv | [docs.astral.sh/uv](https://docs.astral.sh/uv/) | `uv --version` |
 | graphify | `uv tool install graphifyy` | `graphify --help` exits 0 (126 with `bad interpreter` means reinstall); `graphify-out/` in the repo, built with `/graphify .` |
-| EGM | `claude plugin marketplace add google/elephant-goldfish-model`, then `claude plugin install egm@egm` | `claude plugin list` shows `egm@egm` enabled |
+| EGM | Claude Code: `claude plugin marketplace add google/elephant-goldfish-model`, then `claude plugin install egm@egm`. Codex: add the marketplace per EGM's `docs/codex.md` and enable `egm@egm` | Claude Code: `claude plugin list` shows `egm@egm` enabled. Codex: `~/.codex/config.toml` has `[plugins."egm@egm"] enabled = true` |
 
-EGM is a Claude Code plugin whose skills only a person can start. A Codex flow hands each
-`/egm:` command to the user to run in a Claude Code session on the same checkout, so Codex needs
-Claude Code installed for the EGM steps, or the user says "continue without EGM".
+The agent runs EGM itself: its skills set `disable-model-invocation: true`, which only keeps them
+out of automatic loading, so the ritual skills tell the agent to read the EGM skill's `SKILL.md`
+and follow it, spawning EGM's reviewers in fresh contexts. Codex installs EGM as a Codex plugin
+(marketplace `https://github.com/google/elephant-goldfish-model`, path `.agents/plugins`) and runs
+it the same way, following EGM's `docs/codex.md`; its reviewers are spawned with `spawn_agent`.
 
 `cos ritual approve --yes` is what lets an agent record an approval the user told it to make.
 It arrives with [chief-of-staff-v2#23](https://github.com/decebal/chief-of-staff-v2/pull/23).
@@ -59,7 +61,7 @@ Checked on the maintainer's macOS machine with the commands above.
 | Agent | Claude Code 2.1.312 | codex-cli 0.163.0 |
 | `cn`, `gh` (logged in), `uv` 0.9.27, `task`, cargo 1.97.1 | ok | ok (shared) |
 | Skills | ok: copied from `main` at `cdb489e` | ok: `ritual` and `ritual-full` linked to the decebal-codex-skills checkout; `semantic-isa`, `pr-proof`, `systematic-debugging` present |
-| EGM | ok: `egm@egm` 0.1.1 enabled | runs in Claude Code (above) |
+| EGM | ok: `egm@egm` 0.1.1 enabled | ok: `egm@egm` enabled in `~/.codex/config.toml` |
 | graphify | ok | binary ok; per-repo `graphify codex install` not checked |
 | Guard hooks | registered (2 hooks), but the binary predates #97 and denies approval | `codex-guard` hooks registered in `~/.codex/hooks.json` |
 | cos | `cos ritual` ok; `--yes` not installed (#23 open) | same binary |
