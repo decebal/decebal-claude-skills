@@ -111,6 +111,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── jev-with-claude-code.md # TypeSafe Jev: plugin, SDKs, a decision layer for Claude
 │   ├── permissions.md          # Permission patterns & security
 │   ├── ritual-zero-to-hero.md  # ritual and ritual-full from a fresh machine to a shipped flow
+│   ├── ritual-install.md       # what Claude Code and Codex each need to run ritual-full
 │   ├── ritual-explained.html   # one real flow, measured, as a report-press page (.md source beside it)
 │   ├── ritual-proof/           # the proof run's log, epic trail and step files
 │   ├── plans/                  # Dated plans, e.g. Codex parity for rules, guards, skills
@@ -133,6 +134,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **MCP Servers** | [docs/mcp-servers.md](docs/mcp-servers.md) | GitHub, Linear, Slack, Supabase, Firebase, and more |
 | **Permissions** | [docs/permissions.md](docs/permissions.md) | Granular command allowlists by project type |
 | **Ritual, zero to hero** | [docs/ritual-zero-to-hero.md](docs/ritual-zero-to-hero.md) | Install every tool from a fresh machine, then run one flow from idea to shipped change, lean (`ritual`) and with every tool on (`ritual-full`) |
+| **Ritual install checklist** | [docs/ritual-install.md](docs/ritual-install.md) | What to install so both Claude Code and Codex pass `ritual-full`'s preflight, with the check for each row |
 | **Ritual, explained (see a real flow)** | [docs/ritual-explained.html](docs/ritual-explained.html) | One real flow on a toy CLI, every step measured, three design-review rounds and the human gate shown as animated diagrams; evidence in [docs/ritual-proof/](docs/ritual-proof/) |
 | **Token Efficiency** | [docs/token-efficiency.md](docs/token-efficiency.md) | Patterns for staying within context limits |
 | **Guard-rail hooks** | [hooks/README.md](hooks/README.md) | One-open-PR guard, blast-radius guard, Bash hygiene, prompt-number guard, comment hygiene — install steps + pattern list |
