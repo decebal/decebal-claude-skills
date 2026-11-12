@@ -137,7 +137,9 @@ claude plugin list
 Expect an `egm@egm` entry with `Status: ✔ enabled`. Start a new session. Its seven skills are
 `/egm:egm-brainstorm`, `/egm:egm-draft`, `/egm:egm-review`, `/egm:egm-resolve`,
 `/egm:egm-review-loop`, `/egm:egm-bootstrap` and `/egm:egm-drift-report`. They set
-`disable-model-invocation: true`: you type them; the model cannot start them.
+`disable-model-invocation: true`, which keeps them out of automatic loading. The ritual skills
+run them anyway: Claude reads the skill's `SKILL.md` from the plugin directory and follows it,
+spawning EGM's `egm:egm-*` reviewers in fresh contexts. You can still type them yourself.
 
 ### 3.6 cos (chief of staff)
 
@@ -312,20 +314,20 @@ Ask: "ritual full: hello --share posts the greeting to the configured webhook". 
 1. **Preflight** prints one line, for example
    `preflight: cn ok · egm ok · semantic-isa ok · cos ok · graphify missing (uv tool install graphifyy) · claude-guard ok · skills ok`,
    and stops until graphify is installed or you say "continue without graphify".
-2. **Think.** You run `/egm:egm-brainstorm`; Claude runs `graphify query` on the config and HTTP
-   modules. `concepts_brief.md` moves to the dated brief path.
-3. **Spec.** You run `/egm:egm-draft`; `design_draft.md` moves to the dated design path and gains
-   the Semantic ISA section (below). Two reviews in separate contexts: you run
-   `/egm:egm-review docs/plans/2026-11-11-share-flag-design.md`, and Claude hires a Goldfish with
+2. **Think.** Claude runs EGM's `egm-brainstorm` (asking you its questions) and `graphify query`
+   on the config and HTTP modules. `concepts_brief.md` moves to the dated brief path.
+3. **Spec.** Claude runs EGM's `egm-draft`; `design_draft.md` moves to the dated design path and
+   gains the Semantic ISA section (below). Two reviews in separate contexts: Claude runs EGM's
+   `egm-review` on `docs/plans/2026-11-11-share-flag-design.md`, and hires a Goldfish with
    `cos agents spawn --role ritual-goldfish --repo ../hello-share-flag --prompt "Review docs/plans/2026-11-11-share-flag-design.md"`.
    (The role exists in cos's `templates/context/agents.json`; this hire was not run for this
-   guide.) Findings go through `/egm:egm-resolve`; both reviews are re-run until clean on the same digest;
+   guide.) Findings go through EGM's `egm-resolve`; both reviews are re-run until clean on the same digest;
    then `cos ritual check` and your approval, as in section 4.
 4. **Plan.** Each sink gets a bead whose done-when is its VERIFY test.
 5. **Build and Review.** `cos agents spawn --role builder` per ready bead and
    `cos agents spawn --role reviewer` for the review; the reviewer confirms each sink's VERIFY in
    code.
-6. **Reflect.** You run `/egm:egm-drift-report docs/plans/`; any new sink goes in the report and the
+6. **Reflect.** Claude runs EGM's `egm-drift-report` on `docs/plans/`; any new sink goes in the report and the
    design.
 
 The ISA section for the toy:
@@ -428,7 +430,7 @@ Build and Ship. The repo's own `CLAUDE.md` wins over it. A fictional example:
 | `cos ritual check` prints `missing design` | no `ritual-design:` line, or the file is not on the flow's branch | commit the design on the branch and append the line |
 | agent reports `cos ritual approve: unknown flag --yes` | cos predates the `--yes` change | update chief-of-staff-v2 to main, `task setup`, then ask the agent to re-run; without `--yes` the user answers the prompt in their terminal |
 | agent did not approve when asked | the instruction was not explicit in the conversation, or the design is not clean | say "approve <design>" in the conversation; the agent checks the review verdict and the digest before running it |
-| Claude says it cannot run `/egm:egm-review` | EGM skills set `disable-model-invocation: true` | type the command yourself; Claude waits for the output file |
+| Claude says it cannot run `/egm:egm-review` | its skill list hides EGM (`disable-model-invocation: true`) and the ritual skill is older than this change | update the ritual skills; Claude then reads `~/.claude/plugins/cache/egm/egm/<version>/skills/egm-review/SKILL.md` and follows it. Or type the command yourself |
 | `/egm:` commands not found | plugin missing, or session started before install | `claude plugin list`; install per 3.5; start a new session |
 | ritual-full preflight stops on a tool | default-on means missing blocks | install with the printed command, or say "continue without <tool>" |
 | `cn task create` errors `unexpected argument '- '` | a description starting with `-` reads as a flag | `--description="- [ ] …"` or start the text with words |
