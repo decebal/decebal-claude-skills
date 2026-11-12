@@ -20,9 +20,11 @@ cargo install --locked --path ~/.claude/skills/report-press/scripts    # or skil
 report-press --version
 ```
 
-The page's palette is neutral newsprint with a text wordmark (frontmatter
-`publisher:`). For a house style, edit `scripts/src/brand.rs` (logo SVG and
-three colours) and reinstall.
+The page prints in the Wolven Tech brand: a howling-wolf mark beside a text
+wordmark (frontmatter `publisher:`, else "Wolven Tech") on newsprint, with a
+monochrome night-forest palette (ink `#16191d`, accent `#5f6b76`, accent on dark
+`#b8c0c8`, moon-gold highlight `#c9a95c`). For a house style, edit
+`scripts/src/brand.rs` (logo SVG and colours) and reinstall.
 
 ## Workflow
 
@@ -124,4 +126,6 @@ Commit the `.md` and the `.html` together and add a row to the docs index
   wider ones scroll inside their frame with a caption hint.
 - Light and dark schemes; `prefers-reduced-motion` gets static SVG; skip link,
   visible focus, phone width.
-- The brand (logo and three colours) is compiled in. A story cannot change it.
+- The brand (Wolven Tech mark and its palette) is compiled in. A story cannot
+  change it; `brand_tests.rs` fails a build whose brand colours drop below
+  WCAG AA where they carry text.

@@ -22,9 +22,9 @@ Run each check, print one table, then stop if any row is `missing`:
 | EGM plugin | `claude plugin list` shows `egm@egm` enabled | `claude plugin marketplace add google/elephant-goldfish-model` then `claude plugin install egm@egm`, new session |
 | semantic-isa | `~/.claude/skills/semantic-isa/SKILL.md` exists | `cp -R skills/semantic-isa ~/.claude/skills/semantic-isa` from this repo |
 | cos | `cos ritual check --help` exits 0 | clone `decebal/chief-of-staff-v2`, run `task setup` in it |
-| graphify | `graphify --help` exits 0; `graphify-out/` in the repo, else build it | `uv tool install graphifyy` then `graphify install` |
+| graphify | `graphify --help` exits 0; `graphify-out/` in the repo, else build it | `uv tool install graphifyy` then `graphify install`; the same reinstall fixes `graphify --help` exiting 126 with `bad interpreter` (its old pipx venv is gone) |
 | claude-guard | infra-guard denies `cn approve` (payload test below) | `cargo install --path gates/rust/claude-guard`, then `skillsync hooks install` |
-| skills | `brainstorming`, `pr-proof`, `systematic-debugging` under `~/.claude/skills/` | `cp -R skills/<name> ~/.claude/skills/<name>` |
+| skills | `pr-proof`, `systematic-debugging` under `~/.claude/skills/` | `cp -R skills/<name> ~/.claude/skills/<name>` |
 
 The claude-guard check feeds the hook a payload and reads its decision; it runs nothing:
 

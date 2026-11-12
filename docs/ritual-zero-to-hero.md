@@ -2,7 +2,9 @@
 
 From a fresh machine to a shipped change, run as one flow. Two skills in this repo do it:
 [`ritual`](../skills/ritual/SKILL.md) (lean) and [`ritual-full`](../skills/ritual-full/SKILL.md)
-(every tool on). This guide installs everything, then walks one toy feature through both.
+(every tool on). This guide installs everything, then walks one toy feature through both. To see a
+real flow, measured step by step, open [ritual-explained.html](ritual-explained.html) (source:
+[ritual-explained.md](ritual-explained.md), raw evidence in [ritual-proof/](ritual-proof/)).
 
 Commands here were checked on macOS against `cn` (Chronis 0.9.3) and `cos` 0.3.0. Linux steps
 follow each tool's own install docs and were not run on Linux for this guide.
@@ -43,7 +45,7 @@ flowchart LR
 
 | | `ritual` | `ritual-full` |
 |---|---|---|
-| Required | `cn` | `cn`, EGM, semantic-isa, `cos`, graphify, claude-guard, and the `brainstorming`, `pr-proof`, `systematic-debugging` skills |
+| Required | `cn` | `cn`, EGM, semantic-isa, `cos`, graphify, claude-guard, and the `pr-proof`, `systematic-debugging` skills (EGM covers Think) |
 | Missing optional tool | that path is skipped | preflight stops and prints the install command; the user may say "continue without X" |
 | Design | decision, context, design, alternatives, security, testing, confidence, acceptance | the same plus a mandatory **Semantic ISA** section |
 | Design review | one fresh-context reviewer | two: `/egm:egm-review` and a hired `ritual-goldfish` |
@@ -111,13 +113,13 @@ Copy the skills the flow uses (run from the clone):
 cp -R skills/ritual ~/.claude/skills/ritual
 cp -R skills/ritual-full ~/.claude/skills/ritual-full
 cp -R skills/semantic-isa ~/.claude/skills/semantic-isa
-cp -R skills/brainstorming ~/.claude/skills/brainstorming
 cp -R skills/pr-proof ~/.claude/skills/pr-proof
 cp -R skills/systematic-debugging ~/.claude/skills/systematic-debugging
 ls ~/.claude/skills
 ```
 
-Expect the six names in the listing. semantic-isa's DESIGN mode also borrows `arch`,
+Expect the five names in the listing. Think's brainstorm comes from EGM (`/egm:egm-brainstorm`), so
+`brainstorming` is not needed. semantic-isa's DESIGN mode also borrows `arch`,
 `security-review`, `rust-clean-architecture` and `integration-test`; copy them the same way if you
 want those steps. To link every skill at once instead, see [skillsync](skillsync.md)
 (`skillsync skills install`).
@@ -192,6 +194,9 @@ uv tool install graphifyy
 graphify install
 graphify --help
 ```
+
+If `graphify --help` exits 126 with `bad interpreter`, the binary points at a removed pipx venv:
+run `uv tool install graphifyy` again.
 
 Then build a repo's graph by typing `/graphify .` in Claude Code inside the repo; it writes
 `graphify-out/`. Optional in `ritual`, on in `ritual-full`.

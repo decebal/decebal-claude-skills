@@ -1,0 +1,1 @@
+cos ritual approve t-de1322 docs/plans/2026-11-12-shout-design.md --by "Decebal Dobrica" --review <scratch>/greeter-shout/docs/plans/2026-11-12-shout-design-review.md --repo <scratch>/greeter

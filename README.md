@@ -110,6 +110,8 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── jev-with-claude-code.md # TypeSafe Jev: plugin, SDKs, a decision layer for Claude
 │   ├── permissions.md          # Permission patterns & security
 │   ├── ritual-zero-to-hero.md  # ritual and ritual-full from a fresh machine to a shipped flow
+│   ├── ritual-explained.html   # one real flow, measured, as a report-press page (.md source beside it)
+│   ├── ritual-proof/           # the proof run's log, epic trail and step files
 │   ├── plans/                  # Dated plans, e.g. Codex parity for rules, guards, skills
 │   ├── rules-reference/        # Incidents and measurements behind rules/, read on demand
 │   ├── target-dir-cleanup.md   # Evicting idle Cargo build dirs; the tool survey behind it
@@ -130,6 +132,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 | **MCP Servers** | [docs/mcp-servers.md](docs/mcp-servers.md) | GitHub, Linear, Slack, Supabase, Firebase, and more |
 | **Permissions** | [docs/permissions.md](docs/permissions.md) | Granular command allowlists by project type |
 | **Ritual, zero to hero** | [docs/ritual-zero-to-hero.md](docs/ritual-zero-to-hero.md) | Install every tool from a fresh machine, then run one flow from idea to shipped change, lean (`ritual`) and with every tool on (`ritual-full`) |
+| **Ritual, explained (see a real flow)** | [docs/ritual-explained.html](docs/ritual-explained.html) | One real flow on a toy CLI, every step measured, three design-review rounds and the human gate shown as animated diagrams; evidence in [docs/ritual-proof/](docs/ritual-proof/) |
 | **Token Efficiency** | [docs/token-efficiency.md](docs/token-efficiency.md) | Patterns for staying within context limits |
 | **Guard-rail hooks** | [hooks/README.md](hooks/README.md) | One-open-PR guard, blast-radius guard, Bash hygiene, prompt-number guard, comment hygiene — install steps + pattern list |
 | **Jev with Claude Code** | [docs/jev-with-claude-code.md](docs/jev-with-claude-code.md) | TypeSafe's plugin, the SDKs, and letting Claude ask Jev at its own decision points |
@@ -153,8 +156,8 @@ Some skills bundle runnable scripts (not just instructions):
   templates, stable rule IDs, and two-proportion experiment snapshots.
 - **`report-press`** — Rust `report-press` CLI: `check` lints a Markdown story,
   `build` prints it as one self-contained, newspaper-style HTML page with an
-  animated Markdy diagram per section (CSS, renderer and Markdy 1.5.7 inlined).
-  See [`skills/report-press/examples/explainer.html`](skills/report-press/examples/explainer.html).
+  animated Markdy diagram per section (CSS, renderer and Markdy 1.5.7 inlined),
+  printed in the compiled-in Wolven Tech brand. See [`skills/report-press/examples/explainer.html`](skills/report-press/examples/explainer.html).
 - **`skill-rank`** — Rust `skill-rank` CLI: rates every installed Claude and Codex skill with TypeSafe Jev, keeps the best-rated inside each host's listing budget, and searches the rest by rating.
 
 The guard-rail hooks are runnable too — four PreToolUse/PostToolUse guards in one
