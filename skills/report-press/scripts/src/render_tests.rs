@@ -54,7 +54,7 @@ fn page_is_self_contained_and_numbers_figures() {
     );
     assert!(html.contains("<section class=\"box notchecked\""));
     assert!(html.contains("<span class=\"src\">observed: z</span>"));
-    assert!(html.contains("--brand-ink:#1c2733"));
+    assert!(html.contains("--brand-ink:#16191d"));
 }
 
 #[test]

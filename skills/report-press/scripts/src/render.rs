@@ -21,13 +21,15 @@ pub fn page(story: &Story) -> String {
         "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n\
          <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
          <meta name=\"generator\" content=\"report-press {}\">\n\
-         <title>{} · {}</title>\n<style>\n:root{{--brand-ink:{};--brand-accent:{};--brand-highlight:{}}}\n{CSS}</style>\n</head>\n<body>\n\
+         <title>{} · {}</title>\n<style>\n:root{{--brand-ink:{};--brand-accent:{};--brand-accent-dark:{};--brand-on-accent:{};--brand-highlight:{}}}\n{CSS}</style>\n</head>\n<body>\n\
          <a class=\"skip\" href=\"#main\">Skip to content</a>\n<div class=\"brandbar\" aria-hidden=\"true\"></div>\n<div class=\"page\">\n",
         env!("CARGO_PKG_VERSION"),
         plain(&f.title),
         escape(&f.date),
         BRAND.ink,
         BRAND.accent,
+        BRAND.accent_dark,
+        BRAND.on_accent,
         BRAND.highlight,
     );
     masthead(&mut s, story);
@@ -82,15 +84,16 @@ pub fn page(story: &Story) -> String {
 
 fn masthead(s: &mut String, story: &Story) {
     let f = &story.front;
-    let mark = match BRAND.logo {
-        Some(svg) => svg.trim().to_owned(),
-        None => format!("<span class=\"wordmark\">{}</span>", escape(BRAND.name)),
-    };
-    let mark = if f.publisher.is_empty() {
-        mark
+    let name = if f.publisher.is_empty() {
+        BRAND.name
     } else {
-        format!("<span class=\"wordmark\">{}</span>", escape(&f.publisher))
+        f.publisher.as_str()
     };
+    let mark = format!(
+        "<span class=\"brand\">{}<span class=\"wordmark\">{}</span></span>",
+        BRAND.logo.map(str::trim).unwrap_or_default(),
+        escape(name)
+    );
     let title = escape(&f.title);
     let title = match title.rsplit_once(' ') {
         Some((head, last)) => format!("{head} <span>{last}</span>"),

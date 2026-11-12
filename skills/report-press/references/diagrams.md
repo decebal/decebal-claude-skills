@@ -32,7 +32,7 @@ beat life "One bead":
   Gates -> Done "yes"
 beat fail "Gates fail":
   Ready <- Gates "no: fix"
-  glow Done color=#FF8300
+  glow Done color=#5f6b76
 ```
 
 ## C4 container view
@@ -51,7 +51,7 @@ beat flow "Requests":
   Dev -> Api "HTTPS"
   Api -> Db "SQL"
   Api ~> Worker "jobs"
-  glow app color=#023047
+  glow app color=#5f6b76
 ```
 
 ## Grammar, the subset that works

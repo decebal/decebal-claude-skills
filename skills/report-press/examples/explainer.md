@@ -3,7 +3,7 @@ title: The Press Edition
 date: 2026-10-28
 desk: Tools · how it works
 strap: Explainer | report-press 0.1.0 | Markdy 1.5.7
-publisher: Field Notes
+publisher: Wolven Tech
 footer: Built from `skills/report-press/examples/explainer.md`
 ---
 
@@ -35,7 +35,7 @@ beat print "From story to page":
   Story -> Press "check"
   Assets -> Press "inlined"
   Press -> Page "build"
-  glow binary color=#FF8300
+  glow binary color=#5f6b76
 ```
 
 ## A story must pass check before it can be printed {#s-check}
@@ -62,7 +62,7 @@ beat happy "Clean story":
   Built -> Seen "agent-browser"
 beat fix "Errors":
   Draft <- Check "yes: fix and re-run"
-  glow Check color=#FEB306
+  glow Check color=#c9a95c
 ```
 
 ## The binary is four small modules and three compiled-in assets {#s-binary}
@@ -91,7 +91,7 @@ beat flow "One build":
   Story -> Render "Story"
   Css -> Render "inlined"
   Js -> Render "inlined"
-  glow logic color=#023047
+  glow logic color=#5f6b76
 ```
 
 ## In the browser, each figure is measured before it animates {#s-figure}
@@ -118,7 +118,7 @@ beat draw "Draw":
   Sized -> Motion "check preference"
   Motion -> Player "no"
   Motion -> Static "yes"
-  glow Sized color=#FF8300
+  glow Sized color=#5f6b76
 ```
 
 ## Seven defects from the first hand-built report are now impossible or caught {#s-defects}
@@ -153,7 +153,7 @@ beat stop "Where each is stopped":
   Check -> Page "builds"
   Css -> Page "minmax(0, …)"
   Js -> Page "sync export · fit · min-width"
-  glow Check color=#FEB306
+  glow Check color=#c9a95c
 ```
 
 ## Follow-ups {.back}

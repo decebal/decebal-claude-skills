@@ -13,6 +13,8 @@ mod render;
 mod story;
 
 #[cfg(test)]
+mod brand_tests;
+#[cfg(test)]
 mod lint_tests;
 #[cfg(test)]
 mod markup_tests;

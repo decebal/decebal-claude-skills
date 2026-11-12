@@ -12,7 +12,7 @@ date: 2026-10-28                  # ISO; printed as "Wednesday 28 October 2026"
 desk: Engineering · Web & SDK     # masthead, centre
 strap: For peer discussion | Not a decision record    # " | "-separated, under the title
 footer: my-repo · `docs/reports/…`                    # inline Markdown
-publisher: Field Notes            # optional; replaces the logo with a text wordmark
+publisher: Wolven Tech            # optional; the wordmark beside the logo (default "Wolven Tech")
 ---
 ```
 
