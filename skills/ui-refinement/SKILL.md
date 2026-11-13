@@ -1,6 +1,6 @@
 ---
 name: ui-refinement
-description: Review and refine a website or desktop app page by page, recording design decisions and enforcing contribution gates with visual and runtime evidence.
+description: Review and refine a website or desktop app page by page, recording design decisions and enforcing contribution gates with visual and runtime evidence. Uses the repository's component workbench (Storybook, Chromatic or equivalents) for state inventory, story tests and visual diffs when one exists.
 ---
 
 # Review the interface
@@ -36,6 +36,18 @@ Capture comparable screenshots for representative states and widths, then exerci
 For efficiency, discover routes and shared components once, then batch deterministic presence, reflow and broken-link checks across affected pages. Inspect representative shared patterns and each distinct page or state that can change the user's decision or journey; record per-page results and exceptions. Run focused checks while iterating and whole-product gates once at the ritual's integration boundary. A batch result never substitutes for visual judgment or proves an unvisited state.
 
 For shared navigation and footer changes, inventory every page family and rendering path that uses them. At narrow and wide sizes, check visible labels, link destinations, reflow and keyboard order and focus, including a journey through the actual links. Capture representative header and footer states and record which families were exercised. If a regression gate checks source structure alone, keep it and add rendered checks where the project can run them; do not treat source presence as proof of working navigation.
+
+## Use the component workbench when the repository has one
+
+Detect it before the baseline: a Storybook configuration (`.storybook/`, a `storybook` dependency, a `*.stories.*` tree), a hosted visual-review service such as Chromatic (`chromatic` dependency, configuration file, or a documented publish command), and any snapshot or story-test projects. Read the repository's own guide and task runner for how each is run, which themes and viewports it renders, and what it costs; do not substitute a generic command such as `npx chromatic` for the documented one. Equivalents (Ladle, Histoire, Percy, Playwright component snapshots) take the same role.
+
+- **State inventory.** List the stories for every component on the affected pages, from the running Storybook's index or its MCP server when available. Each material state from the baseline (empty, loading, unreachable, populated, overflow, long text, each theme) needs a story; a missing story is a finding, and Build adds it before changing the component.
+- **Story tests.** Run the repository's story tests, including interaction and accessibility checks, in every theme it supports. Report counts per theme and name each failure; a story marked as a known accessibility exception stays listed as one.
+- **Captures.** Capture representative stories through the repository's deterministic mode (frozen clock, seeded data, finished animation) so before and after are comparable. Record the story id, theme, viewport and commit for each.
+- **Visual diff.** A hosted service compares changed stories with the baseline branch. Publishing uploads rendered, unreleased interface to an external service: use only the repository's sanctioned command, with the authority that command requires, within its snapshot quota, and never put its token in the repository, a log or a report. Accepting a changed baseline is a design approval and belongs to the owner. "No visual changes" proves pixel equality with the baseline, not correctness; an unreviewed change is not a pass.
+- **Story is not product.** Stories render with fixtures. Capture the running application for the journey as well, check that fixtures match the shapes the real data source returns, and label a story-only capture as such where no real-app capture exists.
+
+In the ritual, Plan lists a story per state, the story-test run and the visual-diff build as trophy rows; Review receives the story list and the diff build link; Ship attaches both with their counts. When the repository has no workbench, do not install one as part of a refinement; record the gap and propose it as a contribution gate for the owner to decide.
 
 ## Decide and refine
 
