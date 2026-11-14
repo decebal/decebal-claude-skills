@@ -1,0 +1,13 @@
+# Rules the weekly loop may reword around but never remove. One per line:
+# <skill>/<file>: <phrase>. Matching ignores case and whitespace runs.
+# Edit this list by hand in a reviewed PR; candidates cannot change it.
+ritual/SKILL.md: Never cut beads for an unapproved design
+ritual/SKILL.md: never approve on your own initiative
+ritual/references/spec.md: Never approve on your own initiative
+ritual-full/SKILL.md: Agents never approve on their own initiative
+ritual/SKILL.md: is not a test run
+ritual/SKILL.md: one PR, one commit
+ritual/references/ship.md: One PR, one commit
+ritual/SKILL.md: never review in your own
+ritual/SKILL.md: Manual and external actions never become beads
+ritual-full/SKILL.md: never skip one silently
