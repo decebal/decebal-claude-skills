@@ -25,8 +25,9 @@ Run each check, print one table, then stop if any row is `missing`:
 | graphify | `graphify --help` exits 0; `graphify-out/` in the repo, else build it | `uv tool install graphifyy` then `graphify install`; the same reinstall fixes `graphify --help` exiting 126 with `bad interpreter` (its old pipx venv is gone) |
 | claude-guard | `command -v claude-guard` finds it (it has no `--help`; with no subcommand it prints usage and exits 2); `~/.claude/settings.json` registers `claude-guard infra-guard` and `claude-guard bash-hygiene` | `cargo install --path gates/rust/claude-guard`, then `skillsync hooks install` |
 | skills | `pr-proof`, `systematic-debugging` under `~/.claude/skills/` | `cp -R skills/<name> ~/.claude/skills/<name>` |
+| ritual-feedback | `ritual-feedback --version` exits 0 | `cargo install --locked --git https://github.com/decebal/decebal-claude-skills ritual-feedback` |
 
-Report: `preflight: cn ok · egm ok · semantic-isa ok · cos ok · graphify ok · claude-guard ok · skills ok`,
+Report: `preflight: cn ok · egm ok · semantic-isa ok · cos ok · graphify ok · claude-guard ok · skills ok · feedback ok`,
 with `missing (<install command>)` in place of `ok` where it applies. You run every EGM step below
 yourself: read the EGM skill's `SKILL.md` and follow it, spawning its `egm:egm-*` reviewers in
 fresh contexts ([ritual's EGM section](../ritual/SKILL.md#egm)).
@@ -88,5 +89,6 @@ VERIFY changed, goes in the report's Drift section and in the design, in the sam
 ## Everything else
 
 Finding the step, the `ritual-*` lines, where the epic and files live, the gates, bugs skipping
-Think and Spec, and per-org notes ([repo-notes.md](../ritual/references/repo-notes.md)) are as in
-[ritual](../ritual/SKILL.md).
+Think and Spec, recording feedback with `--skill ritual-full`
+([Feedback](../ritual/SKILL.md#feedback)), and per-org notes
+([repo-notes.md](../ritual/references/repo-notes.md)) are as in [ritual](../ritual/SKILL.md).

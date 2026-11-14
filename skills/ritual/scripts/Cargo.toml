@@ -1,0 +1,40 @@
+# ritual-feedback: records ritual run feedback in an embedded AllSource store,
+# exports it as frozen cases, scores ritual skill text against them as an
+# autoresearch JSONL evaluator, and drives the weekly improvement loop.
+[workspace]
+members = ["."]
+resolver = "2"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+uninlined_format_args = "warn"
+
+[package]
+name = "ritual-feedback"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+license = "MIT"
+publish = false
+description = "Ritual run feedback in AllSource, scored weekly by autoresearch"
+
+[dependencies]
+allsource-core = { version = "0.28", default-features = false, features = ["embedded"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["rt", "macros"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[[bin]]
+name = "ritual-feedback"
+path = "src/main.rs"
+
+[lints]
+workspace = true
