@@ -15,9 +15,12 @@ This skill routes. It names the step, loads that step's reference, and stops at 
 For page-by-page interface refinement, use `ui-refinement` alongside this router when installed. It contributes page decisions, captures and checks to the same flow; this skill retains stage and approval gates.
 
 **Requires** Chronis (`cn`, `cargo install chronis`) and `ritual-feedback` ([Feedback](#feedback)).
-**Optional:** EGM, `cos`, graphify,
-claude-guard; [ritual-full](../ritual-full/SKILL.md) turns them all on. Install and a worked
-example: [docs/ritual-zero-to-hero.md](../../docs/ritual-zero-to-hero.md).
+**Uses** allstack's run-free tools when installed ([allstack](#allstack-tools-no-run)) and the
+`forge-prove-it` skill in Review. **Optional:** `cos`, graphify, claude-guard;
+[ritual-full](../ritual-full/SKILL.md)'s preflight requires graphify, claude-guard and allstack,
+and reports `cos` as a soft row. EGM is off in both unless
+the user asks for it ([Opt-in: EGM](#opt-in-egm)). Install and a worked example:
+[docs/ritual-zero-to-hero.md](../../docs/ritual-zero-to-hero.md).
 
 ## Find the step
 
@@ -47,11 +50,11 @@ Report the step in one line before acting: `ritual: <repo> <epic> is at <step> b
 | Step | Writes | Names it on the epic as |
 |---|---|---|
 | Think | `docs/plans/YYYY-MM-DD-<slug>-brief.md` | `ritual-brief: <path>` |
-| Spec | the flow's branch; `…-design.md` and `…-design-review.md` committed on it | `ritual-branch: <branch>`, `ritual-design: <path>`, then `ritual-approved: …` (written by `cos ritual approve`, on the user's decision) |
+| Spec | the flow's branch; `…-design.md` and two `…-design-review-*.md` committed on it | `ritual-branch: <branch>`, `ritual-design: <path>`, then `ritual-approved: …` (written by `cos ritual approve`, on the user's decision) |
 | Plan | `…-plan.md` (PRD, gates, testing trophy) on the branch; beads under the epic | `ritual-plan: <path>` |
 | Build | commits on the branch | the beads, closed with a reason |
-| Review | `…-code-review.md`, or a review on the PR | `ritual-review: <path or PR> clean` or `… findings` |
-| Ship | the PR and its evidence (`pr-proof`) | `ritual-pr: <url>`, then after the merge `ritual-shipped: <commit>` |
+| Review | `…-code-review.md` with the repo's prove-it verdict, or a review on the PR; a forged `prove-it` skill when the repo had none | `ritual-review: <path or PR> clean` or `… findings` |
+| Ship | the PR and its evidence (`pr-proof`, `allstack check` receipts) | `ritual-pr: <url>`, then after the merge `ritual-shipped: <commit>` |
 | Reflect | `docs/reports/YYYY-MM-DD-<slug>.md` | `ritual-report: <path>` |
 
 Name a file with `cn task edit <epic> --append-description "ritual-<key>: <value>" --toon`; the
@@ -67,8 +70,12 @@ line in the repo's docs index in the same commit.
   `cn approve` without `cos`) only when the user explicitly tells you to approve in this
   conversation, quote that instruction in your report, and never approve on your own initiative.
 - **Build → Review:** every bead done, and the repo's tests ran. A compile, a lint or a
-  `--no-run` build is not a test run.
-- **Review → Ship:** a reviewer with fresh context returned clean, newer than the last change.
+  `--no-run` build is not a test run. Each gate runs as an `allstack check` receipt, or under
+  `timeout -k 15 300` without allstack.
+- **Review → Ship:** prove-it runs on every Review: a reviewer with fresh context ran the repo's
+  prove-it (forged first if missing) on the PR range and returned clean, newer than the last change.
+  🟢 is clean, 🔴 is findings, 🟡 is findings until each hand-check is answered in the PR body
+  ([review.md](references/review.md) step 5).
 - **Ship:** one PR, one commit, the test plan ticked, pr-guard satisfied.
 
 A human approves the design; nothing else in the flow waits on a person. Manual and external
@@ -106,27 +113,43 @@ events are the cases a weekly autoresearch loop scores candidate edits against
 ([ritual-feedback.md](../../docs/ritual-feedback.md)). Under this skill a missing binary never
 blocks a step: say so in the step report and install it. `ritual-full`'s preflight requires it.
 
-## EGM
+## allstack: tools, no run
 
-The Elephant-Goldfish Model plugin (`egm@egm`) is the deeper Think, Spec and Reflect path, and
-you run it. Its skills set `disable-model-invocation: true`, which only keeps them out of
-automatic loading; read the skill file and follow it:
+[allstack](https://github.com/all-source-os/allstack) supplies receipts and recall. The ritual
+uses only these subcommands, starts no allstack run, and never runs `allstack init` on a repo:
 
-- Claude Code: `~/.claude/plugins/cache/egm/egm/<version>/skills/egm-<step>/SKILL.md`, the
-  version `claude plugin list` shows. Read that plugin's `docs/claude.md` first.
-- Spawn its Goldfish reviewers as the subagent types it names (`egm:egm-zoom-out`,
-  `egm:egm-comprehension`, `egm:egm-design`, …) in fresh contexts; never review in your own.
-- At each EGM checkpoint ask the user its one question, unless they asked for the
-  uninterrupted run.
-
-| Step | EGM skill | Writes |
+| Step | Command | Gives |
 |---|---|---|
-| Think | `egm-brainstorm` | `concepts_brief.md` |
-| Spec | `egm-draft`, then `egm-review`, `egm-resolve` or `egm-review-loop` | `design_draft.md`, review reports |
-| Reflect | `egm-drift-report` | the drift report |
+| Preflight | `allstack doctor` | readiness JSON; `executables_ready: true` is required, `setup_ready` is reported only |
+| Think | `allstack recall "<topic>"`; `allstack catalog` | prior decisions and reviews, source-linked; the repo's workflows (delivery or bugfix) when it has `workflows/catalog.toml` |
+| Build, Review, Ship | `allstack check --expect-exit <n> --seconds <2..270> -- <absolute path to the tool> <args>` | a receipt under `.allstack/checks/`: executable digest, checkout, stdout and stderr digests |
+| Build, after a crash | `allstack checkpoint`, `recover`, `resume`, each `--epoch <n> <run>` | only for work already under an allstack run; without one, recovery is the branch and the beads |
+| Ship | `allstack evidence <run>` | that run's gate receipts, same condition |
+| Reflect | `allstack remember --kind review\|decision\|qa --source <file> --summary "<one line>"` | a Prime node bound to the file's digest; separate from `ritual-feedback` |
 
-The persona reviewers are read-only: write each stage's report from their output yourself. Move
-`concepts_brief.md` and `design_draft.md` to the dated paths above and index them.
+- `check` refuses until `.allstack/` is git-ignored. Append `.allstack/` to `info/exclude` under
+  `git rev-parse --git-common-dir`; never edit the repo's `.gitignore` for it.
+- `check` caps `--seconds` at 270, inside the 5-minute rule. A gate that needs more is split,
+  never raised. Cite each receipt's directory as the command's evidence.
+- `recall` on a repo with no Prime store returns nothing: say "no store", not "no history".
+- Without allstack, run the same commands bare under `timeout -k 15 300` and say so in the report.
+
+## Opt-in: EGM
+
+The Elephant-Goldfish Model plugin (`egm@egm`) is off by default. Use it only when the user asks
+for EGM, and only after `claude plugin list` shows `egm@egm` enabled and
+`~/.claude/plugins/cache/egm/egm/<version>/skills/egm-<step>/SKILL.md` exists; otherwise say it is
+missing and run the native default. Its skills set `disable-model-invocation: true`: read the
+skill file and follow it, spawn its reviewers in fresh contexts (never review in your own), and
+write each report from their output yourself.
+
+| Step | Native default | EGM command | Trigger |
+|---|---|---|---|
+| Think | brief in conversation ([think.md](references/think.md)) | `egm-brainstorm` | user asks for EGM |
+| Spec | native draft; two fresh-context reviewers ([spec.md](references/spec.md)) | `egm-draft`, `egm-review`, `egm-resolve` or `egm-review-loop` | user asks for EGM |
+| Reflect | drift compared by hand ([reflect.md](references/reflect.md)) | `egm-drift-report` | user asks for EGM |
+
+Move `concepts_brief.md` and `design_draft.md` to the dated paths above and index them.
 
 ## Graphs
 

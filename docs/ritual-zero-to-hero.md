@@ -45,11 +45,12 @@ flowchart LR
 
 | | `ritual` | `ritual-full` |
 |---|---|---|
-| Required | `cn` | `cn`, EGM, semantic-isa, `cos`, graphify, claude-guard, and the `pr-proof`, `systematic-debugging` skills (EGM covers Think) |
+| Required | `cn`, `ritual-feedback` | `cn`, `ritual-feedback`, allstack, semantic-isa, graphify, claude-guard, and the `pr-proof`, `systematic-debugging`, `forge-prove-it` skills; `cos` is a soft row |
 | Missing optional tool | that path is skipped | preflight stops and prints the install command; the user may say "continue without X" |
 | Design | decision, context, design, alternatives, security, testing, confidence, acceptance | the same plus a mandatory **Semantic ISA** section |
-| Design review | one fresh-context reviewer | two: `/egm:egm-review` and a hired `ritual-goldfish` |
-| Build and Review | in session or hired | hired `builder` and `reviewer` per bead |
+| Design review | two fresh-context reviewer agents | the same two, checking the ISA section too |
+| Build and Review | in session or hired; the repo's prove-it on every Review | hired `builder` and `reviewer` per bead; prove-it plus the sink-to-VERIFY check |
+| EGM | off; opt-in when you ask for it | off; opt-in when you ask for it |
 
 Pick `ritual` for small repos or a first run. Pick `ritual-full` when the change has side effects
 worth naming (files, network, APIs, messages, deploys, data writes).
@@ -115,31 +116,39 @@ cp -R skills/ritual-full ~/.claude/skills/ritual-full
 cp -R skills/semantic-isa ~/.claude/skills/semantic-isa
 cp -R skills/pr-proof ~/.claude/skills/pr-proof
 cp -R skills/systematic-debugging ~/.claude/skills/systematic-debugging
+cp -R skills/forge-prove-it ~/.claude/skills/forge-prove-it
 ls ~/.claude/skills
 ```
 
-Expect the five names in the listing. Think's brainstorm comes from EGM (`/egm:egm-brainstorm`), so
-`brainstorming` is not needed. semantic-isa's DESIGN mode also borrows `arch`,
+Expect the six names in the listing. Think runs in conversation, so `brainstorming` is not
+needed. semantic-isa's DESIGN mode also borrows `arch`,
 `security-review`, `rust-clean-architecture` and `integration-test`; copy them the same way if you
 want those steps. To link every skill at once instead, see [skillsync](skillsync.md)
 (`skillsync skills install`).
 
-### 3.5 EGM plugin
+### 3.5 allstack, required by ritual-full
 
-From the [EGM README](https://github.com/google/elephant-goldfish-model#install) ([egm.dev](https://egm.dev)):
+From [all-source-os/allstack](https://github.com/all-source-os/allstack):
 
 ```sh
-claude plugin marketplace add google/elephant-goldfish-model
-claude plugin install egm@egm
-claude plugin list
+git clone https://github.com/all-source-os/allstack ~/src/allstack
 ```
 
-Expect an `egm@egm` entry with `Status: ✔ enabled`. Start a new session. Its seven skills are
-`/egm:egm-brainstorm`, `/egm:egm-draft`, `/egm:egm-review`, `/egm:egm-resolve`,
-`/egm:egm-review-loop`, `/egm:egm-bootstrap` and `/egm:egm-drift-report`. They set
-`disable-model-invocation: true`, which keeps them out of automatic loading. The ritual skills
-run them anyway: Claude reads the skill's `SKILL.md` from the plugin directory and follows it,
-spawning EGM's `egm:egm-*` reviewers in fresh contexts. You can still type them yourself.
+Then, in the clone:
+
+```sh
+cargo install --path . --locked
+allstack doctor
+```
+
+Expect JSON with `"executables_ready": true`. `setup_ready: false` is fine: the ritual uses
+only run-free tools (`doctor`, `recall`, `catalog`, `check`, `remember`) and never runs
+`allstack init`. `allstack check` refuses until `.allstack/` is git-ignored; the ritual appends it
+to the repo's local `info/exclude`.
+
+EGM is opt-in and not part of this install: add it per the
+[EGM README](https://github.com/google/elephant-goldfish-model#install) only if you will ask for
+it, and the ritual checks `claude plugin list` before using it.
 
 ### 3.6 cos (chief of staff)
 
@@ -223,8 +232,9 @@ cn task create "Share flag" --type epic --toon --description $'Post the greeting
 
 Output: `created:epic:t-561aed:Share flag` (ids are random).
 
-**Spec.** It cuts the flow's branch in its own worktree, names it, drafts the design, has a
-fresh-context reviewer write `…-design-review.md` with `verdict: clean`, and names the design:
+**Spec.** It cuts the flow's branch in its own worktree, names it, drafts the design, has two
+fresh-context reviewers write `…-design-review-a.md` and `…-design-review-b.md`, each with
+`verdict: clean`, and names the design:
 
 ```sh
 git worktree add -b feat/share-flag ../hello-share-flag origin/main
@@ -238,7 +248,7 @@ Approval is your decision, and there are two ways to give it:
 - You type the command in your own terminal:
 
   ```sh
-  cos ritual approve t-561aed docs/plans/2026-11-11-share-flag-design.md --by "Your Name" --review docs/plans/2026-11-11-share-flag-design-review.md
+  cos ritual approve t-561aed docs/plans/2026-11-11-share-flag-design.md --by "Your Name" --review docs/plans/2026-11-11-share-flag-design-review-b.md
   ```
 
   It asks for `yes`, appends `ritual-approved: <path> sha256:<hex> by Your Name` and runs
@@ -270,10 +280,15 @@ Only US-001 is ready; US-002 shows `blocked_by` US-001.
 **Build.** Per ready bead: `cn claim <id> --toon`, test first, code, test green, commit on
 `feat/share-flag`, then `cn done <id> --toon --reason "<commit, test command, result>"`.
 
-**Review.** A fresh-context reviewer reads the design, the diff and the repo, runs the feature,
-and writes `…-code-review.md`: `ritual-review: docs/plans/2026-11-11-share-flag-code-review.md clean`.
+**Review.** `hello` has no `.claude/skills/prove-it/SKILL.md`, so Claude runs
+`/forge-prove-it --host claude --dry-run`, then `/forge-prove-it --host claude --no-interview`,
+and keeps the `UNVERIFIED:` lines for the PR body. A fresh-context reviewer reads the design, the
+diff and the repo, runs the feature (each command as an `allstack check` receipt), runs the new
+prove-it on the PR range, and writes `…-code-review.md`:
+`ritual-review: docs/plans/2026-11-11-share-flag-code-review.md clean`.
 
-**Ship.** One commit, `pr-proof` evidence, one PR: `ritual-pr: <url>`. After the merge:
+**Ship.** One commit (the forged prove-it included), `pr-proof` evidence, one PR whose body lists
+the open questions: `ritual-pr: <url>`. After the merge:
 `ritual-shipped: <merge commit>`.
 
 **Reflect.** `docs/reports/2026-11-11-share-flag.md`, `ritual-report: <path>`, then
@@ -312,23 +327,24 @@ were observed in a scratch repo; the later lines follow the same `--append-descr
 Ask: "ritual full: hello --share posts the greeting to the configured webhook". Differences:
 
 1. **Preflight** prints one line, for example
-   `preflight: cn ok · egm ok · semantic-isa ok · cos ok · graphify missing (uv tool install graphifyy) · claude-guard ok · skills ok`,
+   `preflight: cn ok · allstack ok · semantic-isa ok · graphify missing (uv tool install graphifyy) · claude-guard ok · skills ok · feedback ok · cos ok`,
    and stops until graphify is installed or you say "continue without graphify".
-2. **Think.** Claude runs EGM's `egm-brainstorm` (asking you its questions) and `graphify query`
-   on the config and HTTP modules. `concepts_brief.md` moves to the dated brief path.
-3. **Spec.** Claude runs EGM's `egm-draft`; `design_draft.md` moves to the dated design path and
-   gains the Semantic ISA section (below). Two reviews in separate contexts: Claude runs EGM's
-   `egm-review` on `docs/plans/2026-11-11-share-flag-design.md`, and hires a Goldfish with
-   `cos agents spawn --role ritual-goldfish --repo ../hello-share-flag --prompt "Review docs/plans/2026-11-11-share-flag-design.md"`.
-   (The role exists in cos's `templates/context/agents.json`; this hire was not run for this
-   guide.) Findings go through EGM's `egm-resolve`; both reviews are re-run until clean on the same digest;
-   then `cos ritual check` and your approval, as in section 4.
+2. **Think.** In conversation, with `allstack recall "share webhook"` for earlier decisions and
+   `graphify query` on the config and HTTP modules.
+3. **Spec.** Claude drafts the design with the Semantic ISA section (below). Two reviewer agents
+   in separate fresh contexts, each given only `docs/plans/2026-11-11-share-flag-design.md` and
+   the repo root; one may be a hired Goldfish
+   (`cos agents spawn --role ritual-goldfish --repo ../hello-share-flag --prompt "Review docs/plans/2026-11-11-share-flag-design.md"`;
+   not run for this guide). Findings are resolved in the design and both reviews re-run until
+   clean on the same digest; then `cos ritual check` and your approval, as in section 4.
 4. **Plan.** Each sink gets a bead whose done-when is its VERIFY test.
-5. **Build and Review.** `cos agents spawn --role builder` per ready bead and
-   `cos agents spawn --role reviewer` for the review; the reviewer confirms each sink's VERIFY in
-   code.
-6. **Reflect.** Claude runs EGM's `egm-drift-report` on `docs/plans/`; any new sink goes in the report and the
-   design.
+5. **Build and Review.** `cos agents spawn --role builder` per ready bead; the reviewer runs the
+   repo's prove-it (forged as in section 4) and confirms each sink's VERIFY in code.
+6. **Reflect.** Claude compares the design with the code by hand; any new sink goes in the report
+   and the design.
+
+Say "use EGM" to swap Think, Spec or Reflect for EGM's commands
+([opt-in table](../skills/ritual/SKILL.md#opt-in-egm)).
 
 The ISA section for the toy:
 
@@ -382,7 +398,7 @@ diff touches only src/format.rs (pure string formatting).`
 |---|---|---|
 | Spec → Plan | cutting beads | `cos ritual check <epic>` exits 0: approved, and the design's sha256 equals the newest `ritual-approved:` digest |
 | Build → Review | review | every bead done; the tests ran (a compile, lint or `--no-run` build is not a test run) |
-| Review → Ship | the PR | a fresh-context review, newer than the last change, says `clean` |
+| Review → Ship | the PR | a fresh-context review that ran the repo's prove-it, newer than the last change, says `clean` |
 | Ship | merge | one PR, one commit, test plan ticked |
 
 The approval is what makes the design a decision rather than the author's opinion of its own
@@ -430,8 +446,9 @@ Build and Ship. The repo's own `CLAUDE.md` wins over it. A fictional example:
 | `cos ritual check` prints `missing design` | no `ritual-design:` line, or the file is not on the flow's branch | commit the design on the branch and append the line |
 | agent reports `cos ritual approve: unknown flag --yes` | cos predates the `--yes` change | update chief-of-staff-v2 to main, `task setup`, then ask the agent to re-run; without `--yes` the user answers the prompt in their terminal |
 | agent did not approve when asked | the instruction was not explicit in the conversation, or the design is not clean | say "approve <design>" in the conversation; the agent checks the review verdict and the digest before running it |
-| Claude says it cannot run `/egm:egm-review` | its skill list hides EGM (`disable-model-invocation: true`) and the ritual skill is older than this change | update the ritual skills; Claude then reads `~/.claude/plugins/cache/egm/egm/<version>/skills/egm-review/SKILL.md` and follows it. Or type the command yourself |
-| `/egm:` commands not found | plugin missing, or session started before install | `claude plugin list`; install per 3.5; start a new session |
+| you asked for EGM and Claude says it is missing | `claude plugin list` shows no `egm@egm`, or the session started before install | install per the EGM README, start a new session; without it the native path runs |
+| `allstack check` errors `ignore .allstack/ before retaining command evidence` | `.allstack/` is not git-ignored | append `.allstack/` to `info/exclude` under `git rev-parse --git-common-dir` |
+| `allstack check` errors `check requires an absolute executable path` | argv starts with a bare name | pass the path `command -v <tool>` prints |
 | ritual-full preflight stops on a tool | default-on means missing blocks | install with the printed command, or say "continue without <tool>" |
 | `cn task create` errors `unexpected argument '- '` | a description starting with `-` reads as a flag | `--description="- [ ] …"` or start the text with words |
 | repo has `.beads/` and no `.chronis/` | legacy beads tracker | `cn migrate-beads --toon`, then verify with `cn list --toon` before Plan |
@@ -445,6 +462,7 @@ Build and Ship. The repo's own `CLAUDE.md` wins over it. A fictional example:
 | bead | one story under the epic: a Chronis task an agent can finish in one session |
 | ready set | open beads with nothing blocking them: `cn ready --toon` |
 | Elephant | the author with the full context, who drafts the brief and design (EGM's term) |
+| prove-it | the repo's own generated feature reviewer (`forge-prove-it` writes it); Review runs it on every PR |
 | Goldfish | a reviewer with no memory of the author's conversation: only the document and the code |
 | drift | the design no longer matches what was approved, or the code no longer matches the design |
 | sink | an Execution instruction where tainted data must never arrive unchecked: an outbound message, a payment, a delete, a write to a shared system |

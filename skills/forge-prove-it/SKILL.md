@@ -77,11 +77,12 @@ unwired gates must not become one, so it also ships no gate script of its own.
 
 G1–G4 share no state. **Run them inline in the main thread by default**; the agent counts above
 are ceilings, not quotas. Spawn an agent for G2 or G4 only when the inline pass cannot settle a
-slot without reading more than the main context can hold, and ask the decision router first
-when one is installed (G0):
+slot without reading more than the main context can hold. The run needs no router: with none
+installed every phase stays inline, including for `--no-interview` callers such as the ritual's
+Review. When G0 finds one, even under `--no-interview`, ask it first, through the `route` command its skill names:
 
 ```
-~/Projects/muse-jev-playbook/route '{"goal":"census a repository to generate a feature reviewer","kind":"coding","cached_artifact":<true when --update finds a current skill>,"constraints":["agents only for slots the inline pass could not settle"]}'
+route '{"goal":"census a repository to generate a feature reviewer","kind":"coding","cached_artifact":<true when --update finds a current skill>,"constraints":["agents only for slots the inline pass could not settle"]}'
 ```
 
 `allow_subagent` permits the agent; `reuse_cache` on `--update` means re-census only the facts
@@ -97,10 +98,10 @@ Establish, and print:
   `CLAUDE.md` exist
 - the stacks, from manifests actually present, never from file extensions alone
 - whether a generated skill is already here (`--update` path)
-- whether a decision router is installed: `test -x ~/Projects/muse-jev-playbook/route` and the
-  `jev-decision-layer` skill. It fills the emitted skill's `{{router}}` slot (Phase 1.5 in
-  `references/emitted-skill-template.md`); absent means the emitted sizing is `inline` unless
-  `--deep`
+- whether a decision router is installed: the `jev-decision-layer` skill and the `route` command
+  it names, resolved on this machine, never from a hard-coded path. Optional. It fills the emitted
+  skill's `{{router}}` slot (Phase 1.5 in `references/emitted-skill-template.md`); absent means
+  `router: none` and the emitted sizing is `inline` by default
 - the trunk's name — read it, do not assume `main`. Every delta probe in the emitted skill is
   measured against a base ref, so an unresolvable trunk poisons the whole run; make it mark itself
   instead. In order, stopping at the first that answers:

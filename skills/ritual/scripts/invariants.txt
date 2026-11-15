@@ -11,3 +11,5 @@ ritual/references/ship.md: One PR, one commit
 ritual/SKILL.md: never review in your own
 ritual/SKILL.md: Manual and external actions never become beads
 ritual-full/SKILL.md: never skip one silently
+ritual/SKILL.md: prove-it runs on every Review
+ritual/references/review.md: a forged prove-it is committed on the feature PR

@@ -62,7 +62,8 @@ that names no repository, customer, path or diff line, and maps its action:
 
 The router is advisory: a size that differs from its action is stated in one header line, and a
 router error or timeout means `inline` with `router: unavailable`. When G0 finds no router,
-emit the size table without the router rows: `inline` unless `--deep`. The header carries
+emit the size table without the router rows: `inline`, and `fan-out` only on an explicit `--deep`.
+No caller needs `--deep`; a default run never depends on it. The header carries
 `size: inline|fan-out · router: <action|none|unavailable>`.
 
 **Phase 3 scales with findings**: in `inline`, the main thread tries to kill each finding itself,
