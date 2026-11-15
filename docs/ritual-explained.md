@@ -124,9 +124,9 @@ beat done "Round 3":
 
 The agent ran every command except one {{observed: `log.jsonl`}}. Chronis (`cn`) held the epic, the beads and their dependency edge; `cos` answered the gate (`unapproved`, exit 1, then `approved: … unchanged since approval`) and inferred the step for `cos flows` at seven points, reading spec, spec, build, review, ship, reflect and done {{observed: `log.jsonl`, `cos … flows` lines}}. The fresh reviewers wrote their verdict files and nothing else.
 
-In `ritual-full` two more parties join: EGM, whose `/egm:` commands the user types because they set `disable-model-invocation: true`, and `cos agents spawn` hires for the Goldfish, builder and reviewer {{observed: `skills/ritual-full/SKILL.md`}}. Neither ran here; they appear dashed below.
+In `ritual-full` two more parties join: the repo's prove-it, which a fresh reviewer runs on the PR range (forged by `forge-prove-it` when the repo has none), and `cos agents spawn` hires for the Goldfish, builder and reviewer {{observed: `skills/ritual-full/SKILL.md`, `skills/ritual/references/review.md`}}. Neither ran here; they appear dashed below. EGM is opt-in since this run and joins only when the user asks for it.
 
-```markdy Sequence of messages between the person, the agent, Chronis, cos, fresh reviewers and EGM
+```markdy Sequence of messages between the person, the agent, Chronis, cos, fresh reviewers and prove-it
 scene type=sequence
 layout LR
 user You "You"
@@ -134,7 +134,7 @@ service Agent "Agent"
 database Cn "Chronis cn"
 security Cos "cos"
 service Fresh "Fresh reviewer"
-service Egm "EGM, not run"
+service Prove "prove-it, not run"
 beat reveal "Parties":
   show $nodes stagger=60ms
 beat think "Think and Spec":
@@ -152,7 +152,7 @@ beat build "Plan to Reflect":
   Agent -> Fresh "diff + design"
   Agent <- Fresh "clean"
   Agent -> Cn "cn done t-de1322"
-  Agent ~> Egm "/egm:egm-review, typed by you"
+  Fresh ~> Prove "prove-it on the PR range"
 ```
 
 ## The epic is the flow's memory: nine lines name every hand-over {#s-epic}
@@ -207,11 +207,13 @@ beat name "Each step names its file":
 | | `ritual` (this run) | `ritual-full` |
 |---|---|---|
 | Missing tool | that path is skipped | preflight stops and prints the install command |
-| Think | brief in conversation | you type `/egm:egm-brainstorm`; `graphify query` on the touched modules |
+| Think | brief in conversation | the same, plus `allstack recall` and `graphify query` on the touched modules |
 | Spec design | decision, context, design, security, testing, acceptance | the same plus a mandatory Semantic ISA section |
-| Spec review | one fresh reviewer per round | two in separate contexts: `/egm:egm-review` and a hired `ritual-goldfish` |
-| Build, Review | in session | `cos agents spawn --role builder` per bead, `--role reviewer` with a sink-to-VERIFY check |
-| Reflect | report | plus `/egm:egm-drift-report` and a new-sink diff |
+| Spec review | one fresh reviewer per round | two fresh-context reviewer agents, each with only the design path and the repo root |
+| Build, Review | in session | `cos agents spawn --role builder` per bead; the reviewer runs the repo's prove-it and a sink-to-VERIFY check |
+| Reflect | report | plus a hand drift check and a new-sink diff |
+
+> **Since this run.** The table above is the current skill: EGM is off by default in both skills and opt-in on request, the lean ritual also uses two Spec reviewers and runs prove-it in Review, and ritual-full's preflight checks allstack in place of EGM, with `cos` a soft row. The preflight below is what this run observed under the earlier rows.
 
 This run used ritual-full's Semantic ISA section anyway, which is where both review findings came from {{observed: the design's `## Semantic ISA`}}. The ritual-full preflight ran for real on the same machine {{observed: `log.jsonl`, `preflight` lines}}:
 
@@ -225,7 +227,7 @@ This run used ritual-full's Semantic ISA section anyway, which is where both rev
 | claude-guard | payload test for `cn approve` and `cos ritual approve` | `"permissionDecision":"deny"` for both [[have]] |
 | skills | `pr-proof`, `systematic-debugging` | present [[have]] |
 
-So the preflight line on this machine reads `graphify missing (uv tool install graphifyy)`, and ritual-full would stop there until it is reinstalled or the user says "continue without graphify" {{inferred from `skills/ritual-full/SKILL.md` preflight rules}}. The commands it would then run, none run in this proof: `/egm:egm-draft`, `/egm:egm-review docs/plans/2026-11-12-shout-design.md`, `cos agents spawn --role ritual-goldfish --repo ../greeter-shout`, `cos agents spawn --role builder`, `cos agents spawn --role reviewer`, `/egm:egm-drift-report docs/plans/` {{not checked}}.
+So the preflight line on this machine reads `graphify missing (uv tool install graphifyy)`, and ritual-full would stop there until it is reinstalled or the user says "continue without graphify" {{inferred from `skills/ritual-full/SKILL.md` preflight rules}}. The commands the current skill would then run, none run in this proof: `allstack recall`, two fresh reviewer agents on `docs/plans/2026-11-12-shout-design.md`, `cos agents spawn --role builder`, `/forge-prove-it --host claude --dry-run` then `--no-interview`, and the forged prove-it on the PR range {{not checked}}.
 
 ```markdy C4 container view of where the ritual-full tools plug into the steps
 scene type=architecture
@@ -234,22 +236,24 @@ step Think "Think"
 step Spec "Spec"
 step Build "Build + Review"
 step Reflect "Reflect"
-runtime Egm "EGM"
+runtime Alls "allstack"
 policy Isa "Semantic ISA"
 security Two "two Goldfish"
 service Hires "cos hires"
+security Prove "prove-it"
 database Graph "graphify"
 group steps "The seven steps": Think Spec Build Reflect
 beat reveal "Containers":
   show $nodes stagger=50ms
 beat plug "Where each plugs in":
-  Egm -> Think "brainstorm"
+  Alls -> Think "recall"
   Graph -> Think "context"
-  Egm -> Spec "draft, review"
   Isa -> Spec "ISA section"
   Two -> Spec "two reviews"
   Hires -> Build "builder, reviewer"
-  Egm -> Reflect "drift report"
+  Alls -> Build "check receipts"
+  Prove -> Build "Review verdict"
+  Alls -> Reflect "remember"
   glow Isa color=#5f6b76
 ```
 
@@ -336,7 +340,8 @@ beat try "Attempts":
 
 ## What I have not checked {.notchecked}
 
-- EGM commands (`/egm:egm-brainstorm`, `-draft`, `-review`, `-resolve`, `-drift-report`): not run; they need the user to type them.
+- EGM commands (`/egm:egm-brainstorm`, `-draft`, `-review`, `-resolve`, `-drift-report`): not run; opt-in in the current skills.
+- prove-it and `forge-prove-it`: not run; the current Review step forges and runs them.
 - `cos agents spawn` hires (Goldfish, builder, reviewer): not run; they start paid Claude runs.
 - A real PR, CI and a forge merge: Ship was a local squash and a local fast-forward of `master`; nothing was pushed.
 - graphify context: the binary is broken on this machine (exit 126) and the toy repo has no `graphify-out/`.

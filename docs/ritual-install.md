@@ -12,16 +12,18 @@ the Codex skills live in [decebal-codex-skills](https://github.com/decebal/deceb
 | Rust toolchain | [rustup.rs](https://rustup.rs) | `cargo --version` |
 | GitHub CLI | [cli.github.com](https://cli.github.com), then `gh auth login` | `gh auth status` |
 | Chronis `cn` | `cargo install chronis`, then `cn init --toon` once per repo, in its main checkout | `cn --help` exits 0; `.chronis/` in the main checkout |
-| cos | clone [chief-of-staff-v2](https://github.com/decebal/chief-of-staff-v2), then `task setup` in it (needs [Task](https://taskfile.dev/installation/)) | `cos ritual check --help` exits 0; `cos ritual approve --help` lists `--yes` |
+| allstack | clone [all-source-os/allstack](https://github.com/all-source-os/allstack), then `cargo install --path . --locked` in it | `allstack doctor` exits 0 and prints `"executables_ready": true` (`setup_ready: false` is fine: the ritual never runs `allstack init`) |
+| cos (soft) | clone [chief-of-staff-v2](https://github.com/decebal/chief-of-staff-v2), then `task setup` in it (needs [Task](https://taskfile.dev/installation/)) | `cos ritual check --help` exits 0; `cos ritual approve --help` lists `--yes`. Missing is reported, not blocking |
 | uv | [docs.astral.sh/uv](https://docs.astral.sh/uv/) | `uv --version` |
 | graphify | `uv tool install graphifyy` | `graphify --help` exits 0 (126 with `bad interpreter` means reinstall); `graphify-out/` in the repo, built with `/graphify .` |
-| EGM | Claude Code: `claude plugin marketplace add google/elephant-goldfish-model`, then `claude plugin install egm@egm`. Codex: add the marketplace per EGM's `docs/codex.md` and enable `egm@egm` | Claude Code: `claude plugin list` shows `egm@egm` enabled. Codex: `~/.codex/config.toml` has `[plugins."egm@egm"] enabled = true` |
 
-The agent runs EGM itself: its skills set `disable-model-invocation: true`, which only keeps them
-out of automatic loading, so the ritual skills tell the agent to read the EGM skill's `SKILL.md`
-and follow it, spawning EGM's reviewers in fresh contexts. Codex installs EGM as a Codex plugin
-(marketplace `https://github.com/google/elephant-goldfish-model`, path `.agents/plugins`) and runs
-it the same way, following EGM's `docs/codex.md`; its reviewers are spawned with `spawn_agent`.
+`allstack check` needs `.allstack/` git-ignored; the ritual appends it to the repo's local
+`info/exclude`, never to `.gitignore`.
+
+**EGM is opt-in** and no preflight checks it. Install it only to use it when you ask for EGM:
+Claude Code `claude plugin marketplace add google/elephant-goldfish-model`, then
+`claude plugin install egm@egm` (check: `claude plugin list` shows it enabled); Codex per EGM's
+`docs/codex.md`. The ritual checks the plugin is present before following an EGM skill.
 
 `cos ritual approve --yes` is what lets an agent record an approval the user told it to make.
 It arrives with [chief-of-staff-v2#23](https://github.com/decebal/chief-of-staff-v2/pull/23).
@@ -32,7 +34,7 @@ Without it, the agent stops and the user runs `cos ritual approve` in their own 
 | Tool | Install | Check |
 |---|---|---|
 | Claude Code | [setup docs](https://code.claude.com/docs/en/setup) | `claude --version` |
-| Skills | from this repo: `cp -R skills/<name> ~/.claude/skills/<name>` for `ritual`, `ritual-full`, `semantic-isa`, `pr-proof`, `systematic-debugging` (and `ui-refinement` for interface work) | the five folders exist under `~/.claude/skills/` |
+| Skills | from this repo: `cp -R skills/<name> ~/.claude/skills/<name>` for `ritual`, `ritual-full`, `semantic-isa`, `pr-proof`, `systematic-debugging`, `forge-prove-it` (and `ui-refinement` for interface work) | the six folders exist under `~/.claude/skills/` |
 | claude-guard and skillsync | `cargo install --path gates/rust/claude-guard`, `cargo install --path gates/rust/skillsync`, then `skillsync hooks install` | `command -v claude-guard`; `grep -cE 'claude-guard (infra-guard\|bash-hygiene)' ~/.claude/settings.json` prints 2 or more |
 | graphify skill | `graphify install` | `/graphify` is listed in Claude Code |
 
@@ -45,7 +47,7 @@ older than #97 still denies `cn approve` and `cos ritual approve`, and with them
 | Tool | Install | Check |
 |---|---|---|
 | Codex CLI | [Codex docs](https://developers.openai.com/codex/cli) | `codex --version` |
-| Skills | from decebal-codex-skills: copy or symlink `skills/<name>` into `~/.agents/skills/` for `ritual`, `ritual-full`, `semantic-isa`, `pr-proof`, `systematic-debugging` | the five folders exist under `~/.agents/skills/` (or the repo's `.agents/skills/`) |
+| Skills | from decebal-codex-skills: copy or symlink `skills/<name>` into `~/.agents/skills/` for `ritual`, `ritual-full`, `semantic-isa`, `pr-proof`, `systematic-debugging`, `forge-prove-it` | the six folders exist under `~/.agents/skills/` (or the repo's `.agents/skills/`) |
 | codex-guard | from decebal-codex-skills: `cargo install --path gates/rust/codex-guard`, then register the hooks as its `configs/hooks.json` shows in `~/.codex/hooks.json` and trust them | `command -v codex-guard`; `~/.codex/hooks.json` names `codex-guard infra-guard`, `bash-hygiene` and `pr-guard` |
 | graphify for Codex | `graphify codex install` in the repo | the repo's `AGENTS.md` has graphify's section |
 

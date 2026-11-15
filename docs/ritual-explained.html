@@ -260,10 +260,10 @@ beat done "Round 3":
 </header>
 <div class="cols">
 <p>The agent ran every command except one <span class="src">observed: <code>log.jsonl</code></span>. Chronis (<code>cn</code>) held the epic, the beads and their dependency edge; <code>cos</code> answered the gate (<code>unapproved</code>, exit 1, then <code>approved: … unchanged since approval</code>) and inferred the step for <code>cos flows</code> at seven points, reading spec, spec, build, review, ship, reflect and done <span class="src">observed: <code>log.jsonl</code>, <code>cos … flows</code> lines</span>. The fresh reviewers wrote their verdict files and nothing else.</p>
-<p>In <code>ritual-full</code> two more parties join: EGM, whose <code>/egm:</code> commands the user types because they set <code>disable-model-invocation: true</code>, and <code>cos agents spawn</code> hires for the Goldfish, builder and reviewer <span class="src">observed: <code>skills/ritual-full/SKILL.md</code></span>. Neither ran here; they appear dashed below.</p>
+<p>In <code>ritual-full</code> two more parties join: the repo's prove-it, which a fresh reviewer runs on the PR range (forged by <code>forge-prove-it</code> when the repo has none), and <code>cos agents spawn</code> hires for the Goldfish, builder and reviewer <span class="src">observed: <code>skills/ritual-full/SKILL.md</code>, <code>skills/ritual/references/review.md</code></span>. Neither ran here; they appear dashed below. EGM is opt-in since this run and joins only when the user asks for it.</p>
 </div>
 <figure class="fig" data-markdy>
-<div class="stage" role="img" aria-label="Sequence of messages between the person, the agent, Chronis, cos, fresh reviewers and EGM"></div>
+<div class="stage" role="img" aria-label="Sequence of messages between the person, the agent, Chronis, cos, fresh reviewers and prove-it"></div>
 <script type="text/markdy">scene theme=__THEME__ type=sequence
 layout LR
 user You "You"
@@ -271,7 +271,7 @@ service Agent "Agent"
 database Cn "Chronis cn"
 security Cos "cos"
 service Fresh "Fresh reviewer"
-service Egm "EGM, not run"
+service Prove "prove-it, not run"
 beat reveal "Parties":
   show $nodes stagger=60ms
 beat think "Think and Spec":
@@ -289,9 +289,9 @@ beat build "Plan to Reflect":
   Agent -> Fresh "diff + design"
   Agent <- Fresh "clean"
   Agent -> Cn "cn done t-de1322"
-  Agent ~> Egm "/egm:egm-review, typed by you"
+  Fresh ~> Prove "prove-it on the PR range"
 </script>
-<figcaption><b>Fig. 4</b>Sequence of messages between the person, the agent, Chronis, cos, fresh reviewers and EGM</figcaption>
+<figcaption><b>Fig. 4</b>Sequence of messages between the person, the agent, Chronis, cos, fresh reviewers and prove-it</figcaption>
 </figure>
 </section>
 <section class="story" id="s-epic" aria-labelledby="h-s-epic">
@@ -349,13 +349,16 @@ beat name "Each step names its file":
 <div class="tablewrap">
 <table><thead><tr><th></th><th><code>ritual</code> (this run)</th><th><code>ritual-full</code></th></tr></thead><tbody>
 <tr><td>Missing tool</td><td>that path is skipped</td><td>preflight stops and prints the install command</td></tr>
-<tr><td>Think</td><td>brief in conversation</td><td>you type <code>/egm:egm-brainstorm</code>; <code>graphify query</code> on the touched modules</td></tr>
+<tr><td>Think</td><td>brief in conversation</td><td>the same, plus <code>allstack recall</code> and <code>graphify query</code> on the touched modules</td></tr>
 <tr><td>Spec design</td><td>decision, context, design, security, testing, acceptance</td><td>the same plus a mandatory Semantic ISA section</td></tr>
-<tr><td>Spec review</td><td>one fresh reviewer per round</td><td>two in separate contexts: <code>/egm:egm-review</code> and a hired <code>ritual-goldfish</code></td></tr>
-<tr><td>Build, Review</td><td>in session</td><td><code>cos agents spawn --role builder</code> per bead, <code>--role reviewer</code> with a sink-to-VERIFY check</td></tr>
-<tr><td>Reflect</td><td>report</td><td>plus <code>/egm:egm-drift-report</code> and a new-sink diff</td></tr>
+<tr><td>Spec review</td><td>one fresh reviewer per round</td><td>two fresh-context reviewer agents, each with only the design path and the repo root</td></tr>
+<tr><td>Build, Review</td><td>in session</td><td><code>cos agents spawn --role builder</code> per bead; the reviewer runs the repo's prove-it and a sink-to-VERIFY check</td></tr>
+<tr><td>Reflect</td><td>report</td><td>plus a hand drift check and a new-sink diff</td></tr>
 </tbody></table>
 </div>
+<blockquote class="pull">
+<p><strong>Since this run.</strong> The table above is the current skill: EGM is off by default in both skills and opt-in on request, the lean ritual also uses two Spec reviewers and runs prove-it in Review, and ritual-full's preflight checks allstack in place of EGM, with <code>cos</code> a soft row. The preflight below is what this run observed under the earlier rows.</p>
+</blockquote>
 <div class="cols">
 <p>This run used ritual-full's Semantic ISA section anyway, which is where both review findings came from <span class="src">observed: the design's <code>## Semantic ISA</code></span>. The ritual-full preflight ran for real on the same machine <span class="src">observed: <code>log.jsonl</code>, <code>preflight</code> lines</span>:</p>
 </div>
@@ -371,7 +374,7 @@ beat name "Each step names its file":
 </tbody></table>
 </div>
 <div class="cols">
-<p>So the preflight line on this machine reads <code>graphify missing (uv tool install graphifyy)</code>, and ritual-full would stop there until it is reinstalled or the user says "continue without graphify" <span class="src">inferred from <code>skills/ritual-full/SKILL.md</code> preflight rules</span>. The commands it would then run, none run in this proof: <code>/egm:egm-draft</code>, <code>/egm:egm-review docs/plans/2026-11-12-shout-design.md</code>, <code>cos agents spawn --role ritual-goldfish --repo ../greeter-shout</code>, <code>cos agents spawn --role builder</code>, <code>cos agents spawn --role reviewer</code>, <code>/egm:egm-drift-report docs/plans/</code> <span class="src">not checked</span>.</p>
+<p>So the preflight line on this machine reads <code>graphify missing (uv tool install graphifyy)</code>, and ritual-full would stop there until it is reinstalled or the user says "continue without graphify" <span class="src">inferred from <code>skills/ritual-full/SKILL.md</code> preflight rules</span>. The commands the current skill would then run, none run in this proof: <code>allstack recall</code>, two fresh reviewer agents on <code>docs/plans/2026-11-12-shout-design.md</code>, <code>cos agents spawn --role builder</code>, <code>/forge-prove-it --host claude --dry-run</code> then <code>--no-interview</code>, and the forged prove-it on the PR range <span class="src">not checked</span>.</p>
 </div>
 <figure class="fig" data-markdy>
 <div class="stage" role="img" aria-label="C4 container view of where the ritual-full tools plug into the steps"></div>
@@ -381,22 +384,24 @@ step Think "Think"
 step Spec "Spec"
 step Build "Build + Review"
 step Reflect "Reflect"
-runtime Egm "EGM"
+runtime Alls "allstack"
 policy Isa "Semantic ISA"
 security Two "two Goldfish"
 service Hires "cos hires"
+security Prove "prove-it"
 database Graph "graphify"
 group steps "The seven steps": Think Spec Build Reflect
 beat reveal "Containers":
   show $nodes stagger=50ms
 beat plug "Where each plugs in":
-  Egm -> Think "brainstorm"
+  Alls -> Think "recall"
   Graph -> Think "context"
-  Egm -> Spec "draft, review"
   Isa -> Spec "ISA section"
   Two -> Spec "two reviews"
   Hires -> Build "builder, reviewer"
-  Egm -> Reflect "drift report"
+  Alls -> Build "check receipts"
+  Prove -> Build "Review verdict"
+  Alls -> Reflect "remember"
   glow Isa color=#5f6b76
 </script>
 <figcaption><b>Fig. 6</b>C4 container view of where the ritual-full tools plug into the steps</figcaption>
@@ -496,7 +501,8 @@ beat try "Attempts":
 <section class="box notchecked" id="what-i-have-not-checked" aria-labelledby="h-what-i-have-not-checked">
 <h2 id="h-what-i-have-not-checked">What I have not checked</h2>
 <ul>
-<li>EGM commands (<code>/egm:egm-brainstorm</code>, <code>-draft</code>, <code>-review</code>, <code>-resolve</code>, <code>-drift-report</code>): not run; they need the user to type them.</li>
+<li>EGM commands (<code>/egm:egm-brainstorm</code>, <code>-draft</code>, <code>-review</code>, <code>-resolve</code>, <code>-drift-report</code>): not run; opt-in in the current skills.</li>
+<li>prove-it and <code>forge-prove-it</code>: not run; the current Review step forges and runs them.</li>
 <li><code>cos agents spawn</code> hires (Goldfish, builder, reviewer): not run; they start paid Claude runs.</li>
 <li>A real PR, CI and a forge merge: Ship was a local squash and a local fast-forward of <code>master</code>; nothing was pushed.</li>
 <li>graphify context: the binary is broken on this machine (exit 126) and the toy repo has no <code>graphify-out/</code>.</li>
