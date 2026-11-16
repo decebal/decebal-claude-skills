@@ -32,7 +32,8 @@ trunk.
 while it is open lands on it**: a fix the PR needs to go green (a red check it
 inherits from the trunk included), a follow-up on the same surface, discovered
 work, and the next thing the user asks for. A second open PR needs the user's
-own words, and the user runs it themselves (`! gh pr create`). Never offer a
+OK: `pr-guard` asks through the permission prompt, the user answers it, and the
+agent runs the command. Never hand the user a command to paste. Never offer a
 split ("two PRs?") as an option. Once the PR merges, the next request starts
 the next PR.
 
@@ -40,8 +41,8 @@ the next PR.
 in a day, the last a 4-line fix for the red check on the PR still open beside
 it. The rule was written down and loaded, and did not hold.
 
-- **Enforced by `claude-guard pr-guard`** (PreToolUse, Bash): denies
-  `gh pr create` / `gh pr new` and branch creation (`switch -c`, `checkout -b`,
+- **Enforced by `claude-guard pr-guard`** (PreToolUse, Bash): asks the user,
+  through the permission prompt, before `gh pr create` / `gh pr new` and branch creation (`switch -c`, `checkout -b`,
   `worktree add -b`, `branch <name>`) while a PR this session created is still
   open in that repo. It reads the session's PRs from its transcript, checks them
   with one `gh pr list`, and allows on any error or at an 8 s deadline.

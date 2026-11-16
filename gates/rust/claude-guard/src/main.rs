@@ -7,6 +7,7 @@
 //! claude-guard comment-hygiene    # PostToolUse, Edit|Write|MultiEdit
 //! claude-guard pr-guard           # PreToolUse, Bash
 //! claude-guard stack-guard        # PreToolUse, Bash
+//! claude-guard handoff-guard      # Stop (no command handed to the user to run)
 //! claude-guard trust '<command>'  # vet a wrapper chain, record the judgement
 //! ```
 //!
@@ -19,6 +20,7 @@
 
 mod bash_hygiene;
 mod comment_hygiene;
+mod handoff_guard;
 mod hook;
 mod infra;
 mod pr_guard;
@@ -48,10 +50,11 @@ fn main() -> ExitCode {
             | "comment-hygiene"
             | "pr-guard"
             | "stack-guard"
+            | "handoff-guard"
     );
     if !hookish {
         eprintln!(
-            "usage: claude-guard <infra-guard|bash-hygiene|prompt-number|comment-hygiene|pr-guard|stack-guard|trust>"
+            "usage: claude-guard <infra-guard|bash-hygiene|prompt-number|comment-hygiene|pr-guard|stack-guard|handoff-guard|trust>"
         );
         return ExitCode::from(2);
     }
@@ -67,6 +70,7 @@ fn main() -> ExitCode {
         "comment-hygiene" => comment_hygiene::run(&payload),
         "pr-guard" => pr_guard::run(&payload),
         "stack-guard" => stack_guard::run(&payload),
+        "handoff-guard" => handoff_guard::run(&payload),
         _ => unreachable!("checked above"),
     }
 }
