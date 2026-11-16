@@ -19,7 +19,10 @@ For page-by-page interface refinement, use `ui-refinement` alongside this router
 `forge-prove-it` skill in Review. **Optional:** `cos`, graphify, claude-guard;
 [ritual-full](../ritual-full/SKILL.md)'s preflight requires graphify, claude-guard and allstack,
 and reports `cos` as a soft row. EGM is off in both unless
-the user asks for it ([Opt-in: EGM](#opt-in-egm)). Install and a worked example:
+the user asks for it ([Opt-in: EGM](#opt-in-egm)). Check the tools with
+`ritual-feedback preflight` (exit 1 when `cn` is missing; spawning checks cached in
+`~/.ritual/preflight.json`, `--recheck` to redo them, `--stale <tool>` after a tool fails in use).
+Install and a worked example:
 [docs/ritual-zero-to-hero.md](../../docs/ritual-zero-to-hero.md).
 
 ## Find the step

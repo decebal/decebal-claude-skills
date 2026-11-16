@@ -1,6 +1,7 @@
 mod cases;
 mod evaluate;
 mod feedback;
+mod preflight;
 mod proc;
 mod schedule;
 mod store;
@@ -12,6 +13,8 @@ mod cases_tests;
 mod evaluate_tests;
 #[cfg(test)]
 mod feedback_tests;
+#[cfg(test)]
+mod preflight_tests;
 #[cfg(test)]
 mod proc_tests;
 #[cfg(test)]
@@ -107,6 +110,27 @@ enum Cmd {
         #[arg(long)]
         print: bool,
     },
+    /// Check the tools a ritual flow needs; spawning checks are cached per binary.
+    Preflight(PreflightArgs),
+}
+
+#[derive(clap::Args)]
+struct PreflightArgs {
+    /// Check ritual-full's rows instead of the lean ritual's.
+    #[arg(long)]
+    full: bool,
+    /// Re-run every spawning check, ignoring the cache.
+    #[arg(long)]
+    recheck: bool,
+    /// Mark one cached check stale (a tool that failed in use) so it runs again.
+    #[arg(long, value_parser = clap::builder::PossibleValuesParser::new(preflight::PROBES))]
+    stale: Option<String>,
+    #[arg(long)]
+    json: bool,
+    /// Cache file, the only location override (--store and $RITUAL_FEEDBACK_DIR do not
+    /// apply). Default: ~/.ritual/preflight.json.
+    #[arg(long)]
+    cache: Option<PathBuf>,
 }
 
 #[derive(clap::Args, Clone)]
@@ -199,6 +223,36 @@ fn weekly_options(args: &WeeklyArgs, store: PathBuf) -> Result<weekly::Options, 
         start_weekday: args.start_weekday,
         start_hour: args.start_hour,
     })
+}
+
+/// The text to print and whether every hard row passed.
+fn preflight_cmd(args: &PreflightArgs) -> Result<(String, bool), String> {
+    let home = home()?;
+    let cache = match &args.cache {
+        Some(c) => absolute(c.clone())?,
+        None => home.join(".ritual").join("preflight.json"),
+    };
+    let env = preflight::Env {
+        home,
+        cwd: std::env::current_dir().map_err(|e| e.to_string())?,
+        path: std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()).collect(),
+        cache: cache.clone(),
+    };
+    let mut runner = preflight::ProcRunner {
+        log_dir: cache.with_file_name("preflight-logs"),
+    };
+    let opts = preflight::Options {
+        full: args.full,
+        recheck: args.recheck,
+        stale: args.stale.clone(),
+    };
+    let report = preflight::run(&opts, &env, &mut runner)?;
+    let text = if args.json {
+        serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?
+    } else {
+        report.line()
+    };
+    Ok((text, report.ok()))
 }
 
 fn run(cli: Cli) -> Result<String, String> {
@@ -343,14 +397,27 @@ fn run(cli: Cli) -> Result<String, String> {
                 path.display()
             ))
         }
+        Cmd::Preflight(_) => Err("preflight is dispatched from main".into()),
     }
 }
 
 fn main() -> ExitCode {
-    match run(Cli::parse()) {
-        Ok(out) => {
+    let cli = Cli::parse();
+    let result = match &cli.command {
+        Cmd::Preflight(_) if cli.store.is_some() => {
+            Err("--store does not apply to preflight; pass --cache".into())
+        }
+        Cmd::Preflight(args) => preflight_cmd(args),
+        _ => run(cli).map(|out| (out, true)),
+    };
+    match result {
+        Ok((out, passed)) => {
             println!("{out}");
-            ExitCode::SUCCESS
+            if passed {
+                ExitCode::SUCCESS
+            } else {
+                ExitCode::FAILURE
+            }
         }
         Err(e) => {
             eprintln!("ritual-feedback: {e}");
