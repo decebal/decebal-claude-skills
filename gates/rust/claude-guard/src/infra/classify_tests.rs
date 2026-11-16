@@ -41,6 +41,24 @@ fn denies_terraform_mutation_bare_and_chdir() {
 }
 
 #[test]
+fn asks_for_a_saved_terraform_plan() {
+    assert!(is_ask("terraform apply bootstrap.tfplan"));
+    assert!(is_ask(
+        "terraform -chdir=deploy/bootstrap apply -input=false -no-color bootstrap.tfplan"
+    ));
+    assert!(is_ask("terraform apply -auto-approve tfplan.tfplan"));
+}
+
+#[test]
+fn still_denies_unreviewed_terraform_mutation() {
+    assert!(is_deny("terraform apply -auto-approve"));
+    assert!(is_deny("terraform apply -var-file=prod.tfvars"));
+    assert!(is_deny("terraform destroy"));
+    assert!(is_deny("terraform apply -destroy destroy.tfplan"));
+    assert!(is_deny("terraform apply -target=x.tfplan"));
+}
+
+#[test]
 fn terraform_plan_is_read_only() {
     assert_eq!(verdict("terraform -chdir=infra/dev plan"), None);
 }
