@@ -95,10 +95,10 @@ fn a_second_pr_while_the_first_is_open_is_denied() {
         &fake,
         deadline(),
     )
-    .expect("denied");
+    .expect("asked");
     assert!(why.contains("#12"), "{why}");
     assert!(why.contains("fix/first"), "{why}");
-    assert!(why.contains("! gh pr create"), "{why}");
+    assert!(why.contains("Allow a second open PR"), "{why}");
 }
 
 #[test]
@@ -384,15 +384,14 @@ fn remote_urls_resolve_to_owner_and_repo() {
 }
 
 #[test]
-fn the_reason_carries_the_way_out() {
+fn the_reason_asks_the_user_and_hands_them_no_command() {
     let open = OpenPr {
         number: 12,
         title: "fix it".into(),
         head: "fix/first".into(),
     };
     let pr = reason("owner/repo", &open, &Trigger::CreatePr { repo: None });
-    assert!(pr.contains("! gh pr create"));
-    assert!(pr.contains("the user's own words"));
+    assert!(pr.contains("Allow a second open PR") && pr.contains("fix/first"));
     let branch = reason(
         "owner/repo",
         &open,
@@ -402,7 +401,11 @@ fn the_reason_carries_the_way_out() {
             force: false,
         },
     );
-    assert!(branch.contains("once #12 merges"));
+    assert!(branch.contains("Allow creating branch feat/y while #12 is open"));
+    for r in [&pr, &branch] {
+        assert!(crate::handoff_guard::handoff(r).is_none(), "{r}");
+        assert!(!r.contains("themselves") && !r.contains("`!"), "{r}");
+    }
 }
 
 #[test]

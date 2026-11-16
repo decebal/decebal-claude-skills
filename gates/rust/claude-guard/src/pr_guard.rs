@@ -1,9 +1,10 @@
 //! PreToolUse, Bash — one session keeps at most one open PR per GitHub repo.
 //!
 //! While a PR this session created is still open in a repo, `gh pr create` /
-//! `gh pr new` and branch creation in that repo are denied: the change belongs on
-//! the open PR's branch. A second PR is the user's call, made in their own words
-//! and run by them with `!`.
+//! `gh pr new` and branch creation in that repo ask the user through the
+//! permission prompt: by default the change belongs on the open PR's branch, and
+//! a second PR is the user's call. The agent cannot answer the prompt, so the
+//! decision stays the user's; the command stays the agent's to run.
 //!
 //! The session's PRs come from its own transcript. Claude Code records a PR it
 //! created as `toolUseResult.gitOperation.pr` with `action: "created"`; a result
@@ -60,12 +61,12 @@ pub(crate) trait Lookup {
 
 pub fn run(payload: &Value) -> ! {
     match decide(payload, &Live, Instant::now() + DEADLINE) {
-        Some(reason) => hook::deny(&reason),
+        Some(reason) => hook::ask(&reason),
         None => hook::allow(),
     }
 }
 
-/// The deny reason, or `None` to allow.
+/// The reason to ask the user, or `None` to allow.
 pub(crate) fn decide(payload: &Value, lookup: &dyn Lookup, deadline: Instant) -> Option<String> {
     if hook::str_at(payload, &["tool_name"]) != "Bash" {
         return None;
@@ -123,10 +124,10 @@ pub(crate) fn reason(repo: &str, open: &OpenPr, trigger: &Trigger) -> String {
     );
     match trigger {
         Trigger::CreatePr { .. } => format!(
-            "{facts} Commit this change on {head} instead: a fix that PR needs to go green, a follow-up on the same surface, and work found along the way all belong on it. A second open PR from one session needs the user's own words; if they ask for one, they run it themselves with `! gh pr create ...`."
+            "{facts} Allow a second open PR from this session? Decline, and the change goes on {head}."
         ),
         Trigger::CreateBranch { name, .. } => format!(
-            "{facts} Commit on {head} instead of creating branch {name}; start a new branch once #{number} merges, or when the user asks for one in their own words (they run `! git switch -c {name}` themselves)."
+            "{facts} Allow creating branch {name} while #{number} is open? Decline, and the change goes on {head}."
         ),
     }
 }
