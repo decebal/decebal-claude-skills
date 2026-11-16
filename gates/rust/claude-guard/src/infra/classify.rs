@@ -93,6 +93,14 @@ pub fn classify(text: &str) -> Option<Verdict> {
     if m(r"(add-iam-policy-binding|remove-iam-policy-binding|set-iam-policy)") {
         return deny("IAM change on a live resource — propose it for manual/CI run");
     }
+    // A saved plan applies exactly what was already shown, so the user approves
+    // it in the permission prompt. A bare apply or a destroy decides its changes
+    // at run time, with nothing reviewed.
+    if m(r"terraform +(-chdir=[^ ]+ +)?apply +(-[a-z-]+(=[^ ]+)? +)*[^ -][^ ]*\.tfplan( |$)")
+        && !m(r"-destroy")
+    {
+        return ask("terraform apply of a saved plan — approve only if you reviewed that plan");
+    }
     if m(r"terraform +(-chdir=[^ ]+ +)?(apply|destroy)") {
         return deny(
             "terraform apply/destroy mutates real infra — propose it (terraform plan is fine)",
