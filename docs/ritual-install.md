@@ -1,7 +1,10 @@
 # What to install so Claude Code and Codex both run ritual-full
 
 One checklist for both agents. Each row names the install step and the check `ritual-full`'s
-preflight runs, so a machine that passes this list passes the preflight in either agent. The
+preflight runs, so a machine that passes this list passes the preflight in either agent.
+`ritual-feedback preflight --full` runs those checks and caches the spawning ones that pass in
+`~/.ritual/preflight.json` (or `--cache <file>`) until the binary changes; `--recheck` redoes
+them. The
 step-by-step walkthrough with a worked flow is [ritual, zero to hero](ritual-zero-to-hero.md);
 the Codex skills live in [decebal-codex-skills](https://github.com/decebal/decebal-codex-skills).
 

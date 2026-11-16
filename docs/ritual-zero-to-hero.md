@@ -326,9 +326,12 @@ were observed in a scratch repo; the later lines follow the same `--append-descr
 
 Ask: "ritual full: hello --share posts the greeting to the configured webhook". Differences:
 
-1. **Preflight** prints one line, for example
-   `preflight: cn ok · allstack ok · semantic-isa ok · graphify missing (uv tool install graphifyy) · claude-guard ok · skills ok · feedback ok · cos ok`,
-   and stops until graphify is installed or you say "continue without graphify".
+1. **Preflight** is `ritual-feedback preflight --full`. It prints one line, for example
+   `preflight: cn ok · allstack ok · semantic-isa ok · graphify missing (not on PATH: uv tool install graphifyy then graphify install) · claude-guard ok · skills ok · feedback ok · cos ok · 3 cached, 0 checked`,
+   and exits 1, so the flow stops until graphify is installed or you say "continue without
+   graphify". A missing row is rechecked on every run. Spawning checks that pass are cached in `~/.ritual/preflight.json` per binary path, size and
+   mtime, so later flows spawn nothing until a binary changes; `--recheck` redoes them and
+   `--stale <tool>` redoes one after it fails in use.
 2. **Think.** In conversation, with `allstack recall "share webhook"` for earlier decisions and
    `graphify query` on the config and HTTP modules.
 3. **Spec.** Claude drafts the design with the Semantic ISA section (below). Two reviewer agents

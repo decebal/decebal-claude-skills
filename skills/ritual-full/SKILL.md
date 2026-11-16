@@ -15,7 +15,11 @@ install and a worked example: [docs/ritual-zero-to-hero.md](../../docs/ritual-ze
 
 ## Preflight (first thing, every flow)
 
-Run each check, print one table, then stop if any hard row is `missing`:
+Run `ritual-feedback preflight --full`, print its line, and stop if it exits 1 (a hard row is
+`missing`). It checks the rows below and caches each spawning check (`--help`, `allstack doctor`)
+in `~/.ritual/preflight.json` against the binary's path, size and mtime; only `ok` results are reused, file checks run live.
+Pass `--recheck` when the user asks for a fresh check. When a tool fails in real use, run
+`ritual-feedback preflight --full --stale <tool>`: it rechecks that tool.
 
 | Tool | Row | Check | Install when missing |
 |---|---|---|---|
@@ -25,10 +29,10 @@ Run each check, print one table, then stop if any hard row is `missing`:
 | graphify | hard | `graphify --help` exits 0; `graphify-out/` in the repo, else build it | `uv tool install graphifyy` then `graphify install`; the same reinstall fixes `graphify --help` exiting 126 with `bad interpreter` (its old pipx venv is gone) |
 | claude-guard | hard | `command -v claude-guard` finds it (it has no `--help`; with no subcommand it prints usage and exits 2); `~/.claude/settings.json` registers `claude-guard infra-guard` and `claude-guard bash-hygiene` | `cargo install --path gates/rust/claude-guard`, then `skillsync hooks install` |
 | skills | hard | `pr-proof`, `systematic-debugging`, `forge-prove-it` under `~/.claude/skills/` | `cp -R skills/<name> ~/.claude/skills/<name>` |
-| ritual-feedback | hard | `ritual-feedback --version` exits 0 | `cargo install --locked --git https://github.com/decebal/decebal-claude-skills ritual-feedback` |
+| ritual-feedback | hard | the preflight runs at all (it is this binary) | `cargo install --locked --git https://github.com/decebal/decebal-claude-skills ritual-feedback` |
 | cos | soft | `cos ritual check --help` exits 0; missing prints the install command and does not stop: hires become fresh subagents, approval takes the no-`cos` path in [spec.md](../ritual/references/spec.md#approve) | clone `decebal/chief-of-staff-v2`, run `task setup` in it |
 
-Report: `preflight: cn ok · allstack ok · semantic-isa ok · graphify ok · claude-guard ok · skills ok · feedback ok · cos ok`,
+Its line: `preflight: cn ok · allstack ok · semantic-isa ok · graphify ok · claude-guard ok · skills ok · feedback ok · cos ok · 4 cached, 0 checked`,
 with `missing (<install command>)` in place of `ok` where it applies.
 
 ## What is on, per step
