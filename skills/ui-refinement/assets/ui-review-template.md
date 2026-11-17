@@ -6,6 +6,7 @@ Use this template within the ritual's existing brief, design, plan, review and P
 
 - Product, audience, jobs and design direction:
 - Build identity, URL or app, environment and date:
+- Loaded changed assets and preview routing verified against the tested build:
 - Reviewer, input methods, assistive technology, browsers or devices:
 - Target standard and level: WCAG 2.2 AA by default for web content, unless the project specifies another applicable baseline. Record desktop accessibility requirements separately.
 - Existing design decisions, tokens, components and exclusions:
