@@ -1,4 +1,5 @@
 mod cases;
+mod decide;
 mod evaluate;
 mod feedback;
 mod preflight;
@@ -9,6 +10,8 @@ mod weekly;
 
 #[cfg(test)]
 mod cases_tests;
+#[cfg(test)]
+mod decide_tests;
 #[cfg(test)]
 mod evaluate_tests;
 #[cfg(test)]
@@ -102,6 +105,31 @@ enum Cmd {
     },
     /// Advance the weekly loop by one bounded step.
     Weekly(WeeklyArgs),
+    /// Ask TypeSafe Jev to pick one option, in place of asking the user.
+    Decide {
+        /// The decision, as one complete question.
+        #[arg(long)]
+        question: String,
+        /// One option as name=description; repeat, at least two.
+        #[arg(long = "option", required = true)]
+        options: Vec<String>,
+        /// What the decision is about: JSON, or plain text.
+        #[arg(
+            long,
+            conflicts_with = "state_file",
+            required_unless_present = "state_file"
+        )]
+        state: Option<String>,
+        /// Read the state from this file instead.
+        #[arg(long)]
+        state_file: Option<PathBuf>,
+        #[arg(long, default_value = "jev-latest")]
+        model: String,
+        #[arg(long, default_value_t = 20, value_parser = clap::value_parser!(u64).range(1..=60))]
+        timeout_secs: u64,
+        #[arg(long)]
+        json: bool,
+    },
     /// Install the weekly loop as a macOS LaunchAgent that ticks every 15 minutes.
     Schedule {
         #[command(flatten)]
@@ -351,6 +379,34 @@ fn run(cli: Cli) -> Result<String, String> {
             holdout_max_open,
             max_words,
         })),
+        Cmd::Decide {
+            question,
+            options,
+            state,
+            state_file,
+            model,
+            timeout_secs,
+            json,
+        } => {
+            let options = decide::parse_options(&options)?;
+            let state = match (state, state_file) {
+                (Some(s), _) => s,
+                (None, Some(p)) => {
+                    std::fs::read_to_string(&p).map_err(|e| format!("read {}: {e}", p.display()))?
+                }
+                (None, None) => return Err("pass --state or --state-file".into()),
+            };
+            let body =
+                decide::request_body(&model, &question, &options, decide::parse_state(&state));
+            let key = decide::api_key(std::env::var("TYPESAFE_API_KEY").ok(), &home()?)?;
+            let resp = decide::call(&key, &body, std::time::Duration::from_secs(timeout_secs))?;
+            let decision = decide::parse_response(&resp)?;
+            if json {
+                return serde_json::to_string_pretty(&decision.to_json())
+                    .map_err(|e| e.to_string());
+            }
+            Ok(decision.render())
+        }
         Cmd::Weekly(args) => weekly::step(&weekly_options(&args, store()?)?),
         Cmd::Schedule {
             weekly: args,

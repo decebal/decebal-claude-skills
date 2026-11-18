@@ -17,8 +17,8 @@ For page-by-page interface refinement, use `ui-refinement` alongside this router
 **Requires** Chronis (`cn`, `cargo install chronis`) and `ritual-feedback` ([Feedback](#feedback)).
 **Uses** allstack's run-free tools when installed ([allstack](#allstack-tools-no-run)) and the
 `forge-prove-it` skill in Review. **Optional:** `cos`, graphify, claude-guard;
-[ritual-full](../ritual-full/SKILL.md)'s preflight requires graphify, claude-guard and allstack,
-and reports `cos` as a soft row. EGM is off in both unless
+[ritual-full](../ritual-full/SKILL.md) installs and checks them in its
+[preflight](../ritual-full/SKILL.md#preflight-tier-full-before-think). EGM is off in both unless
 the user asks for it ([Opt-in: EGM](#opt-in-egm)). Check the tools with
 `ritual-feedback preflight` (exit 1 when `cn` is missing; spawning checks cached in
 `~/.ritual/preflight.json`, `--recheck` to redo them, `--stale <tool>` after a tool fails in use).

@@ -116,6 +116,26 @@ Take what you agree with into a PR here, and port it to
 [decebal-codex-skills](https://github.com/decebal/decebal-codex-skills) by hand: the loop
 edits only the Claude skills.
 
+## Decisions
+
+`ritual-feedback decide` asks TypeSafe Jev one Choice question, so `ritual-full` decides tier,
+approach and finding triage without stopping for the user:
+
+```sh
+ritual-feedback decide --question "Which ritual tier does this change need?" \
+  --option "none=a one-line or mechanical change with no new behaviour" \
+  --option "lean=one repo, no new or changed side effect, reversible, a design that fits one page" \
+  --option "full=a new or changed side effect such as a network call, API, message, deploy or data write, a production system, more than one repo, auth, money or data deletion" \
+  --state '{"change":"rename a CLI flag in a skill doc and its help text","repos":1,"new_side_effects":[],"reversible":true,"files_touched":2}'
+# decide: lean act-and-report confidence=0.77 · runner-up none p=0.15 · 432 input tokens
+```
+
+It posts to `https://api.typesafe.ai/v1/systemone` with the key from `$TYPESAFE_API_KEY` or
+`~/.config/typesafe/key`, gives up after `--timeout-secs` (default 20, at most 60), and maps the
+answer's confidence to a policy: `act` at 0.80 and above, `act-and-report` from 0.50, `ask` below.
+`--json` prints the choice, confidence, policy and every option's probability. The state leaves
+the machine, so it never carries secrets or customer data. Design approval is never sent.
+
 ## Limits
 
 - A check is a phrase match. A candidate can close a case by saying the words without the

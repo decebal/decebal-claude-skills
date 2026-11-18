@@ -46,7 +46,9 @@ flowchart LR
 | | `ritual` | `ritual-full` |
 |---|---|---|
 | Required | `cn`, `ritual-feedback` | `cn`, `ritual-feedback`, allstack, semantic-isa, graphify, claude-guard, and the `pr-proof`, `systematic-debugging`, `forge-prove-it` skills; `cos` is a soft row |
-| Missing optional tool | that path is skipped | preflight stops and prints the install command; the user may say "continue without X" |
+| Missing tool | that path is skipped | the agent installs it and checks again; it stops only when an install fails, with the command and error |
+| Tier | always the lean flow | picks the cheapest tier first: `none` (no flow), `lean` (runs `ritual`) or `full`, by the change's facts and TypeSafe Jev |
+| In-flow questions | asked in conversation | sent to `ritual-feedback decide` (TypeSafe Jev) first; you are asked only below 0.50 confidence, at approval, after a third review round, and before an irreversible external action |
 | Design | decision, context, design, alternatives, security, testing, confidence, acceptance | the same plus a mandatory **Semantic ISA** section |
 | Design review | two fresh-context reviewer agents | the same two, checking the ISA section too |
 | Build and Review | in session or hired; the repo's prove-it on every Review | hired `builder` and `reviewer` per bead; prove-it plus the sink-to-VERIFY check |
@@ -211,8 +213,8 @@ graphify --help
 If `graphify --help` exits 126 with `bad interpreter`, the binary points at a removed pipx venv:
 run `uv tool install graphifyy` again.
 
-Then build a repo's graph by typing `/graphify .` in Claude Code inside the repo; it writes
-`graphify-out/`. Optional in `ritual`, on in `ritual-full`.
+A repo's graph lives in `graphify-out/`, built with the graphify skill. Optional in `ritual`; in
+`ritual-full` the agent builds it when it is missing.
 
 ## 4. First flow, lean (`ritual`)
 
@@ -221,7 +223,8 @@ from the config file and appends it to a local history file.
 
 Ask Claude: "plan this feature: hello --share posts the greeting to the configured webhook".
 The skill reports the step in one line (`ritual: hello <epic> is at think because no epic yet`)
-and works through the steps below. The commands are what it runs; you type only the approval.
+and works through the steps below. The commands are what it runs; you only answer its questions,
+the approval among them.
 
 **Think.** It asks one question per message, writes
 `docs/plans/2026-11-11-share-flag-brief.md`, and creates the epic in the main checkout:
@@ -242,24 +245,18 @@ cn task edit t-561aed --append-description "ritual-branch: feat/share-flag" --to
 cn task edit t-561aed --append-description "ritual-design: docs/plans/2026-11-11-share-flag-design.md" --toon
 ```
 
-Each edit prints `ok:edited:t-561aed`. Then it shows you the design and the review and stops.
-Approval is your decision, and there are two ways to give it:
+Each edit prints `ok:edited:t-561aed`. Then it names the design, its digest and both verdicts,
+and asks whether to approve. Approval is your decision; you answer in the conversation, for
+example "approve the share-flag design", and Claude runs the command:
 
-- You type the command in your own terminal:
+```sh
+cos ritual approve t-561aed docs/plans/2026-11-11-share-flag-design.md --by "Your Name" --review docs/plans/2026-11-11-share-flag-design-review-b.md --yes
+```
 
-  ```sh
-  cos ritual approve t-561aed docs/plans/2026-11-11-share-flag-design.md --by "Your Name" --review docs/plans/2026-11-11-share-flag-design-review-b.md
-  ```
-
-  It asks for `yes`, appends `ritual-approved: <path> sha256:<hex> by Your Name` and runs
-  `cn approve`.
-- You tell Claude to approve in the conversation, for example "approve the share-flag design".
-  Claude checks that `cos ritual approve --help` lists `--yes`, runs the same command with `--yes` in
-  place of the prompt, and quotes your instruction in its report. If `--yes` is missing, Claude stops
-  and asks you to update chief-of-staff-v2 to main.
-
-Without `cos`: `shasum -a 256 <design>`, append the same line yourself, then `cn approve t-561aed`
-(or tell Claude to run `cn approve t-561aed`).
+It appends `ritual-approved: <path> sha256:<hex> by Your Name`, runs `cn approve`, and Claude
+quotes your instruction in its report. If `cos ritual approve --help` does not list `--yes`,
+Claude updates chief-of-staff-v2 itself; if that fails it takes the path without `cos`: it
+computes `shasum -a 256 <design>`, appends the same line and runs `cn approve t-561aed`.
 
 **Plan.** The gate first; before approval it prints `unapproved` and exits 1:
 
@@ -326,24 +323,28 @@ were observed in a scratch repo; the later lines follow the same `--append-descr
 
 Ask: "ritual full: hello --share posts the greeting to the configured webhook". Differences:
 
-1. **Preflight** is `ritual-feedback preflight --full`. It prints one line, for example
+1. **Tier.** The change adds a webhook POST, a new side effect, so it runs `full` without a
+   TypeSafe call.
+2. **Preflight** is `ritual-feedback preflight --full`. It prints one line, for example
    `preflight: cn ok · allstack ok · semantic-isa ok · graphify missing (not on PATH: uv tool install graphifyy then graphify install) · claude-guard ok · skills ok · feedback ok · cos ok · 3 cached, 0 checked`,
-   and exits 1, so the flow stops until graphify is installed or you say "continue without
-   graphify". A missing row is rechecked on every run. Spawning checks that pass are cached in `~/.ritual/preflight.json` per binary path, size and
+   and exits 1. The agent runs the printed install itself, reruns with `--stale graphify`, and
+   stops only if the install fails. A missing row is rechecked on every run. Spawning checks that pass are cached in `~/.ritual/preflight.json` per binary path, size and
    mtime, so later flows spawn nothing until a binary changes; `--recheck` redoes them and
    `--stale <tool>` redoes one after it fails in use.
-2. **Think.** In conversation, with `allstack recall "share webhook"` for earlier decisions and
-   `graphify query` on the config and HTTP modules.
-3. **Spec.** Claude drafts the design with the Semantic ISA section (below). Two reviewer agents
+3. **Think.** In conversation, with `allstack recall "share webhook"` for earlier decisions and
+   `graphify query` on the config and HTTP modules. Clarifying questions go to
+   `ritual-feedback decide` first; you are asked only when its confidence is below 0.50.
+4. **Spec.** Claude drafts the design with the Semantic ISA section (below). Two reviewer agents
    in separate fresh contexts, each given only `docs/plans/2026-11-11-share-flag-design.md` and
    the repo root; one may be a hired Goldfish
    (`cos agents spawn --role ritual-goldfish --repo ../hello-share-flag --prompt "Review docs/plans/2026-11-11-share-flag-design.md"`;
-   not run for this guide). Findings are resolved in the design and both reviews re-run until
-   clean on the same digest; then `cos ritual check` and your approval, as in section 4.
-4. **Plan.** Each sink gets a bead whose done-when is its VERIFY test.
-5. **Build and Review.** `cos agents spawn --role builder` per ready bead; the reviewer runs the
+   not run for this guide). Findings are resolved in the design and both reviews re-run, at most
+   three rounds, until clean on the same digest; then `cos ritual check` and your approval, as in
+   section 4.
+5. **Plan.** Each sink gets a bead whose done-when is its VERIFY test.
+6. **Build and Review.** `cos agents spawn --role builder` per ready bead; the reviewer runs the
    repo's prove-it (forged as in section 4) and confirms each sink's VERIFY in code.
-6. **Reflect.** Claude compares the design with the code by hand; any new sink goes in the report
+7. **Reflect.** Claude compares the design with the code by hand; any new sink goes in the report
    and the design.
 
 Say "use EGM" to swap Think, Spec or Reflect for EGM's commands
@@ -447,12 +448,13 @@ Build and Ship. The repo's own `CLAUDE.md` wins over it. A fictional example:
 | `cn show <epic>` says not found in a worktree; `cn list` is empty | each linked worktree has its own untracked `.chronis/` | run `cn` from the main checkout; check `git rev-parse --git-common-dir` and `--git-dir` print the same directory |
 | `cos ritual check` prints `changed since approval` | the design's bytes changed after approval (drift) | back to Spec: new review on the new digest, new `cos ritual approve`. Keep the plan in its own file so planning never edits the design |
 | `cos ritual check` prints `missing design` | no `ritual-design:` line, or the file is not on the flow's branch | commit the design on the branch and append the line |
-| agent reports `cos ritual approve: unknown flag --yes` | cos predates the `--yes` change | update chief-of-staff-v2 to main, `task setup`, then ask the agent to re-run; without `--yes` the user answers the prompt in their terminal |
+| agent reports `cos ritual approve: unknown flag --yes` | cos predates the `--yes` change | the agent updates chief-of-staff-v2 and runs `task setup` itself; if that fails it approves on the no-`cos` path (`ritual-approved:` line, `cn approve`) |
+| agent reports `decide: unavailable (no TYPESAFE_API_KEY …)` | no TypeSafe key on the machine | put the key in `~/.config/typesafe/key`; until then the agent decides on its own judgment and says so |
 | agent did not approve when asked | the instruction was not explicit in the conversation, or the design is not clean | say "approve <design>" in the conversation; the agent checks the review verdict and the digest before running it |
 | you asked for EGM and Claude says it is missing | `claude plugin list` shows no `egm@egm`, or the session started before install | install per the EGM README, start a new session; without it the native path runs |
 | `allstack check` errors `ignore .allstack/ before retaining command evidence` | `.allstack/` is not git-ignored | append `.allstack/` to `info/exclude` under `git rev-parse --git-common-dir` |
 | `allstack check` errors `check requires an absolute executable path` | argv starts with a bare name | pass the path `command -v <tool>` prints |
-| ritual-full preflight stops on a tool | default-on means missing blocks | install with the printed command, or say "continue without <tool>" |
+| ritual-full preflight stops on a tool | the agent's install of that row failed | the report names the command and its error; fix the cause (network, toolchain), then ask the agent to rerun |
 | `cn task create` errors `unexpected argument '- '` | a description starting with `-` reads as a flag | `--description="- [ ] …"` or start the text with words |
 | repo has `.beads/` and no `.chronis/` | legacy beads tracker | `cn migrate-beads --toon`, then verify with `cn list --toon` before Plan |
 | `cos flows` shows nothing | `tasks` source not approved in the cos profile, or the repo is not directly under `--projects` | approve the source per `START-HERE.md`; pass `--projects <dir>` |
