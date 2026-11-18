@@ -30,7 +30,12 @@ Claude Code `claude plugin marketplace add google/elephant-goldfish-model`, then
 
 `cos ritual approve --yes` is what lets an agent record an approval the user told it to make.
 It arrives with [chief-of-staff-v2#23](https://github.com/decebal/chief-of-staff-v2/pull/23).
-Without it, the agent stops and the user runs `cos ritual approve` in their own terminal.
+Without it, the agent approves on the no-`cos` path: it appends the `ritual-approved:` line and
+runs `cn approve` itself.
+
+**TypeSafe (soft).** `ritual-feedback decide` answers the flow's in-flow decisions with TypeSafe
+Jev. It reads `$TYPESAFE_API_KEY`, else `~/.config/typesafe/key`. Without a key the agent decides
+on its own judgment and reports `decide: unavailable`.
 
 ## Claude Code
 
