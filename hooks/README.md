@@ -81,7 +81,7 @@ error, unreadable payload or missing dependency allows the call.
 |---|---|---|---|---|
 | `infra-guard` | Live-service mutation, IAM, `terraform apply`/`destroy`, storage and artefact deletion, namespace or PVC delete, publish, force-push to a protected branch, a wrapper chain that runs one of these | Other `kubectl`/`helm` writes, `pkill`, `sudo`, `rm -rf` on root/home/`..`, any mutation touching a prod token, `--all`/`-A` mutations, a chain touching infra with no clean match | none | Deep wrapper layer only; literal layer always runs. `INFRA_GUARD_OFF=1` turns a deny into an ask |
 | `bash-hygiene` | Compound commands (`&&`, `\|\|`, `;`, newlines), `$()`, backticks, `\| tee`, `&>`, piped or file-redirected `2>&1` | none | A trailing `2>&1` that is the sole redirect is removed | Unparseable payload allows |
-| `pr-guard` | `gh pr create` / `gh pr new`, and branch creation, while a PR this session created is still open in that repo | none | none | No transcript, unreadable transcript, no GitHub remote, `gh` failing, 8 s deadline |
+| `pr-guard` | none | `gh pr create` / `gh pr new`, and branch creation, while a PR this session created is still open in that repo | none | No transcript, unreadable transcript, no GitHub remote, `gh` failing, 8 s deadline |
 | `stack-guard` | Stacked `gh pr create` without `--draft`, without an open parent, or not containing the parent's head; `gh pr ready`/`gh pr merge` on a PR not based on the default branch, or on a stack root with more than one commit by an author; with a gate context set, `gh pr merge` without `--match-head-commit <head>` or with that status not `success`; `git push` carrying commits already on the default branch, a merged parent's old head, or missing a moved parent's head; a second own commit on a stacked layer | none | none | No GitHub remote, `gh` failing, an object not in the local store, 8 s deadline |
 | `prompt-number` | `Write`/`Edit`/`MultiEdit` that would create `.prompts/NNN-*.md` with no `.prompts/.numbers/NNN` claim | none | none | File exists, no `.numbers/` store, archive moves, nested stage files, paths outside `.prompts/` |
 | `comment-hygiene` | never (PostToolUse) | never | none | Always allows; feedback is `additionalContext` only |
@@ -92,7 +92,7 @@ in `gates/rust/claude-guard/src`. Check the binary when in doubt:
 
 Check the installed binary, not the source: feed a subcommand a payload on stdin
 and read its decision. For `pr-guard`, a transcript that records an open PR of
-yours plus a branch-creation command must print a `deny`:
+yours plus a branch-creation command must print an `ask`:
 
 ```sh
 claude-guard pr-guard < payload.json   # {"tool_name":"Bash","tool_input":{"command":"git switch -c x"},"transcript_path":"…","cwd":"…"}
@@ -132,15 +132,20 @@ and reading `github.com/<owner>/<repo>/pull/<n>` from the text. `toolUseResult`
 is sometimes a plain string, so the reader type-checks before indexing. Then
 one `gh pr list --state open --author @me` shows which are still open.
 
-**The way out.** A second PR is the user's call. The deny says so: the user runs
-`! gh pr create …` (or `! git switch -c …`) in the session, which runs outside
-the agent's tool calls.
+**The way out.** A second PR is the user's call, made at the permission prompt.
+The agent runs the command; the prompt names the open PR and its branch, and
+the user allows it or declines and keeps the change on that branch.
+
+**Check the installed binary after pulling.** `claude-guard` keeps version
+`0.1.0`, so `cargo install` reports nothing to upgrade and a machine can keep an
+old build. Reinstall with `cargo install --force --path gates/rust/claude-guard`,
+then probe it as above.
 
 **Fails open** on: no transcript path, an unreadable or garbled transcript, no
 GitHub `origin` remote, `gh` missing or failing, and the 8 s deadline shared by
 every child. `git` and `gh` run as children the hook owns; on the deadline they
 are killed, then reaped. Measured on a real transcript with live `gh`: allow
-1.13 s, deny 0.85 s. Every other command returns before the transcript is
+1.13 s, deny 0.85 s, from the build that denied; the ask build is not re-measured. Every other command returns before the transcript is
 opened.
 
 **Known limits.** It sees only its own session: several sessions can each hold
