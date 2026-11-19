@@ -156,8 +156,14 @@ Both land the work under a new SHA, so anything that reasons about ancestry lies
 
 - **Title** in conventional commit format, under 70 chars. **Body:** summary
   bullets, test-plan checklist, link to the design doc.
-- **Open the PR with the first pushed commit.** A branch with commits and no PR
-  is invisible; at ~5 commits with no PR, stop and open one.
+- **Open the PR with the first pushed commit, as a DRAFT.** A branch with
+  commits and no PR is invisible; at ~5 commits with no PR, stop and open one.
+- **Draft until the feature is fully implemented; ready only then.** Ready
+  means the feature works end-to-end ([definition-of-done.md](definition-of-done.md)),
+  not that a slice, a plan or a doc is finished. A plan PR stays draft and the
+  implementation lands on it. Ready is a claim the whole thing can merge.
+  2026-11-07: a plan-only PR (#1846) was marked ready; the owner made it draft
+  and set this as a key practice.
 - **Not ready while any author has more than one commit.** Each author
   collapses their own; re-run the gates on the new head, then mark it ready.
 - **One feature = one PR**, unless it depends on another open PR's code; then it
