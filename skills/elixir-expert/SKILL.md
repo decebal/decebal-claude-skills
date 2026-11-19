@@ -1,6 +1,7 @@
 ---
 name: elixir-expert
 description: Build and operate Phoenix/OTP services in Elixir — supervision trees, GenServer/Task/Agent choice, Rustler NIFs alongside a Rust core, Mix releases in Docker, and mix format/Credo/Dialyzer quality gates. Use when working on a Phoenix app, an umbrella project, a Query Service or MCP server in Elixir, an OTP process design, or a Rust NIF binding. Triggers on: Phoenix, OTP, GenServer, Supervisor, umbrella, Ecto, Rustler NIF, mix release, LiveView, "BEAM stalls", "GenServer bottleneck", "mailbox overflow", Dialyzer, Credo.
+tags: [elixir]
 ---
 
 # Elixir / Phoenix / OTP Expert
