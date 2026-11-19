@@ -5,7 +5,7 @@ binary** — [`gates/rust/claude-guard`](../gates/rust/claude-guard).
 
 | Subcommand | Event | Effect |
 |---|---|---|
-| `claude-guard pr-guard` | PreToolUse, Bash | Denies `gh pr create` / `gh pr new` and branch creation while a PR this session created is open in that repo. Fails open |
+| `claude-guard pr-guard` | PreToolUse, Bash | Asks the user before `gh pr create` / `gh pr new` and branch creation while a PR this session created is open in that repo. Fails open |
 | `claude-guard stack-guard` | PreToolUse, Bash | Stacked PRs open as drafts, land bottom-up, keep one commit per author per layer, and are never pushed carrying a parent's stale commits. Fails open |
 | `claude-guard infra-guard` | PreToolUse, Bash | Denies or prompts on high-blast-radius commands, by blast radius rather than apparent simplicity |
 | `claude-guard bash-hygiene` | PreToolUse, Bash | Blocks compound commands, substitution and combined redirects. Rewrites a repairable `2>&1` instead of blocking it |
@@ -107,8 +107,9 @@ some earlier settings edits the same way. Add permission rules yourself.
 
 One agent session keeps at most **one open PR per repo**. While a PR the
 session created is still open, `gh pr create` / `gh pr new` and branch creation
-in that repo are denied, and the deny tells the agent to commit on the open
-PR's branch. The rule it enforces is
+in that repo go to the permission prompt. The user decides: allow, and the
+command runs; decline, and the change goes on the open PR's branch. The rule it
+enforces is
 [`git-discipline.md` § One open PR per session](../rules/git-discipline.md#one-open-pr-per-session).
 
 **Why a hook.** One session created 29 PRs in a single repo; one UI component
@@ -116,7 +117,7 @@ took four in a day, the last a 4-line fix for the red check on the PR still open
 beside it. The rule against it was loaded, and had been broken twice before.
 Prose did not hold, so the tool call is checked instead.
 
-| Blocked while a session PR is open | Allowed |
+| Asks while a session PR is open | Allowed |
 |---|---|
 | `gh pr create`, `gh pr new` (with `-R`/`--repo` in `OWNER/REPO`, `github.com/…` or URL form, `GH_REPO=`, `rtk`/`env`/`command` wrappers, in any segment of a chained command) | `gh pr create --help`, `gh pr list`, `gh pr view`; text inside a heredoc body |
 | `git switch -c`/`--create`, `git checkout -b`, `git worktree add -b`, `git branch <name>` (with `git -C <dir>`); `switch -C`, `checkout -B`, `worktree add -B` and `branch -f` only for a branch that does not exist yet | `git branch` listing, `-d`, `-m`, `--show-current`, `-u`, combined flags such as `-dr`; moving an existing branch (`git branch -f main origin/main`); `git switch main`; `git worktree add --detach` |
