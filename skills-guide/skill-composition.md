@@ -12,16 +12,16 @@ skill names:
 
 ```yaml
 ---
-name: claude-beads
+name: ritual-full
 description: ...
-depends_on: [claude-prd]      # hard: this skill CONSUMES that skill's output
+depends_on: [ritual]          # hard: this skill CONSUMES that skill's output
 enhances: [typescript]        # soft: load that skill's rules while running this one
 ---
 ```
 
 - **`depends_on`** — a *pipeline* edge. The named skill's output is this skill's
-  input. `claude-beads` depends on `claude-prd` because it converts a PRD into
-  beads: run the producer first (or expect its artifact).
+  input. `ritual-full` depends on `ritual` because it runs ritual's steps with
+  more tools switched on: load the producer first (or expect its artifact).
 - **`enhances`** — an *overlay* edge. While this skill runs, also pull in the named
   skill's rules/patterns. `perf-review enhances typescript` means the language-level
   optimizations apply on top of the app-level hot-path review.
@@ -58,8 +58,8 @@ end to end), that's the point to reconsider B — not before.
 
 | Chain | Edge |
 |-------|------|
-| `claude-prd` → `claude-beads` | `claude-beads` **depends_on** `claude-prd` |
-| `brainstorming` → `feature-spec` → `claude-prd` | design → spec → PRD (pipeline) |
+| `ritual` → `ritual-full` | `ritual-full` **depends_on** `ritual` and `semantic-isa` |
+| `ritual` (Think → Spec → Plan → beads) | design → spec → plan → beads, one skill |
 | `perf-review` + `typescript` / `security-review` | `perf-review` **enhances** both (review overlay) |
 | `security-review` + `typescript` | `security-review` **enhances** `typescript` |
 | `explain-module` + `arch` | `explain-module` **enhances** `arch` (C4 / Mermaid templates) |

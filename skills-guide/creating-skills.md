@@ -50,9 +50,6 @@ frontmatter keys — see [skill-composition.md](skill-composition.md).
 
 ## Examples from Installed Skills
 
-### Questionnaire Pattern (claude-prd)
-Ask lettered clarifying questions (A, B, C, D) before generating output. Adapt follow-up questions based on answers.
-
 ### Multi-phase Workflow (mcp-builder)
 1. Research & Planning
 2. Implementation

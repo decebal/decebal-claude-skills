@@ -22,8 +22,6 @@ This repo captures patterns and configurations used across 25+ projects spanning
 │   ├── forge-prove-it/         # Census a repo's gates → write it a prove-it reviewer
 │   ├── pr-proof/               # Build the HTML evidence report a PR ships (+ template)
 │   ├── mcp-builder/            # MCP server creation guide
-│   ├── claude-beads/           # PRD → beads conversion (auto-detects cn/br/bd)
-│   ├── claude-prd/             # PRD generation for agent execution
 │   ├── rust-clean-architecture/ # Rust layering enforced as a test (domain ← infra)
 │   ├── rust-quality/           # Workspace clippy/unsafe/rustdoc lint gates + cargo sort
 │   ├── integration-test/       # Audit coverage; write un-hangable cross-boundary tests
@@ -105,7 +103,7 @@ This repo captures patterns and configurations used across 25+ projects spanning
 ├── skills-guide/               # Skills authoring & usage
 │   ├── overview.md             # Installed skills inventory
 │   ├── creating-skills.md      # How to create custom skills
-│   └── claude-workflow.md      # PRD → Beads → Execution pipeline
+│   └── claude-cn-workflow.md   # Spec → Plan → Beads → Execution (ritual + cn)
 ├── docs/                       # Deep dives
 │   ├── mcp-servers.md          # MCP server integrations
 │   ├── hooks.md                # Hooks configuration

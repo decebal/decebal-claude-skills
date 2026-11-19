@@ -47,7 +47,6 @@ changed, `notion-database` schemas and views, `notion-preview` the review gate b
 | **brainstorming** | Explore ideas before implementation | Any creative/feature work (auto-triggers) |
 | **feature-spec** | PRDs, requirements, scope management | "write prd", "define requirements" |
 | **create-plans** | Hierarchical Claude-executable project plans; ships `/create-prompt` + `/run-prompt` | "plan this project", "create-prompt", "phase plan" |
-| **claude-prd** | PRDs optimized for agent execution | "create a prd", "plan this feature" |
 | **semantic-isa** | Design an agent's Semantic ISA + deterministic kernel, or write it up accurately | "semantic ISA", "Arbiter-K", "deterministic kernel for an agent" |
 | **report-press** | One-page newspaper-style HTML report, an animated Markdy state or C4 diagram per section, printed by a Rust binary from a Markdown story | "write a report", "one-pager for the team", "HTML report with diagrams" |
 
@@ -55,7 +54,7 @@ changed, `notion-database` schemas and views, `notion-preview` the review gate b
 
 | Skill | Purpose | Trigger Phrases |
 |-------|---------|-----------------|
-| **claude-beads** | Convert PRDs to executable beads; auto-detects the tracker CLI (cn/br/bd) | "create beads", "convert prd to beads" |
+| **ritual** | One flow from idea to shipped change: Think, Spec, Plan (cuts the beads in `cn`), Build, Review, Ship, Reflect | "create a prd", "create beads", "work the beads" |
 
 ### Engineering Quality
 
@@ -100,8 +99,6 @@ changed, `notion-database` schemas and views, `notion-preview` the review gate b
 ├── feature-spec -> ~/.agents/skills/feature-spec
 ├── find-skills -> ~/.agents/skills/find-skills
 ├── mcp-builder -> ~/.agents/skills/mcp-builder
-├── claude-beads -> ~/.agents/skills/claude-beads
-├── claude-prd -> ~/.agents/skills/claude-prd
 ├── rust-clean-architecture -> ~/.agents/skills/rust-clean-architecture
 ├── rust-quality -> ~/.agents/skills/rust-quality
 ├── integration-test -> ~/.agents/skills/integration-test
