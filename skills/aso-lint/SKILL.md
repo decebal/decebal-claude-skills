@@ -1,6 +1,7 @@
 ---
 name: aso-lint
 description: Research, lint, and improve Apple App Store and Google Play listings with current platform rules, evidence-led keyword and competitor analysis, metadata optimization, localization, review synthesis, visual planning, and controlled experiments. Use for ASO audits, store metadata, app keywords, listing conversion, launches, updates, and experiment analysis. Includes a Rust linter.
+tags: [general]
 ---
 
 # ASO Lint

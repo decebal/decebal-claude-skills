@@ -76,7 +76,7 @@ Run in order. Each step names the skill it borrows.
 10. **Prove it — `integration-test`.** One test per sink asserting a tainted input is refused, one
     asserting VERIFY clears it, one per exception path. Drive the kernel with a scripted proposal stream,
     never a live model — a test that depends on what the model happens to say cannot fail reliably.
-11. **Build it — `claude-prd` → `claude-beads`** when the user wants implementation planned.
+11. **Build it — `ritual`** (its Spec and Plan steps) when the user wants implementation planned.
 
 Done when every capability in step 1 maps to exactly one instruction, every instruction has a core, a
 property and a binding, every sink has a refusal test, and the sequence diagram matches the test.

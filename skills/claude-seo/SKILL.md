@@ -1,6 +1,7 @@
 ---
 name: claude-seo
 description: Audit, plan, and improve technical SEO, on-page content, structured data, sitemaps, hreflang, local/ecommerce visibility, and AI-search citability using evidence-first workflows and a safe Rust static-analysis CLI. Use for SEO audits, page reviews, traffic or ranking investigations, content plans, schema, crawlability, indexation, migration drift, competitor research, and GEO. Never invent search, analytics, backlink, or performance data.
+tags: [general]
 ---
 
 # Claude SEO

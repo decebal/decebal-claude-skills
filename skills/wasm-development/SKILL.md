@@ -1,6 +1,7 @@
 ---
 name: wasm-development
 description: "Build and integrate WebAssembly across both major toolchains — C/C++ via Emscripten (emcc/em++) and Rust via wasm-pack + wasm-bindgen. Covers the JS/WASM memory boundary, off-main-thread execution in Web Workers, CSP requirements, size optimization, and debugging. Use when the user wants to build WASM, compile C/C++ or Rust to WebAssembly, set up Emscripten or wasm-pack, call a WASM module from JavaScript, pass data across the JS/WASM boundary, or shrink/debug a .wasm binary. Triggers on: build WASM, Emscripten, wasm-pack, WebAssembly, wasm-bindgen, WASM module."
+tags: [wasm]
 ---
 
 # WASM Development
