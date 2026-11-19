@@ -16,8 +16,10 @@ cn task edit <epic> --append-description "ritual-branch: <type>/<slug>" --toon  
 ```
 
 Use the repo's branch rule (a ticket key, see the org's notes in `repo-notes.md`). Move the Think brief from the main
-checkout onto the branch, and commit the design there as you draft it: `cos` reads the committed
-copy while the branch exists, and a hired reviewer's worktree is cut from it.
+checkout onto the branch, and commit the design there as you draft it: a hired reviewer's worktree
+is cut from the branch, so it reads the committed copy. Approval is the exception — `cos ritual
+approve` reads the design from the main checkout's working tree, not from the branch, so the design
+has to be put there first; see [Approve](#approve).
 
 ## Draft (the Elephant)
 
@@ -105,5 +107,30 @@ says so in the line it writes. `--by` is a name the caller types, not a verified
 
 Without `cos`, once the user tells you to approve, you compute `shasum -a 256 <design>`, append
 the same line with `cn task edit <epic> --append-description`, and run `cn approve <epic>`.
+
+### The design is on the branch; the epic is in the main checkout
+
+`cos ritual approve` resolves `<DESIGN>` (and each `--review`) against `--repo` — the checkout that
+holds the epic's `.chronis`, defaulting to the main checkout of the current directory — not the
+worktree the design was committed in. The flow's design is committed on the worktree branch (see
+[The branch](#the-branch)) while the main checkout sits on the trunk, so that file is not in the
+main checkout's working tree and approve cannot find it. A 2026-11-18 flow lost time to exactly
+this: approval only went through after the design was copied into the main checkout by hand.
+
+Point `--repo` at the main checkout (the default) and materialize the committed design and reviews
+there from the branch first, then remove them:
+
+```bash
+git -C <main-checkout> show <branch>:docs/plans/YYYY-MM-DD-<slug>-design.md \
+  > <main-checkout>/docs/plans/YYYY-MM-DD-<slug>-design.md      # and each --review file
+cos ritual approve <epic> docs/plans/YYYY-MM-DD-<slug>-design.md --by "<name>" \
+  --review docs/plans/YYYY-MM-DD-<slug>-design-review-b.md --yes
+rm <main-checkout>/docs/plans/YYYY-MM-DD-<slug>-design.md      # and the review copies
+```
+
+`--repo <worktree>` does not help: `.chronis` is per-checkout, so the epic lives in the main
+checkout's store, not the worktree's. The no-`cos` path above avoids the copy entirely — only the
+digest string crosses: compute `shasum -a 256 <design>` in the worktree, then append the
+`ritual-approved:` line and run `cn approve <epic>` against the main checkout's `.chronis`.
 
 Then the next step is Plan ([plan.md](plan.md)).
