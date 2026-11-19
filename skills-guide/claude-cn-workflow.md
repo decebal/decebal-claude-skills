@@ -11,38 +11,23 @@ when splitting is worth it and when it costs more in merge than it saves.
 ## Pipeline Overview
 
 ```
-1. PRD Generation   →   2. Beads Creation   →   3. Execution
-   (claude-prd)           (claude-beads)         (claude, reading `cn ready`)
+1. Spec + Plan      →   2. Beads Creation   →   3. Execution
+   (ritual)               (ritual's Plan step)   (claude, reading `cn ready`)
 ```
 
-## Stage 1: PRD Generation
+## Stage 1: Spec and Plan
 
-Invoke with: "create a prd for [feature]"
+Invoke with: "create a prd for [feature]" or "ritual spec [feature]". The `ritual`
+skill writes the approved design and then the plan under `docs/plans/`.
 
-The skill asks iterative clarifying questions with lettered options, then generates:
-
-```
-./tasks/prd-[feature-name].md
-```
-
-**PRD structure:**
-- Overview & Goals
-- Quality Gates (epic-level vs story-level)
-- User Stories (tagged: `[Schema]`, `[Backend]`, `[UI]`, `[Integration]`)
-- Functional Requirements
-- Non-Goals
-- Technical Considerations
-- Success Metrics
-
-**Key pattern:** Two-tier quality gates
+**Key pattern:** Two-tier quality gates, in the plan
 - **Epic-level** — Run once at end (e.g., full E2E test suite)
 - **Story-level** — Run per story (e.g., unit tests, type checks)
 
 ## Stage 2: Beads Creation
 
-Invoke with: "create beads from [prd file]"
-
-Converts each user story into a bead (task) using the `cn` CLI:
+Ritual's Plan step cuts the beads once the design is approved. Each user story
+becomes a bead (task) through the `cn` CLI:
 
 ```bash
 # Create epic
@@ -90,11 +75,8 @@ Each story should fit within a single agent context window. Rules:
 ## Example
 
 ```bash
-# 1. Generate PRD
+# 1-2. Spec, plan and cut the beads
 claude "create a prd for user authentication with OAuth"
-
-# 2. Create beads from PRD
-claude "create beads from ./tasks/prd-user-auth.md"
 
 # 3. Work them
 claude "work the ready beads: cn ready --toon, claim each, implement, run its quality gates, cn done"
