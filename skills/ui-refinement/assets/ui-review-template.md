@@ -44,6 +44,10 @@ Review the rendered product against its actual audience, intended task and estab
 
 Inventory controls and text links across page families, including generated, static, guide and printable screen pages. Record purpose and semantic role, approved variants, action hierarchy, spacing at narrow and wide widths, keyboard and touch behavior, and consistent inline-link treatment. Check that actions are necessary and separated; document deliberate exceptions. Preserve print-specific layouts and verify print output separately.
 
+For each distinct control and state, record route, viewport, starting state, exact activation, expected and observed result, repeat or close behavior, keyboard focus, persistence after reload where applicable, and screenshots. Activate same-page controls as well as navigation; check overlay occlusion, scroll and layout shifts. Mark untested controls unverified. For shared navigation, check centered alignment and wrapping around responsive breakpoints; trace unexplained empty space to its layout source.
+
+For each printable, record actual print activation, paper size, browser or printer settings, expected and observed page count, blank-page and clipping checks, output evidence and regression-gate result. Test relevant paper sizes and distinguish untested printer settings.
+
 Taste reference: [design-taste-frontend](https://github.com/Leonxlnx/taste-skill/blob/main/skills/taste-skill/SKILL.md). Apply relevant design judgments to the existing product and stack; do not require its starter, scripts, design tokens or randomly selected layout. Record unavailable tools or skills rather than claiming they ran.
 
 ## Contribution gates and follow-through
