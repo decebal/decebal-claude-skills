@@ -90,6 +90,15 @@ fn the_prompt_number_refusal_names_the_fix_without_arguing_for_it() {
 }
 
 #[test]
+fn the_target_guard_deny_names_the_fix_in_a_line() {
+    let r = crate::target_guard::reason(
+        std::path::Path::new("/Users/me/Projects/app/target/target-p2-screens"),
+        std::path::Path::new("/Users/me/Projects/app/target"),
+    );
+    assert_under("target-guard deny reason", &r, 60);
+}
+
+#[test]
 fn a_clean_call_costs_nothing() {
     // The common case by a wide margin: no output, no tokens.
     assert!(bash_hygiene::violations("ls -la", None).is_empty());
