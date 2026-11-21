@@ -11,6 +11,7 @@ binary** — [`gates/rust/claude-guard`](../gates/rust/claude-guard).
 | `claude-guard bash-hygiene` | PreToolUse, Bash | Blocks compound commands, substitution and combined redirects. Rewrites a repairable `2>&1` instead of blocking it |
 | `claude-guard prompt-number` | PreToolUse, Write/Edit | Denies creating `.prompts/NNN-*.md` when the number was never allocated |
 | `claude-guard comment-hygiene` | PostToolUse, Edit/Write | Feeds back the comment lines an edit added, to be justified or deleted |
+| `claude-guard target-guard` | PreToolUse, Bash | Denies a `CARGO_TARGET_DIR` or `--target-dir` inside an existing Cargo build directory, where `target-gc` can never expire it |
 | `claude-guard trust '<cmd>'` | — | Vet a wrapper chain, record the judgement as a content hash |
 
 ## Why a binary and not shell
@@ -52,6 +53,8 @@ same block; `skillsync hooks install` merges it in without touching other keys.
         "hooks": [{ "type": "command", "command": "claude-guard pr-guard", "timeout": 10 }] },
       { "matcher": "Bash",
         "hooks": [{ "type": "command", "command": "claude-guard stack-guard", "timeout": 10 }] },
+      { "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "claude-guard target-guard", "timeout": 5 }] },
       { "matcher": "Write|Edit|MultiEdit",
         "hooks": [{ "type": "command", "command": "claude-guard prompt-number", "timeout": 5 }] }
     ],
@@ -85,6 +88,7 @@ error, unreadable payload or missing dependency allows the call.
 | `stack-guard` | Stacked `gh pr create` without `--draft`, without an open parent, or not containing the parent's head; `gh pr ready`/`gh pr merge` on a PR not based on the default branch, or on a stack root with more than one commit by an author; with a gate context set, `gh pr merge` without `--match-head-commit <head>` or with that status not `success`; `git push` carrying commits already on the default branch, a merged parent's old head, or missing a moved parent's head; a second own commit on a stacked layer | none | none | No GitHub remote, `gh` failing, an object not in the local store, 8 s deadline |
 | `prompt-number` | `Write`/`Edit`/`MultiEdit` that would create `.prompts/NNN-*.md` with no `.prompts/.numbers/NNN` claim | none | none | File exists, no `.numbers/` store, archive moves, nested stage files, paths outside `.prompts/` |
 | `comment-hygiene` | never (PostToolUse) | never | none | Always allows; feedback is `additionalContext` only |
+| `target-guard` | `CARGO_TARGET_DIR=<dir>`, `--target-dir <dir>` or `--target-dir=<dir>` where a proper ancestor of `<dir>` holds Cargo's `CACHEDIR.TAG` | none | none | No target dir named, a dir outside every build directory, unparseable payload |
 
 Every guard fails open; none fails closed. The table is a summary of the sources
 in `gates/rust/claude-guard/src`. Check the binary when in doubt:
