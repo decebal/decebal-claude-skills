@@ -54,9 +54,9 @@ checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
 name = "allsource-core"
-version = "0.28.0"
+version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a74fcf52f39fbf32e0ee5a3d96011084bc6bf68dace4ff7e23ad415bc3fd7bc8"
+checksum = "0a4bcca6179be1db0c846a539cb11cd57cf0f258d44c0ce05fefc5ba21e89a2a"
 dependencies = [
  "anyhow",
  "arrow",
@@ -64,6 +64,7 @@ dependencies = [
  "base64",
  "bumpalo",
  "bytes",
+ "cap",
  "chrono",
  "crc32fast",
  "crossbeam",
@@ -461,6 +462,12 @@ name = "bytes"
 version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
+
+[[package]]
+name = "cap"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f125eb85b84a24c36b02ed1d22c9dd8632f53b3cde6e4d23512f94021030003"
 
 [[package]]
 name = "cc"
