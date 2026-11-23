@@ -21,7 +21,7 @@ publish = false
 description = "Ritual run feedback in AllSource, scored weekly by autoresearch"
 
 [dependencies]
-allsource-core = { version = "0.28", default-features = false, features = ["embedded"] }
+allsource-core = { version = "0.29", default-features = false, features = ["embedded"] }
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
