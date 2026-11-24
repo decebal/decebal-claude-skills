@@ -97,7 +97,23 @@ Establish, and print:
 - the host — which of `.claude/skills`, `.agents/skills`, `~/.codex/skills`, `AGENTS.md`,
   `CLAUDE.md` exist
 - the stacks, from manifests actually present, never from file extensions alone
-- whether a generated skill is already here (`--update` path)
+- whether a prove-it is already here, in **any** skill directory and under **any** name. Search
+  every `SKILL.md` under `.claude/skills/`, `.agents/skills/` and the repo's other skill roots,
+  and match on content, not on the directory name:
+
+  ```
+  git grep -l -i -E 'prove-it|coverage ledger|six lenses|hand-checks' -- '*SKILL.md'
+  ```
+
+  Untracked skill directories are invisible to `git grep`; check `git status --porcelain --
+  .claude .agents` as well.
+
+  A hit is the skill to update. Take the `--update` path against that file, at its path and under
+  its name, whatever `--name` and `--host` say, and print which file was chosen. Writing a second
+  reviewer beside an existing one leaves two skills with diverging facts and, where their rules
+  differ (posting, review scope), opposite instructions for the same review. When more than one
+  hit is found, ask which is canonical; under `--no-interview`, stop and print the candidates
+  rather than pick one.
 - whether a decision router is installed: the `jev-decision-layer` skill and the `route` command
   it names, resolved on this machine, never from a hard-coded path. Optional. It fills the emitted
   skill's `{{router}}` slot (Phase 1.5 in `references/emitted-skill-template.md`); absent means
