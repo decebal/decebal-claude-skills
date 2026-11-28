@@ -281,3 +281,111 @@ fn a_vetted_chain_stops_prompting_until_it_changes() {
     );
     assert_deny(lab.decide(cmd), "recipe edited");
 }
+
+/// The shape of a worktree helper that prints push hints: every line naming
+/// `git push`, `--force` or `main` is printed, documented or harmless alone.
+const HINT_SCRIPT: &str = r#"#!/usr/bin/env bash
+usage() {
+  cat <<'EOF'
+usage: hints.sh create <name>
+  never: git push --force origin main
+EOF
+}
+cleanup() { git worktree remove --force "$path"; }
+git fetch origin main
+git worktree add -b "$name" --no-track "$path" origin/main
+echo "  git push origin HEAD:$on_branch"
+echo "  git push -u origin $name && gh pr create --draft --base main"
+printf '%s\n' "git push --force origin main"
+# git push --force origin main
+"#;
+
+#[test]
+fn printed_hints_and_mentions_never_read_as_a_force_push() {
+    let lab = Lab::new();
+    lab.write("scripts/hints.sh", HINT_SCRIPT);
+    lab.write(
+        "scripts/force.sh",
+        "#!/usr/bin/env bash\ngit push --force origin main\n",
+    );
+    let hints = lab.root.join("scripts/hints.sh");
+    let hints = hints.to_string_lossy();
+
+    assert_silent(
+        lab.decide("bash scripts/hints.sh create feat-x"),
+        "running a script that only prints push hints",
+    );
+    assert_silent(
+        lab.decide(&format!("{hints} create feat-x")),
+        "the same script by absolute path",
+    );
+    assert_silent(
+        lab.decide(&format!("grep -n push {hints}")),
+        "grep over the script",
+    );
+    assert_silent(
+        lab.decide("cat scripts/force.sh"),
+        "reading a script that does force-push",
+    );
+    assert_silent(
+        lab.decide("head -n 5 scripts/force.sh"),
+        "head over a script that does force-push",
+    );
+    assert_silent(
+        lab.decide("hc run t1 claude \"look at scripts/force.sh and explain it\""),
+        "a path inside a quoted argument",
+    );
+}
+
+#[test]
+fn a_real_force_push_is_still_caught_through_every_wrapper() {
+    let lab = Lab::new();
+    lab.write(
+        "scripts/force.sh",
+        "#!/usr/bin/env bash\necho 'pushing'\ngit push --force origin main\n",
+    );
+    lab.write(
+        "scripts/wrapper.sh",
+        "#!/usr/bin/env bash\ncd scripts && bash force.sh\n",
+    );
+    lab.write(
+        "scripts/piped.sh",
+        "echo 'git push -f origin main' | bash\n",
+    );
+    lab.write(
+        "scripts/heredoc.sh",
+        "bash <<EOF\ngit push -f origin main\nEOF\n",
+    );
+    lab.write(
+        "scripts/substituted.sh",
+        "echo \"result: $(git push --force origin main)\"\n",
+    );
+    lab.write(
+        "scripts/same-line.sh",
+        "echo 'about to push' ; git push --force-with-lease origin main\n",
+    );
+    lab.write(
+        "scripts/continued.sh",
+        "git push \\\n  --force origin main\n",
+    );
+    lab.write(
+        "Makefile",
+        "ship:\n\t@bash scripts/wrapper.sh\n\nbuild:\n\techo building\n",
+    );
+
+    for (cmd, case) in [
+        ("bash scripts/force.sh", "direct"),
+        ("bash scripts/wrapper.sh", "two scripts deep via cd"),
+        ("make ship", "make recipe to a wrapper to the push"),
+        ("\"./scripts/force.sh\"", "quoted command position"),
+        ("timeout 300 ./scripts/force.sh", "behind a timeout runner"),
+        ("cat scripts/force.sh | bash", "piped into a shell"),
+        ("bash scripts/piped.sh", "echo piped into bash"),
+        ("bash scripts/heredoc.sh", "heredoc fed to bash"),
+        ("bash scripts/substituted.sh", "substitution inside an echo"),
+        ("bash scripts/same-line.sh", "echo then push on one line"),
+        ("bash scripts/continued.sh", "backslash continuation"),
+    ] {
+        assert_deny(lab.decide(cmd), case);
+    }
+}

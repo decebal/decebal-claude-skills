@@ -12,6 +12,7 @@
 
 pub mod classify;
 pub mod resolve;
+pub mod shell;
 
 use crate::hook;
 use classify::{classify, Verdict};

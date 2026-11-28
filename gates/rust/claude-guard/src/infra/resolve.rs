@@ -1,11 +1,19 @@
 //! Wrapper-chain resolution: a blocked command hidden one layer down is still a
 //! blocked command.
 //!
-//! FOLLOWS project-local text scripts reached by static resolution —
+//! FOLLOWS project-local text scripts reached by static resolution, in command
+//! position only —
 //! `[cd <dir> &&] bash|sh|source|. <path>`, `./<path>.sh`, `<dir>/<path>.sh`,
 //! `make [-C <dir>] <target>`, `$(MAKE) <target>`, and
 //! `[cd <dir> &&] bun|npm|pnpm run <script>` with the `--cwd`/`--prefix`/`-C`
-//! forms.
+//! forms, plus `bash -c`/`eval` bodies, `| bash`, `bash < <path>` and
+//! `find -exec`. A path given to `grep`/`cat` or inside a quoted argument is
+//! data and is not followed.
+//!
+//! Inside a followed script, each executed command is classified on its own.
+//! Printed text (`echo`, `printf`), comments and heredoc bodies not fed to a
+//! shell are not commands. Classifying a whole file at once would let one
+//! line's `git push`, another's `--force` and a third's `main` add up to a deny.
 //!
 //! `-C` and `--cwd` matter more than they look. Any convention that prefers them
 //! over `cd <dir> && …` routes every command through the flag form, so a
@@ -18,9 +26,11 @@
 //! Known limits, both covered by the literal tier and the trust cache: a script
 //! referencing a sibling by a path relative to a `cd`'d subdir is not resolved
 //! (the `cd <dir> && bash <path>` form itself is), and a dynamic command naming
-//! no infra tool is a blind spot.
+//! no infra tool is a blind spot — a force-push whose branch is a variable
+//! included.
 
 use super::classify::{cached, classify, Verdict, INFRA_TOOL_RE, MUTATE_RE, READONLY_RE};
+use super::shell::{self, Segment};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -109,49 +119,142 @@ pub fn sha256_hex(text: &str) -> String {
 
 /// Every wrapper reference in a block of text, deduped and ordered.
 pub fn extract_refs(text: &str) -> BTreeSet<Ref> {
+    refs_in(&shell::logical_lines(text))
+}
+
+fn refs_in(lines: &[Vec<Segment>]) -> BTreeSet<Ref> {
     let mut out = BTreeSet::new();
-
-    let cd_script = cached(r"cd +([^ ;&|]+) +&& +(?:bash|sh|source|\.) +([^ ;&|<>]+\.sh)");
-    for c in cd_script.captures_iter(text) {
-        out.insert(Ref::Script(format!("{}/{}", &c[1], &c[2])));
-    }
-    for c in cached(r"(?:^|[^a-z])(?:bash|sh|source|\.) +([^ ;&|<>]+\.sh)").captures_iter(text) {
-        out.insert(Ref::Script(c[1].to_string()));
-    }
-    for c in cached(r"(?:^|[[:space:]])([^ ;&|<>()]*\.sh)").captures_iter(text) {
-        out.insert(Ref::Script(c[1].to_string()));
-    }
-    for c in cached(r"(?:^|[^a-z])source +([^ ;&|<>]+)").captures_iter(text) {
-        out.insert(Ref::Script(c[1].to_string()));
-    }
-
-    for c in cached(r"(?:^|[^a-z])make +-C +([^ ;&|]+) +([a-zA-Z0-9_.:][a-zA-Z0-9_.:-]*)")
-        .captures_iter(text)
-    {
-        out.insert(Ref::Make(c[1].to_string(), c[2].to_string()));
-    }
-    // `-C` is excluded here so the flag is not read as the target.
-    for c in cached(r"(?:^|[^a-z])make +([a-zA-Z0-9_.:][a-zA-Z0-9_.:-]*)").captures_iter(text) {
-        out.insert(Ref::Make(String::new(), c[1].to_string()));
-    }
-    for c in cached(r"[$][({]MAKE[)}] +([a-zA-Z0-9_.:-]+)").captures_iter(text) {
-        out.insert(Ref::Make(String::new(), c[1].to_string()));
-    }
-
-    for c in
-        cached(r"cd +([^ ;&|]+) +&& +(?:bun|npm|pnpm) +run +([a-zA-Z0-9:_.-]+)").captures_iter(text)
-    {
-        out.insert(Ref::Node(c[1].to_string(), c[2].to_string()));
-    }
-    for c in cached(r"(?:bun|npm|pnpm) +(?:--cwd|--prefix|-C) +([^ ;&|]+) +run +([a-zA-Z0-9:_.-]+)")
-        .captures_iter(text)
-    {
-        out.insert(Ref::Node(c[1].to_string(), c[2].to_string()));
-    }
-    for c in cached(r"(?:^|[^&] )(?:bun|npm|pnpm) +run +([a-zA-Z0-9:_.-]+)").captures_iter(text) {
-        out.insert(Ref::Node(String::new(), c[1].to_string()));
+    for line in lines {
+        let mut cd: Option<String> = None;
+        let mut prev: Option<&Segment> = None;
+        for seg in line {
+            let cmd = shell::command_words(&seg.words);
+            if seg.head() == Some("cd") {
+                cd = cmd.get(1).cloned();
+            } else {
+                let piped_from = prev.filter(|_| seg.piped);
+                command_refs(cmd, seg, piped_from, cd.as_deref(), &mut out);
+            }
+            prev = Some(seg);
+        }
     }
     out
+}
+
+/// A script run after `cd <dir>` is recorded under both spellings: the
+/// resolver tries each against the root and the cwd.
+fn add_script(out: &mut BTreeSet<Ref>, path: &str, cd: Option<&str>) {
+    out.insert(Ref::Script(path.to_string()));
+    if let Some(d) = cd {
+        out.insert(Ref::Script(format!("{d}/{path}")));
+    }
+}
+
+fn command_refs(
+    cmd: &[String],
+    seg: &Segment,
+    piped_from: Option<&Segment>,
+    cd: Option<&str>,
+    out: &mut BTreeSet<Ref>,
+) {
+    let Some(head) = seg.head() else {
+        return;
+    };
+    let args = &cmd[1..];
+
+    if let Some(pos) = args.iter().position(|w| w == "-exec" || w == "-execdir") {
+        let sub = Segment {
+            words: args[pos + 1..].to_vec(),
+            ..Segment::default()
+        };
+        command_refs(&sub.words, &sub, None, cd, out);
+    }
+
+    if head.ends_with(".sh") {
+        add_script(out, head, cd);
+    } else if shell::is_shell(head) {
+        let mut i = 0;
+        while i < args.len() && args[i].starts_with(['-', '+']) {
+            match args[i].as_str() {
+                "-c" => {
+                    if let Some(body) = args.get(i + 1) {
+                        out.extend(extract_refs(body));
+                    }
+                    return;
+                }
+                "-o" | "+o" => i += 2,
+                _ => i += 1,
+            }
+        }
+        if let Some(script) = args.get(i) {
+            add_script(out, script, cd);
+        } else if let Some(file) = &seg.stdin {
+            add_script(out, file, cd);
+        } else if let Some(from) = piped_from {
+            for w in from.words.iter().filter(|w| w.ends_with(".sh")) {
+                add_script(out, w, cd);
+            }
+        }
+    } else if head == "source" || head == "." {
+        if let Some(script) = args.first() {
+            add_script(out, script, cd);
+        }
+    } else if head == "eval" {
+        out.extend(extract_refs(&args.join(" ")));
+    } else if matches!(head, "make" | "gmake" | "$(MAKE)" | "${MAKE}") {
+        make_refs(args, out);
+    } else if matches!(head, "bun" | "npm" | "pnpm") {
+        node_refs(args, cd, out);
+    }
+}
+
+fn make_refs(args: &[String], out: &mut BTreeSet<Ref>) {
+    let mut dir = String::new();
+    let mut targets = Vec::new();
+    let mut i = 0;
+    while i < args.len() {
+        let a = args[i].as_str();
+        if a == "-C" {
+            dir = args.get(i + 1).cloned().unwrap_or_default();
+            i += 1;
+        } else if let Some(d) = a.strip_prefix("-C") {
+            dir = d.to_string();
+        } else if a == "-f"
+            || (a == "-j" && args.get(i + 1).is_some_and(|n| n.parse::<u32>().is_ok()))
+        {
+            i += 1;
+        } else if !a.starts_with('-') && !a.contains('=') {
+            targets.push(a.to_string());
+        }
+        i += 1;
+    }
+    for t in targets {
+        out.insert(Ref::Make(dir.clone(), t));
+    }
+}
+
+fn node_refs(args: &[String], cd: Option<&str>, out: &mut BTreeSet<Ref>) {
+    let mut dir: Option<String> = None;
+    let mut i = 0;
+    while i < args.len() {
+        let a = args[i].as_str();
+        if matches!(a, "--cwd" | "--prefix" | "-C") {
+            dir = args.get(i + 1).cloned();
+            i += 1;
+        } else if let Some(d) = a
+            .strip_prefix("--cwd=")
+            .or_else(|| a.strip_prefix("--prefix="))
+        {
+            dir = Some(d.to_string());
+        } else if a == "run" {
+            if let Some(name) = args.get(i + 1) {
+                let dir = dir.or_else(|| cd.map(str::to_string)).unwrap_or_default();
+                out.insert(Ref::Node(dir, name.clone()));
+            }
+            return;
+        }
+        i += 1;
+    }
 }
 
 fn is_project_local(p: &Path, root: &Path) -> bool {
@@ -167,13 +270,6 @@ fn is_project_local(p: &Path, root: &Path) -> bool {
 /// Text, by the same test `grep -I` uses: no NUL byte in the content.
 fn is_text(bytes: &[u8]) -> bool {
     !bytes.contains(&0)
-}
-
-fn strip_comments(text: &str) -> String {
-    text.lines()
-        .filter(|l| !l.trim_start().starts_with('#'))
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 /// Read-only invocations are deliberately not a risk signal. Flagging every
@@ -327,12 +423,16 @@ pub fn scan_tree(
         scan.units
             .push(format!("{}  {}", sha256_hex(&content), unit_name));
 
-        let code = strip_comments(&content);
-        if !scan.risk && risky_lines(&code, prod_re) {
+        let lines = shell::logical_lines(&content);
+        let commands = shell::executed(&lines);
+        if !scan.risk && risky_lines(&commands.join("\n"), prod_re) {
             scan.risk = true;
         }
 
-        if let Some(v) = classify(&code.to_lowercase()) {
+        for command in &commands {
+            let Some(v) = classify(&command.to_lowercase()) else {
+                continue;
+            };
             let reason = format!("{} (in {})", reason_of(&v), r.label());
             match (&v, &scan.verdict) {
                 (Verdict::Deny(_), Some(Verdict::Deny(_))) => {}
@@ -348,7 +448,7 @@ pub fn scan_tree(
             }
         }
 
-        for next in extract_refs(&code) {
+        for next in refs_in(&lines) {
             work.push_back((depth + 1, next));
         }
     }
