@@ -69,6 +69,40 @@ fn a_command_reaching_nothing_yields_no_refs() {
 }
 
 #[test]
+fn a_script_given_to_a_reader_is_data() {
+    assert!(refs("grep -n push /repo/tooling/scripts/agent-worktree.sh").is_empty());
+    assert!(refs("cat scripts/deploy.sh").is_empty());
+    assert!(refs("head -n 20 scripts/deploy.sh").is_empty());
+}
+
+#[test]
+fn a_script_named_inside_a_quoted_argument_is_data() {
+    assert!(refs("hc run t1 claude \"read scripts/deploy.sh and fix it\"").is_empty());
+    assert!(refs("echo 'run ./scripts/deploy.sh next'").is_empty());
+}
+
+#[test]
+fn a_quoted_script_in_command_position_is_followed() {
+    assert!(
+        refs("\"./scripts/deploy.sh\" now").contains(&Ref::Script("./scripts/deploy.sh".into()))
+    );
+}
+
+#[test]
+fn finds_scripts_behind_runners_pipes_and_bodies() {
+    let s = |p: &str| Ref::Script(p.into());
+    assert!(refs("timeout 300 ./x.sh").contains(&s("./x.sh")));
+    assert!(refs("cat x.sh | bash").contains(&s("x.sh")));
+    assert!(refs("bash < x.sh").contains(&s("x.sh")));
+    assert!(refs("bash -c './x.sh --now'").contains(&s("./x.sh")));
+    assert!(refs("eval ./x.sh").contains(&s("./x.sh")));
+    assert!(refs("find . -name '*.txt' -exec ./x.sh {} \\;").contains(&s("./x.sh")));
+    assert!(refs("@bash scripts/x.sh").contains(&s("scripts/x.sh")));
+    assert!(refs("out=$(./x.sh)").contains(&s("./x.sh")));
+    assert!(refs("if ./x.sh; then echo ok; fi").contains(&s("./x.sh")));
+}
+
+#[test]
 fn the_risk_signal_ignores_read_only_use() {
     assert!(risky_lines("gcloud run deploy web-cdn", None));
     assert!(!risky_lines(

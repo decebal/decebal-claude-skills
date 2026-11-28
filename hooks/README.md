@@ -224,6 +224,17 @@ follows chains inside the repo and classifies what they actually run:
 `cd <dir> && …` routes every command through the flag form, so a resolver blind to
 it is blind to the common case.
 
+A path is followed only in command position, so `grep push x.sh`, `cat x.sh` and
+a path inside a quoted argument (`claude "read x.sh"`) reach nothing. Runner
+prefixes (`timeout 300`, `env`, `xargs`), `bash -c`/`eval` bodies, `| bash`,
+`bash < x.sh` and `find -exec` are followed.
+
+Inside a followed script each executed command is classified on its own. `echo`
+and `printf` text, comments, and heredoc bodies not fed to a shell are not
+commands; a substitution inside them (`echo "$(git push -f origin main)"`) is.
+A force-push rule needs `git push`, a force flag and a protected branch in one
+command, not on three lines of the same file.
+
 `INFRA_GUARD_DEPTH` sets how many layers to follow: default 5, 0 follows none
 while leaving the literal tiers untouched. A non-numeric value falls back to the
 default rather than to 0, so a typo cannot silently drop the layer. Layers count
@@ -254,8 +265,8 @@ silence a prompt removes the protection instead of fixing it.
 
 - A script referencing a sibling by a path relative to a `cd`'d subdir is not
   resolved. The `cd <dir> && bash <path>` form itself is.
-- A dynamic command naming no infra tool is a silent blind spot.
-- Resolution stops at installed binaries, anything outside the repo, and
+- A dynamic command naming no infra tool is a silent blind spot. That includes
+  a force-push whose branch is a variable (`git push --force origin "$b"`).- Resolution stops at installed binaries, anything outside the repo, and
   `node_modules`/`dist`/`build`.
 
 The first two are backstopped by the literal layer plus the trust hashes.
